@@ -39,7 +39,7 @@ final class TemplateParser{
 	 */
 	public function template_compile($tplfile,$compiledtplfile){
 		if(!is_file($tplfile)){
-			E('templates' . str_replace(CORE_PATH . 'template' . DS . 'styles' . DS, '', $tplfile) . ' is not exists!');
+			E('templates' . str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile) . ' is not exists!');
 		}
 		$content=file_get_contents($tplfile);
 		$filepath=dirname($compiledtplfile) . DS;
@@ -390,7 +390,7 @@ final class TemplateParser{
 						$action=array_pop($mcas);
 						empty($mcas) && array_push($mcas, ROUTE_C);
 						unset($datas['name']);
-						$str.='$' . $return . ' = \Library\Controller::callMethod(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
+						$str.='$' . $return . ' = \Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
 					}
 					break;
 				case 'json': 

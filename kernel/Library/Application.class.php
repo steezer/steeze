@@ -33,7 +33,7 @@ class Application{
 				($controller=Loader::controller(ROUTE_C,$params)) && 
 			is_callable(array($controller, ROUTE_A))
 		){
-			$result=Controller::callMethod($controller, ROUTE_A,$params);
+			$result=Controller::run($controller, ROUTE_A,$params);
 			View::render($result);
 		}
 	}

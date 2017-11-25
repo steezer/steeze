@@ -269,7 +269,7 @@ class Image{
 		$source_info=getimagesize($source);
 		$source_w=$source_info[0];
 		$source_h=$source_info[1];
-		$font_path=CORE_PATH . 'data' . DS . 'system' . DS . 'font' . DS . 'elephant.ttf';
+		$font_path=KERNEL_PATH . 'data' . DS . 'system' . DS . 'font' . DS . 'elephant.ttf';
 		
 		// 添加水印条件
 		if($source_w < $setting['w_minwidth'] || $source_h < $setting['w_minheight']){

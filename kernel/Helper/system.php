@@ -704,11 +704,19 @@ function session($name='',$value=''){
 		
 		if($name['type']){ // 读取session驱动
 			$class=ucwords(strtolower($name['type']));
-			$path=CORE_PATH . 'Service/Session/' . $class . '.class.php';
+			$path=KERNEL_PATH . 'Service'.DS.'Session'.DS.'Driver'. DS . $class . '.class.php';
 			if(is_file($path)){
-				include_once $path;
-				$hander=new $class();
-				session_set_save_handler(array(&$hander,'open'), array(&$hander,'close'), array(&$hander,'read'), array(&$hander,'write'), array(&$hander,'destroy'), array(&$hander,'gc'));
+				$concrete='Service\\Session\\Driver\\'.$class;
+				$hander=\Library\Container::getInstance()->make($concrete);
+				//配置驱动
+				session_set_save_handler(
+						array(&$hander,'open'), 
+						array(&$hander,'close'), 
+						array(&$hander,'read'), 
+						array(&$hander,'write'), 
+						array(&$hander,'destroy'), 
+						array(&$hander,'gc')
+					);
 			}
 		}
 		// 启动session

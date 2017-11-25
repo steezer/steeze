@@ -37,11 +37,11 @@ define('SYS_VENDOR_URL', STATIC_URL . 'resx/vendor/'); /* 系统使用外部插�
 
 /* 【定义服务器端路径】 */
 define('DS', DIRECTORY_SEPARATOR); /* 简化目录分割符 */
-define('CORE_PATH', dirname(__FILE__) . DS); /* 框架目录 */
-define('APP_PATH', CORE_PATH . '..' . DS . 'app' . DS); /* 应用目录 */
-define('STORAGE_PATH', CORE_PATH . '..' . DS . 'storage' . DS);
+define('KERNEL_PATH', dirname(__FILE__) . DS); /* 框架目录 */
+define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); /* 应用目录 */
+define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
 define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); /* 缓存目录 */
-!defined('ROOT_PATH') && define('ROOT_PATH', CORE_PATH . '..' . DS . 'public' . DS); /* 网站根目录路径 */
+!defined('ROOT_PATH') && define('ROOT_PATH', KERNEL_PATH . '..' . DS . 'public' . DS); /* 网站根目录路径 */
 define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS); /* 文件上传目录路径 */
 define('STATIC_PATH', ROOT_PATH . 'resx' . DS); /* 静态文件服务端访问路径 */
 
@@ -74,7 +74,7 @@ class Loader{
 			try{
 				include (strpos($path, 'App'.DS)===0 ? 
 						APP_PATH.substr($path,4).'.php' : 
-						CORE_PATH.$path.'.class.php');
+						KERNEL_PATH.$path.'.class.php');
 			}catch (\Library\Exception $e){
 				E($e->getMessage(),$e->getCode());
 			}
@@ -115,7 +115,7 @@ class Loader{
 	 */
 	public static function helper($name,$module=null){
 		static $helpers=[];
-		$baseDir=(empty($module) ? CORE_PATH : APP_PATH . (is_string($module) ? ucfirst($module) : ROUTE_M) . DS);
+		$baseDir=(empty($module) ? KERNEL_PATH : APP_PATH . (is_string($module) ? ucfirst($module) : ROUTE_M) . DS);
 		$path=$baseDir .'Helper' . DS . $name . '.php';
 		$key=md5($path);
 		if(isset($helpers[$key])){

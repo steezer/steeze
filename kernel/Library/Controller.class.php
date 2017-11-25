@@ -222,13 +222,15 @@ class Controller{
 	}
 	
 	/**
-	 * 动态调用方法，增加对调用控制器方法的感知
+	 * 运行控制器方法
+	 * 
 	 * @param string|object $concrete 控制器对象或类型
 	 * @param string $method 方法名称
 	 * @param array $parameters 参数
 	 * return mixed
+	 * 说明：增加对调用控制器类和方法的感知
 	 * */
-	public static function callMethod($concrete,$method,array $parameters=[]){
+	public static function run($concrete,$method,array $parameters=[]){
 		$classes=explode('\\', is_object($concrete)?get_class($concrete):$concrete);
 		array_shift($classes);
 		self::$_m=array_shift($classes);
@@ -236,4 +238,5 @@ class Controller{
 		self::$_a=$method;
 		return Container::getInstance()->callMethod($concrete, $method,$parameters);
 	}
+	
 }
