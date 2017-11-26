@@ -8,6 +8,7 @@ define('NOW_TIME', $_SERVER['REQUEST_TIME']); /* 设置此次请求时间 */
 !defined('APP_DEBUG') && define('APP_DEBUG', true); /* 系统默认在开发模式下运行 */
 define('BIND_MODULE', 'Home'); /* 系统前端默认模块 */
 define('IS_RUNTIME', !APP_DEBUG && defined('BIND_MODULE'));
+define('IS_CLI',PHP_SAPI=='cli');
 
 // 定义当前请求的系统常量
 isset($_SERVER['REQUEST_METHOD']) && define('REQUEST_METHOD', $_SERVER['REQUEST_METHOD']);
@@ -15,17 +16,16 @@ defined('REQUEST_METHOD') && define('IS_GET', REQUEST_METHOD == 'GET' ? true : f
 defined('REQUEST_METHOD') && define('IS_POST', REQUEST_METHOD == 'POST' ? true : false);
 
 /* 【定义客户端访问路径】 */
+define('SYSTEM_ENTRY', '/index.php');
+define('DEFAULT_HOST','127.0.0.1');//默认主机
 define('SITE_PROTOCOL', (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://'));
 define('SITE_PORT', (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : ''));
-define('SITE_HOST',(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '')));
-define('SITE_URL', SITE_PROTOCOL . SITE_HOST . (SITE_PROTOCOL=='https://'?'':SITE_PORT)); /* 网站首页地址 */
-define('ROOT_FULL_URL', isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : substr($_SERVER['PHP_SELF'], 0, stripos($_SERVER['PHP_SELF'], '.php') + 3));
-!defined('ROOT_URL') && define('ROOT_URL', str_replace('\\', '/', rtrim(dirname(ROOT_FULL_URL),'\\/').'/'));
-!defined('REQUEST_FULL_URL') && define('REQUEST_FULL_URL',!empty($_SERVER['REQUEST_URI'])?$_SERVER['REQUEST_URI']:$_SERVER['PHP_SELF'].(isset($_SERVER['QUERY_STRING'])?'?'.$_SERVER['QUERY_STRING']:''));
-define('SYS_ENTRY', basename(ROOT_FULL_URL));
-define('UPLOAD_URL', ROOT_URL . 'ufs/'); /* 上传图片访问路径 */
-define('STATIC_URL', ROOT_URL . 'resx/'); /* 静态文件路径 */
-define('SYS_VENDOR_URL', STATIC_URL . 'resx/vendor/'); /* 系统使用外部插件路径，可以使用来自其它域的插件目录 */
+define('SITE_HOST',(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : DEFAULT_HOST)));
+define('SITE_URL', SITE_PROTOCOL . SITE_HOST . (SITE_PROTOCOL=='https://'?'' : SITE_PORT)); /* 网站首页地址 */
+define('ROOT_URL', rtrim(dirname(SYSTEM_ENTRY),'/').'/'); //系统根目录路径
+define('UPLOAD_URL', ROOT_URL . 'ufs/'); //上传图片访问路径
+define('STATIC_URL', ROOT_URL . 'resx/'); //静态文件路径
+define('SYS_VENDOR_URL', STATIC_URL . 'resx/vendor/'); //外部资源扩展路径
 
 /* 【运行环境判断】 */
 //本地运行环境
@@ -36,23 +36,16 @@ define('SYS_VENDOR_URL', STATIC_URL . 'resx/vendor/'); /* 系统使用外部插�
 !defined('WECHAT_ACCESS') &&  define('WECHAT_ACCESS',isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'],'MicroMessenger')!==false);
 
 /* 【定义服务器端路径】 */
-define('DS', DIRECTORY_SEPARATOR); /* 简化目录分割符 */
-define('KERNEL_PATH', dirname(__FILE__) . DS); /* 框架目录 */
-define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); /* 应用目录 */
+define('DS', DIRECTORY_SEPARATOR); //简化目录分割符
+define('KERNEL_PATH', dirname(__FILE__) . DS); //框架目录
+define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); //应用目录
 define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
-define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); /* 缓存目录 */
-!defined('ROOT_PATH') && define('ROOT_PATH', KERNEL_PATH . '..' . DS . 'public' . DS); /* 网站根目录路径 */
-define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS); /* 文件上传目录路径 */
-define('STATIC_PATH', ROOT_PATH . 'resx' . DS); /* 静态文件服务端访问路径 */
-
-//服务器环境识别
-if(function_exists('saeAutoLoader')){// 自动识别SAE环境
-	defined('APP_MODE')     or define('APP_MODE',      'sae');
-	defined('STORAGE_TYPE') or define('STORAGE_TYPE',  'Sae');
-}else{
-	defined('APP_MODE')     or define('APP_MODE',       'common'); // 应用模式 默认为普通模式
-	defined('STORAGE_TYPE') or define('STORAGE_TYPE',   'File'); // 存储类型 默认为File
-}
+define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); //缓存目录
+define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS); //日志目录
+!defined('ROOT_PATH') && define('ROOT_PATH', KERNEL_PATH . '..' . DS . 'public' . DS); //网站根目录路径
+define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS); //文件上传目录路径
+define('RESX_PATH', ROOT_PATH . 'resx' . DS); //资源文件路径
+!defined('STORAGE_TYPE') && define('STORAGE_TYPE', (function_exists('saeAutoLoader') ? 'Sae' : 'File'));
 
 //加载系统常用函数库
 !IS_RUNTIME && Loader::helper('system');
@@ -98,12 +91,8 @@ class Loader{
 			$c=$name;
 		}
 		$concrete='App\\'.ucfirst(strtolower($m)).'\\Controller\\'.ucfirst(strtolower($c));
-		try{
-			$container=Library\Container::getInstance();
-			return $container->make($concrete,$parameters);
-		}catch (\Library\Exception $e){
-			E($e->getMessage(),$e->getCode());
-		}
+		$container=Library\Container::getInstance();
+		return $container->make($concrete,$parameters);
 	}
 
 	/**
@@ -150,7 +139,7 @@ class Loader{
 		// 如果为第二个参数为数组则直接写入配置
 		if(is_array($key)){
 			$configs[$name]=isset($configs[$name]) ? array_merge($configs[$name], $key) : $key;
-			return null;
+			return $configs[$name];
 		}
 		
 		if(!$reload && isset($configs[$name])){
@@ -174,7 +163,7 @@ class Loader{
 			}
 		}
 		
-		return empty($key) ? $configs[$name] : 
+		return empty($key) ? (!empty($configs[$name]) ? $configs[$name] : $default) : 
 				(isset($configs[$name][$key]) ? $configs[$name][$key] : $default);
 	}
 	

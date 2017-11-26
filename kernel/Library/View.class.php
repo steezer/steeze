@@ -167,6 +167,8 @@ class View{
 			header('X-Powered-By:STWMS');
 		}
 		//输出内容
-		echo (is_array($content) ? json_encode($content,JSON_UNESCAPED_UNICODE) : $content);
+		if(!is_null($content)){
+			echo (is_array($content) ? json_encode($content,JSON_UNESCAPED_UNICODE) : $content);
+		}
 	}
 }

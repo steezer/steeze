@@ -36,22 +36,25 @@ class Container{
 	 * @throws Library\Exception
 	 */
 	public function build($concrete){
-		if($concrete instanceof Closure){
-			return $concrete($this, $this->getLastParameterOverride());
+		try{
+			if($concrete instanceof Closure){
+				return $concrete($this, $this->getLastParameterOverride());
+			}
+			$reflector=new ReflectionClass($concrete);
+			$constructor=$reflector->getConstructor();
+			
+			//没有构造函数的构建
+			if(is_null($constructor)){
+				return new $concrete();
+			}
+			
+			//构造函数带有参数的构建
+			$dependencies=$constructor->getParameters();
+			$instances=$this->resolveDependencies($dependencies);
+			return $reflector->newInstanceArgs($instances);
+		}catch(\Exception $e){
+			E($e);
 		}
-		$reflector=new ReflectionClass($concrete);
-		
-		$constructor=$reflector->getConstructor();
-		
-		//没有构造函数的构建
-		if(is_null($constructor)){
-			return new $concrete();
-		}
-		
-		//构造函数带有参数的构建
-		$dependencies=$constructor->getParameters();
-		$instances=$this->resolveDependencies($dependencies);
-		return $reflector->newInstanceArgs($instances);
 	}
 	
 	/**
@@ -67,12 +70,18 @@ class Container{
 		if(!is_object($concrete)){
 			$concrete=$this->resolve($concrete, $parameters);
 		}
-		$reflector=new ReflectionClass(get_class($concrete));
-		$this->with[]=$parameters;
-		$dependencies=$reflector->getMethod($method)->getParameters();
-		$instances=$this->resolveDependencies($dependencies);
-		array_pop($this->with);
-		return call_user_func_array(array($concrete,$method), $instances);
+		try{
+			if(method_exists($concrete, $method)){
+				$reflector=new ReflectionClass(get_class($concrete));
+				$this->with[]=$parameters;
+				$dependencies=$reflector->getMethod($method)->getParameters();
+				$instances=$this->resolveDependencies($dependencies);
+				array_pop($this->with);
+				return call_user_func_array(array($concrete,$method), $instances);
+			}
+		}catch(\Exception $e){
+			E($e);
+		}
 	}
 	
 	/**
@@ -128,6 +137,7 @@ class Container{
 					$depObject=$this->resolveClass($dependency);
 					//如果实现了模型类（或者是模型类的子类）
 					if($depObject instanceof Model){
+						$this->forgetInstance($depClass->name);
 						$pk=$depObject->getPk();
 						if(is_subclass_of($depObject,Model::class)){
 							//自定义模型需要表名和路由变量名称相同
@@ -208,12 +218,11 @@ class Container{
 		 * 如果我们不能解析类实例，我们将检查这个值是否是可选的，
 		 * 如果它是，我们将返回可选参数值作为依赖项的值，类似默认值
 		 * */
-		catch(Exception $e){
+		catch(\Exception $e){
 			if($parameter->isOptional()){
 				return $parameter->getDefaultValue();
 			}
-			
-			throw $e;
+			E($e);
 		}
 	}
 	

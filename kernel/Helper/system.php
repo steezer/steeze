@@ -12,11 +12,14 @@
  * @param number $is_append
  * @return number 写入日志字节数
  */
-function fastlog($content,$file='log.txt',$is_append=0){
-	if(is_array($content)){
-		$content=var_export($content, true);
-	}
-	return $is_append ? file_put_contents(ROOT_PATH . $file, $content, FILE_APPEND) : file_put_contents(ROOT_PATH . $file, $content);
+function fastlog($content,$isAppend=true,$file='system.log'){
+	$datetime=date('Y-m-d H:i:s');
+	$content='['.$datetime.'] '.dump($content,true);
+	return file_put_contents(
+			LOGS_PATH . $file, 
+			$content."\n", 
+			($isAppend ? FILE_APPEND : 0)
+		);
 }
 
 /**
@@ -28,7 +31,7 @@ function fastlog($content,$file='log.txt',$is_append=0){
  * @return void|array
  */
 function trace($value='[think]',$label='',$level='DEBUG',$record=false) {
-	//return Think\Think::trace($value,$label,$level,$record);
+	
 }
 
 /**
@@ -43,9 +46,9 @@ function dump($var,$isReturn=false){
 			$var[$k]=dump($v,false);
 		}
 	}
-	$return=is_object($var) ? get_class($var) : var_export($expression,true);
+	$return=trim((is_object($var) ? get_class($var) : var_export($var,true)),'\'"');
 	if(!$isReturn){
-		echo $return;
+		echo $return."\n";
 	}else{
 		return $return;
 	}
@@ -317,22 +320,6 @@ function base64($data,$type='ENCODE',$filter=NULL,$strip=0){
 		}
 	}
 	return $data;
-}
-
-
-/**
- * 图片文件进行base64编码
- * @param string $image_file 图片文件路径
- * @return string 编码后的字符串
- */
-function base64EncodeImage($image_file,$add_tag=false){
-	$base64_image='';
-	$image_info=getimagesize($image_file);
-	$fp=fopen($image_file, 'r');
-	$image_data=fread($fp, filesize($image_file));
-	fclose($fp);
-	$image_data=chunk_split(base64_encode($image_data));
-	return ($add_tag ?'data:' . $image_info['mime'] . ';base64,':'').$image_data;
 }
 
 /**
@@ -998,10 +985,10 @@ function resx($file,$type='',$check=false,$default='default'){
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
-				return is_file(STATIC_PATH.$style.DS.$file) ? STATIC_URL.$style.'/'.$file : '';
+				return is_file(RESX_PATH.$style.DS.$file) ? STATIC_URL.$style.'/'.$file : '';
 			}else{
-				if(!is_file(STATIC_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
-					return is_file(STATIC_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
+				if(!is_file(RESX_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
+					return is_file(RESX_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
 							 STATIC_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
 				}
 			}
@@ -1247,8 +1234,6 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		}
 		$url=$info['path'];
 	}else{
-		$is_admin=$type==-1?(!defined('STYLE_URL')&&defined('ADMIN_INI')):$type; // 是否属于后台管理
-		$is_plugin=false;
 		$url=!empty($info['path']) ? $info['path'] : '';
 		if(isset($info['fragment'])){ // 解析锚点
 			$anchor=$info['fragment'];
@@ -1261,10 +1246,6 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		}
 		if(false !== strpos($url, '@')){// 解析域名
 			list($url, $host)=explode('@', $info['path'], 2);
-		}
-		if(strpos($url, ':')===0){
-			$is_plugin=true;
-			$url=substr($url,1);
 		}
 		// 解析子域名
 		if(isset($host)){
@@ -1280,35 +1261,17 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		$url=ltrim($url, $depr);
 		$paths=explode($depr, $url);
 		
-		if(!$is_plugin){ //控制器模式
-			$var_c=C('VAR_CONTROLLER','c');
-			$var_a=C('VAR_ACTION','a');
-			$var[$var_a]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_A')?ROUTE_A:'');
-			$var[$var_c]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_C')?ROUTE_C:'');
-			if(!empty($paths)){
-				$var_m=C('VAR_MODULE','m');
-				$var[$var_m]=implode($depr, $paths);
-				if((defined('BIND_MODULE') && BIND_MODULE == $var[$var_m]) || $var[$var_m] === ''){
-					unset($var[$var_m]);
-				}else{
-					unset($vars[$var_m]);
-				}
-			}
-		}else{ //插件模式
-			$a=!empty($paths) ? array_pop($paths) : (defined('ROUTE_A')?ROUTE_A:'');
-			$c=!empty($paths) ? array_pop($paths) : (defined('ROUTE_C')?ROUTE_C:'');
-			$url='';
-			if(!$is_admin){
-				$urls=& getLcache('plugin', 'core', 'array', 'url');
-				if(isset($urls[$c]) && $urls[$c] !== ''){
-					$url=ROOT_URL . $urls[$c] . $a . '/';
-				}
-			}
-			if(empty($url)){
-				$var_c=C('VAR_PLUGIN_CONTROLLER','plugin_c');
-				$var_a=C('VAR_PLUGIN_ACTION','plugin_a');
-				$var[$var_a]=$a;
-				$var[$var_c]=$c;
+		$var_c=C('VAR_CONTROLLER','c');
+		$var_a=C('VAR_ACTION','a');
+		$var[$var_a]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_A')?ROUTE_A:'');
+		$var[$var_c]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_C')?ROUTE_C:'');
+		if(!empty($paths)){
+			$var_m=C('VAR_MODULE','m');
+			$var[$var_m]=implode($depr, $paths);
+			if((defined('BIND_MODULE') && BIND_MODULE == $var[$var_m]) || $var[$var_m] === ''){
+				unset($var[$var_m]);
+			}else{
+				unset($vars[$var_m]);
 			}
 		}
 		if(!empty($var)){
@@ -1318,7 +1281,7 @@ function U($url='',$vars='',$domain=false,$type=-1){
 			if(!empty($var[$var_a])){
 				unset($vars[$var_a]);
 			}
-			$url=ROOT_FULL_URL . '?'.($is_admin ? C('admin.ini') . '&' : '') . http_build_query(array_reverse(array_filter($var)));
+			$url=SYSTEM_ENTRY . '?' . http_build_query(array_reverse(array_filter($var)));
 		}
 	}
 	
@@ -1349,10 +1312,12 @@ function C($key='',$default=''){
 		$keys=explode('.', $key,2);
 		count($keys) < 2 && array_unshift($keys, 'system');
 		$len=count($keys);
+		$file=trim($keys[0]);
+		$key=trim($keys[1],' *');
 		if($len < 3){
-			return Loader::config($keys[0], $keys[1], $default);
+			return Loader::config($file, $key, $default);
 		}else{
-			$res=Loader::config($keys[0], $keys[1], $default);
+			$res=Loader::config($file, $key, $default);
 			if(is_array($res)){
 				for($i=2; $i < $len; $i++){
 					if(!is_array($res) || !isset($res[$keys[$i]])){
@@ -1370,8 +1335,14 @@ function C($key='',$default=''){
 	return null;
 }
 
-function E($msg, $code=0){
-	throw new Library\Exception($msg, $code);
+function E($obj, $code=0){
+	if(!is_object($obj)){
+		throw new \Library\Exception($obj, $code);
+	}else if($obj instanceof \Exception){
+		throw new \Library\Exception($obj->getMessage(), $obj->getCode());
+	}else if($obj instanceof \Library\Exception){
+		throw $obj;
+	}
 }
 
 function L($message){
