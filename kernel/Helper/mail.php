@@ -7,12 +7,13 @@ function mail_send_log($mode='SMTP',$b='',$c='',$d=''){
 /**
  * 发送邮件
  *
- * @param $toemail 收件人email
- * @param $subject 邮件主题
- * @param $message 正文
- * @param $from 发件人
- * @param $cfg 邮件配置信息
- * @param $sitename 邮件站点名称
+ * @param string $toemail 收件人email
+ * @param string $subject 邮件主题
+ * @param string $message 正文
+ * @param string $from 发件人
+ * @param array $mail 邮件配置信息
+ * @param string $sitename 邮件站点名称
+ * @return bool
  */
 function mail_send($toemail,$subject,$message,$from='',$mail=array(),$sitename=''){
 	if($sitename == ''){

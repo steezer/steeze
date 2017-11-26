@@ -73,7 +73,7 @@ class Controller{
 	 * @access protected
 	 * @param mixed $name 要显示的模板变量
 	 * @param mixed $value 变量的值
-	 * @return Action
+	 * @return Controller
 	 */
 	protected function assign($name,$value=''){
 		$this->view()->assign($name, $value);
