@@ -1017,6 +1017,23 @@ function view($name,$datas=[]){
 }
 
 /**
+ * 获取环境变量
+ * @param string $key 键名称
+ * @param array $default 默认值
+ * @return string 环境变量值
+ */
+function env($key=null,$default=null){
+	if(is_null($key)){ //加载环境变量
+		$path=KERNEL_PATH.'..'.DS.'.env';
+		if(is_file($path) && is_array($result=parse_ini_file($path))){
+			$_ENV=array_merge($_ENV,$result);
+		}
+		return $_ENV;
+	}
+	return isset($_ENV[$key]) ? $_ENV[$key] : $default;
+}
+
+/**
  * 获取远程文件
  * 
  * @param string $url 文件地址

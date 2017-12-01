@@ -34,21 +34,21 @@ return [
 	'cookie_ttl' => 0, // Cookie 生命周期，0 表示随浏览器进程
 
 	// 数据库设置
-	'db_type'               =>  'mysql',     // 数据库类型
-	'db_host'               =>  '127.0.0.1', // 服务器地址
-	'db_name'               =>  'test',          // 数据库名
-	'db_user'               =>  'root',      // 用户名
-	'db_pwd'                =>  '',          // 密码
-	'db_port'               =>  '3306',        // 端口
-	'db_prefix'             =>  'm_',    // 数据库表前缀
-	'db_params'          	=>  array(), // 数据库连接参数
-	'db_debug'  			=>  true, // 数据库调试模式 开启后可以记录SQL日志
-	'db_fields_cache'       =>  true,        // 启用字段缓存
-	'db_charset'            =>  'utf8',      // 数据库编码默认采用utf8
-	'db_deploy_type'        =>  0, // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
-	'db_rw_separate'        =>  false,       // 数据库读写是否分离 主从式有效
-	'db_master_num'         =>  1, // 读写分离后 主服务器数量
-	'db_slave_no'           =>  '', // 指定从服务器序号
+	'db_type'               =>  env('db_type','mysql'),     // 数据库类型
+	'db_host'               =>  env('db_host','127.0.0.1'), // 服务器地址
+	'db_name'               =>  env('db_name','test'),          // 数据库名
+	'db_user'               =>  env('db_user','root'),      // 用户名
+	'db_pwd'                =>  env('db_pwd',''),          // 密码
+	'db_port'               =>  env('db_port','3306'),        // 端口
+	'db_prefix'             =>  env('db_prefix',''),    // 数据库表前缀
+	'db_params'             =>  array(), // 数据库连接参数
+	'db_debug'              =>  env('db_debug',true), // 数据库调试模式 开启后可以记录SQL日志
+	'db_fields_cache'       =>  env('db_fields_cache',true),        // 启用字段缓存
+	'db_charset'            =>  env('db_charset','utf8'),      // 数据库编码默认采用utf8
+	'db_deploy_type'        =>  env('db_deploy_type',0), // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
+	'db_rw_separate'        =>  env('db_rw_separate',false),       // 数据库读写是否分离 主从式有效
+	'db_master_num'         =>  env('db_master_num',1), // 读写分离后 主服务器数量
+	'db_slave_no'           =>  env('db_slave_no',''), // 指定从服务器序号
 
 	//数据缓存设置
 	'data_cache_time'       =>  60,      // 数据缓存有效期 0表示永久缓存

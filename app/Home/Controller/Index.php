@@ -9,7 +9,7 @@ class Index extends Controller{
 	}
 	
 	public function index(){
-		var_dump(__FUNCTION__);
+		//var_dump(__FUNCTION__);
 		//return M('user')->where('id<5')->select();
 	}
 	

@@ -47,8 +47,8 @@ define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS); //文件上传目录路径
 define('RESX_PATH', ROOT_PATH . 'resx' . DS); //资源文件路径
 !defined('STORAGE_TYPE') && define('STORAGE_TYPE', (function_exists('saeAutoLoader') ? 'Sae' : 'File'));
 
-//加载系统常用函数库
-!IS_RUNTIME && Loader::helper('system');
+//加载系统函数库和环境变量
+Loader::helper('system') && env();
 
 //注册类加载器
 spl_autoload_register('Loader::import');
