@@ -81,7 +81,7 @@ class Model implements ArrayAccess{
 		}elseif('' != $tablePrefix){
 			$this->tablePrefix=$tablePrefix;
 		}elseif(!isset($this->tablePrefix)){
-			$this->tablePrefix=C('DB_PREFIX');
+			$this->tablePrefix=C('db_prefix');
 		}
 		
 		// 数据库初始化操作
@@ -101,8 +101,8 @@ class Model implements ArrayAccess{
 		// 只在第一次执行记录
 		if(empty($this->fields)){
 			// 如果数据表字段没有定义则自动获取
-			if(C('DB_FIELDS_CACHE')){
-				$db=$this->dbName ?: C('DB_NAME');
+			if(C('db_fields_cache')){
+				$db=$this->dbName ?: C('db_name');
 				$fields=F('_fields/' . strtolower($db . '.' . $this->tablePrefix . $this->name));
 				if($fields){
 					$this->fields=$fields;
@@ -158,9 +158,9 @@ class Model implements ArrayAccess{
 		$this->fields['_type']=$type;
 		
 		// 2008-3-7 增加缓存开关控制
-		if(C('DB_FIELDS_CACHE')){
+		if(C('db_fields_cache')){
 			// 永久缓存数据表信息
-			$db   =  $this->dbName?:C('DB_NAME');
+			$db   =  $this->dbName?:C('db_name');
 			F('_fields/'.strtolower($db.'.'.$this->tablePrefix.$this->name),$this->fields);
 		}
 	}

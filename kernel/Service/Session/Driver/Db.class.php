@@ -34,21 +34,21 @@ class Db {
      */
     public function open($savePath, $sessName) { 
        $this->lifeTime = C('SESSION_EXPIRE')?C('SESSION_EXPIRE'):ini_get('session.gc_maxlifetime');
-       $this->sessionTable  =   C('SESSION_TABLE')?C('SESSION_TABLE'):C("DB_PREFIX")."session";
+       $this->sessionTable  =   C('SESSION_TABLE')?C('SESSION_TABLE'):C("db_prefix")."session";
        //分布式数据库
-       $host = explode(',',C('DB_HOST'));
-       $port = explode(',',C('DB_PORT'));
-       $name = explode(',',C('DB_NAME'));
-       $user = explode(',',C('DB_USER'));
-       $pwd  = explode(',',C('DB_PWD'));
-       if(1 == C('DB_DEPLOY_TYPE')){
+       $host = explode(',',C('db_host'));
+       $port = explode(',',C('db_port'));
+       $name = explode(',',C('db_name'));
+       $user = explode(',',C('db_user'));
+       $pwd  = explode(',',C('db_pwd'));
+       if(1 == C('db_deploy_type')){
            //读写分离
-           if(C('DB_RW_SEPARATE')){
-               $w = floor(mt_rand(0,C('DB_MASTER_NUM')-1));
-               if(is_numeric(C('DB_SLAVE_NO'))){//指定服务器读
-                   $r = C('DB_SLAVE_NO');
+           if(C('db_rw_separate')){
+               $w = floor(mt_rand(0,C('db_master_num')-1));
+               if(is_numeric(C('db_slave_no'))){//指定服务器读
+                   $r = C('db_slave_no');
                }else{
-                   $r = floor(mt_rand(C('DB_MASTER_NUM'),count($host)-1));
+                   $r = floor(mt_rand(C('db_master_num'),count($host)-1));
                }
                //主数据库链接
                $hander = mysql_connect(

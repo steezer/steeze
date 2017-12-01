@@ -4,7 +4,7 @@ use \Closure;
 
 class Pipeline{
 	protected $container; // 容器实例
-	protected $passable; // 通过管道传递的对象
+	protected $passables=[]; // 通过管道传递的对象
 	protected $pipes=[]; // 类管道的数组
 	protected $method='handle'; // 每个管道上被调用的方法
 
@@ -21,11 +21,11 @@ class Pipeline{
 	/**
 	 * 设置通过管道发送的对象
 	 *
-	 * @param mixed $passable
+	 * @param mixed $passables
 	 * @return $this
 	 */
-	public function send($passable){
-		$this->passable=$passable;
+	public function send(...$passables){
+		$this->passables=$passables;
 		return $this;
 	}
 
@@ -63,7 +63,7 @@ class Pipeline{
 					$this->carry(),
 					$this->prepareDestination($destination)
 				);
-		return $pipeline($this->passable);
+		return $pipeline(...$this->passables);
 	}
 
 	/**
@@ -100,11 +100,11 @@ class Pipeline{
 	 * @return \Closure
 	 */
 	protected function prepareDestination(Closure $destination){
-		return function ($passable) use ($destination){
+		return function (...$passables) use ($destination){
 			try{
-				return $destination($passable);
+				return $destination(...$passables);
 			}catch(\Exception $e){
-				return $this->handleException($passable, $e);
+				return $this->handleException($e, ...$passables);
 			}
 		};
 	}
@@ -116,13 +116,13 @@ class Pipeline{
 	 */
 	protected function carry(){
 		return function ($stack,$pipe){
-			return function ($passable) use ($stack,$pipe){
+			return function (...$passables) use ($stack,$pipe){
 				try{
 					$slice=$this->getSlice();
 					$callable=$slice($stack, $pipe);
-					return $callable($passable);
+					return $callable(...$passables);
 				}catch(\Exception $e){
-					return $this->handleException($passable, $e);
+					return $this->handleException($e,...$passables);
 				}
 			};
 		};
@@ -135,17 +135,17 @@ class Pipeline{
 	 */
 	private function getSlice(){
 		return function ($stack,$pipe){
-			return function ($passable) use ($stack,$pipe){
+			return function (...$passables) use ($stack,$pipe){
 				if(is_callable($pipe)){
 					// 直接调用管道回调函数
-					return $pipe($passable, $stack);
+					return $pipe($stack,...$passables);
 				}elseif(!is_object($pipe)){
 					// 解析命名的字符串通道，并构建
 					list($name, $parameters)=$this->parsePipeString($pipe);
 					$pipe=$this->getContainer()->make($name);
-					$parameters=array_merge([$passable,$stack], $parameters);
+					$parameters=array_merge([$stack], $passables, $parameters);
 				}else{
-					$parameters=[$passable,$stack];
+					$parameters=array_merge([$stack], $passables);
 				}
 				return method_exists($pipe, $this->method) ? 
 						 $pipe->{$this->method}(...$parameters) : $pipe(...$parameters);
@@ -156,18 +156,16 @@ class Pipeline{
 	/**
 	 * 处理给定的异常
 	 *
-	 * @param mixed $passable
 	 * @param Library\Exception $e
+	 * @param array $passables
+	 * 
 	 * @return mixed
 	 *
 	 * @throws Library\Exception
 	 */
-	protected function handleException($passable,\Exception $e){
-		if(!$passable instanceof Request){
-			throw $e;
-		}
+	protected function handleException(\Exception $e,...$passables){
 		$handler=new Exception();
 		$handler->report($e);
-		return $handler->render($passable, $e);
+		return $handler->render($e,...$passables);
 	}
 }

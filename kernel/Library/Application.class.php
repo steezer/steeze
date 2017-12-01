@@ -22,9 +22,14 @@ class Application{
 	 * @param $params 从路由中获取的参数
 	 */
 	private function run(Request $request){
+		//设置路由处理器
+		!($isClosure=is_callable($request->getDisposer())) && 
+			$request->setDisposer(Loader::controller(ROUTE_C,$request->getParam()));
+		
+		//执行中间件并输出处理结果
 		View::render((new Pipeline(Container::getInstance()))
 				->send($request)
-				->through(C('middleware.*',[]))
+				->through($request->getMiddleware(!$isClosure ? ROUTE_A : null))
 				->then($this->dispatchToRouter())
 			);
 	}
@@ -34,20 +39,23 @@ class Application{
 	 * return \Closure
 	 */
 	private function dispatchToRouter(){
-		return function ($request) {
+		return function (Request $request) {
 			//获取路由参数
 			$params=$request->getParam();
-			if(
+			$disposer=$request->getDisposer();
+			if($disposer instanceof \Closure){
+				//直接运行回调函数
+				return $disposer(...array_values($params));
+			}else if(
 				//控制器方法不能以“_”开头，以“_”开头的方法用于模版内部控制器方法调用
-				strpos(ROUTE_A, '_') !== 0 &&
-				($controller=Loader::controller(ROUTE_C,$params)) &&
-				is_callable(array($controller, ROUTE_A))
+				strpos(ROUTE_A, '_') !== 0 && is_object($disposer) &&
+				is_callable(array($disposer, ROUTE_A))
 			){
 				//运行控制器方法
-				return Controller::run($controller, ROUTE_A,$params);
-			}elseif(is_file($tplfile=template(ROUTE_A,ROUTE_C,'',ROUTE_M))){
+				return Controller::run($disposer, ROUTE_A,$params);
+			}else{
 				//直接访问模版
-				include $tplfile;
+				return view(ROUTE_M.'@'.ROUTE_C.'/'.ROUTE_A,$params);
 			}
 		};
 	}

@@ -23,9 +23,9 @@ class Sqlite extends Cache {
             );
         }
         $this->options  =   $options;      
-        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('DATA_CACHE_PREFIX');
+        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');
         $this->options['length']    =   isset($options['length'])?  $options['length']  :   0;        
-        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('DATA_CACHE_TIME');
+        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
         
         $func = $this->options['persistent'] ? 'sqlite_popen' : 'sqlite_open';
         $this->handler      = $func($this->options['db']);
@@ -43,7 +43,7 @@ class Sqlite extends Cache {
         $result = sqlite_query($this->handler, $sql);
         if (sqlite_num_rows($result)) {
             $content   =  sqlite_fetch_single($result);
-            if(C('DATA_CACHE_COMPRESS') && function_exists('gzcompress')) {
+            if(C('data_cache_compress') && function_exists('gzcompress')) {
                 //启用数据压缩
                 $content   =   gzuncompress($content);
             }
@@ -67,7 +67,7 @@ class Sqlite extends Cache {
             $expire  =  $this->options['expire'];
         }
         $expire	=	($expire==0)?0: (time()+$expire) ;//缓存有效期为0表示永久缓存
-        if( C('DATA_CACHE_COMPRESS') && function_exists('gzcompress')) {
+        if( C('data_cache_compress') && function_exists('gzcompress')) {
             //数据压缩
             $value   =   gzcompress($value,3);
         }

@@ -28,7 +28,7 @@ class Manager {
      * @return object
      */
     public function connect($type='',$options=array()) {
-        if(empty($type))  $type = C('DATA_CACHE_TYPE');
+        if(empty($type))  $type = C('data_cache_type');
         $class  =   strpos($type,'\\')? $type : 'Service\\Cache\\Drivers\\'.ucwords(strtolower($type));            
         if(class_exists($class))
             $cache = new $class($options);

@@ -78,7 +78,6 @@ final class TemplateParser{
 		$rd=$this->rightDelim;
 		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
 		// 全局标签的解析
-		stripos($str, $ld . 'action ') !== false && ($str=preg_replace_callback('/' . $ld . 'action\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAction'), $str));
 		stripos($str, $ld . 'import ') !== false && ($str=preg_replace_callback('/' . $ld . 'import\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseImport'), $str));
 		(stripos($str, $ld . 'template ') !== false || stripos($str, $ld . 'include ') !== false) && ($str=preg_replace_callback('/' . $ld . '(?:template|include)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseInclude'), $str));
 		if(stripos($str, $ld . 'st:') !== false){
@@ -132,26 +131,6 @@ final class TemplateParser{
 		
 		$str='<?php defined(\'IN_MYCMS\') or exit(\'No permission resources.\'); ?>' . $str;
 		return $str;
-	}
-
-	/**
-	 * 解析action标签
-	 *
-	 * @param array $matches
-	 * @return string
-	 */
-	public function parseAction($matches){
-		$arrs=$this->parseAttrs($matches[1]);
-		$res='';
-		if(isset($arrs['name'])){
-			$ca=explode(':', $arrs['name'], 2);
-			$a=$ca[0];
-			$c=count($ca) == 1 ? 'ROUTE_C' : '\'' . $ca[1] . '\'';
-			$obj='obj_' . substr(md5($matches[0]), 9, 16);
-			unset($arrs['name']);
-			$res.='<?php $' . $obj . '=Loader::controller(' . $c . ');if($' . $obj . '&&method_exists($' . $obj . ', \'' . $a . '\')){$' . $obj . '->' . $a . '(' . (empty($arrs) ? '' : array2html($arrs)) . ');} ?>';
-		}
-		return $res;
 	}
 
 	/**

@@ -11,9 +11,9 @@ define('IS_RUNTIME', !APP_DEBUG && defined('BIND_MODULE'));
 define('IS_CLI',PHP_SAPI=='cli');
 
 // 定义当前请求的系统常量
-isset($_SERVER['REQUEST_METHOD']) && define('REQUEST_METHOD', $_SERVER['REQUEST_METHOD']);
-defined('REQUEST_METHOD') && define('IS_GET', REQUEST_METHOD == 'GET' ? true : false);
-defined('REQUEST_METHOD') && define('IS_POST', REQUEST_METHOD == 'POST' ? true : false);
+define('REQUEST_METHOD', isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET');
+define('IS_GET', REQUEST_METHOD == 'GET' ? true : false);
+define('IS_POST', REQUEST_METHOD == 'POST' ? true : false);
 
 /* 【定义客户端访问路径】 */
 define('SYSTEM_ENTRY', '/index.php');
@@ -92,7 +92,11 @@ class Loader{
 		}
 		$concrete='App\\'.ucfirst(strtolower($m)).'\\Controller\\'.ucfirst(strtolower($c));
 		$container=Library\Container::getInstance();
-		return $container->make($concrete,$parameters);
+		try{
+			return $container->make($concrete,$parameters);
+		}catch (\Exception $e){
+			return null;
+		}
 	}
 
 	/**

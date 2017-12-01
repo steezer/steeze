@@ -6,6 +6,10 @@ class Controller{
 	protected static $_m=''; //当前被调用的模块
 	protected static $_c=''; //当前被调用的控制器
 	protected static $_a=''; //当前被调用的控制器方法
+	
+	protected function middleware($name,$excepts=[]){
+		Request::setMiddleware($name,$excepts);
+	}
 
 	/**
 	 * 模板显示 调用内置的模板引擎显示方法，

@@ -1,0 +1,16 @@
+<include file="Common/header">
+<div style="text-align:left;padding:30px 40px;">
+	<st:get table="news" return="newses" order="id asc" page="$page">
+		<table cellpadding="0" cellspacing="0">
+			<foreach name="newses" item="item">
+				<tr><td>{$item.id}</td><td>{$item.title}</td></tr>
+			</foreach>
+		</table>
+	</st:get>
+	<p>{$pages}</p>
+	<p>{$user.id}:{$user.username}</p>
+	<st:action name="user.info" user="4"/>
+	<p><a href="{U('/index/index',$_GET)}">{$user.id}:{$user.username}</a></p>
+	
+</div>
+<include file="Common/footer">

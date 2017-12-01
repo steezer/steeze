@@ -1001,6 +1001,22 @@ function resx($file,$type='',$check=false,$default='default'){
 }
 
 /**
+ * 获取渲染后的视图内容
+ * @param string $name 视图名称，可以是直接的文件路径，或者视图路径
+ * @param array $datas 视图变量
+ * @return string 渲染后的视图内容
+ */
+function view($name,$datas=[]){
+	$viewer=new \Library\View();
+	if(is_array($datas)){
+		foreach($datas as $name=> &$value){
+			$viewer->assign($name,$value);
+		}
+	}
+	return $viewer->fetch($name);
+}
+
+/**
  * 获取远程文件
  * 
  * @param string $url 文件地址

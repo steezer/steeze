@@ -69,20 +69,20 @@ class Manager {
             );
         }else {
             $config = array (
-                'type'          =>  C('DB_TYPE'),
-                'username'      =>  C('DB_USER'),
-                'password'      =>  C('DB_PWD'),
-                'hostname'      =>  C('DB_HOST'),
-                'hostport'      =>  C('DB_PORT'),
-                'database'      =>  C('DB_NAME'),
+                'type'          =>  C('db_type'),
+                'username'      =>  C('db_user'),
+                'password'      =>  C('db_pwd'),
+                'hostname'      =>  C('db_host'),
+                'hostport'      =>  C('db_port'),
+                'database'      =>  C('db_name'),
                 'dsn'           =>  C('DB_DSN'),
-                'params'        =>  C('DB_PARAMS'),
-                'charset'       =>  C('DB_CHARSET'),
-                'deploy'        =>  C('DB_DEPLOY_TYPE'),
-                'rw_separate'   =>  C('DB_RW_SEPARATE'),
-                'master_num'    =>  C('DB_MASTER_NUM'),
-                'slave_no'      =>  C('DB_SLAVE_NO'),
-                'debug'         =>  C('DB_DEBUG',null,APP_DEBUG),
+                'params'        =>  C('db_params'),
+                'charset'       =>  C('db_charset'),
+                'deploy'        =>  C('db_deploy_type'),
+                'rw_separate'   =>  C('db_rw_separate'),
+                'master_num'    =>  C('db_master_num'),
+                'slave_no'      =>  C('db_slave_no'),
+                'debug'         =>  C('db_debug',null,APP_DEBUG),
                 'lite'          =>  C('DB_LITE'),
             );
         }

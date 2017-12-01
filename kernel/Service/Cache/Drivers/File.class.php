@@ -16,9 +16,9 @@ class File extends Cache {
         if(!empty($options)) {
             $this->options =  $options;
         }
-        $this->options['temp']      =   !empty($options['temp'])?   $options['temp']    :   C('DATA_CACHE_PATH');
-        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('DATA_CACHE_PREFIX');
-        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('DATA_CACHE_TIME');
+        $this->options['temp']      =   !empty($options['temp'])?   $options['temp']    :   C('data_cache_path');
+        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');
+        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
         $this->options['length']    =   isset($options['length'])?  $options['length']  :   0;
         if(substr($this->options['temp'], -1) != '/')    $this->options['temp'] .= '/';
         $this->init();
@@ -43,11 +43,11 @@ class File extends Cache {
      * @return string
      */
     private function filename($name) {
-        $name	=	md5(C('DATA_CACHE_KEY').$name);
-        if(C('DATA_CACHE_SUBDIR')) {
+        $name	=	md5(C('data_cache_key').$name);
+        if(C('data_cache_subdir')) {
             // 使用子目录
             $dir   ='';
-            for($i=0;$i<C('DATA_PATH_LEVEL');$i++) {
+            for($i=0;$i<C('data_path_level');$i++) {
                 $dir	.=	$name{$i}.'/';
             }
             if(!is_dir($this->options['temp'].$dir)) {
@@ -79,7 +79,7 @@ class File extends Cache {
                 unlink($filename);
                 return false;
             }
-            if(C('DATA_CACHE_CHECK')) {//开启数据校验
+            if(C('data_cache_check')) {//开启数据校验
                 $check  =  substr($content,20, 32);
                 $content   =  substr($content,52, -3);
                 if($check != md5($content)) {//校验错误
@@ -88,7 +88,7 @@ class File extends Cache {
             }else {
             	$content   =  substr($content,20, -3);
             }
-            if(C('DATA_CACHE_COMPRESS') && function_exists('gzcompress')) {
+            if(C('data_cache_compress') && function_exists('gzcompress')) {
                 //启用数据压缩
                 $content   =   gzuncompress($content);
             }
@@ -114,11 +114,11 @@ class File extends Cache {
         }
         $filename   =   $this->filename($name);
         $data   =   serialize($value);
-        if( C('DATA_CACHE_COMPRESS') && function_exists('gzcompress')) {
+        if( C('data_cache_compress') && function_exists('gzcompress')) {
             //数据压缩
             $data   =   gzcompress($data,3);
         }
-        if(C('DATA_CACHE_CHECK')) {//开启数据校验
+        if(C('data_cache_check')) {//开启数据校验
             $check  =  md5($data);
         }else {
             $check  =  '';
