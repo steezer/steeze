@@ -408,8 +408,8 @@ function template($template='index',$dir='',$style='',$module=''){
 	}
 	
 	if($tplExists && (!is_file($compiledtplfile) || (filemtime($templatefile) > filemtime($compiledtplfile)) || (APP_DEBUG && defined('TEMPLATE_REPARSE') && TEMPLATE_REPARSE))){
-		$template_cache=Library\TemplateParser::instance();
-		$template_cache->template_compile($templatefile, $compiledtplfile);
+		$templateService=Service\Template\Manager::instance();
+		$templateService->compile($templatefile, $compiledtplfile);
 	}
 	return $compiledtplfile;
 }
@@ -1390,9 +1390,7 @@ function E($obj, $code=404, $isRender=null){
 	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
 	if(!is_object($obj)){
 		$e=new \Library\Exception($obj, $errorCode);
-	}else if($obj instanceof \Exception){
-		$e=new \Library\Exception($obj->getMessage(), $obj->getCode());
-	}else if($obj instanceof \Library\Exception){
+	}else if(($obj instanceof \Exception) || ($obj instanceof \Library\Exception)){
 		$e=&$obj;
 	}else{
 		$e=new \Library\Exception(L('An unknown error'), $errorCode);
@@ -1409,7 +1407,7 @@ function E($obj, $code=404, $isRender=null){
  * @param string $message 语言键名
  * @return 转换后的语言
  * */
-function L($message){
+function L($message,$datas=[]){
 	static $langs=null;
 	if(is_null($langs)){
 		$langs=[];
@@ -1421,5 +1419,9 @@ function L($message){
 			$langs=array_merge($langs,include(APP_PATH.ROUTE_M.$lang));
 		}
 	}
-	return isset($langs[$message]) ? $langs[$message] : $message;
+	$message=isset($langs[$message]) ? $langs[$message] : $message;
+	foreach((array) $datas as $k=>$v){
+		$message=str_replace('{'.$k.'}', $v, $message);
+	}
+	return $message;
 }

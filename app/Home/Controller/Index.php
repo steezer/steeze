@@ -13,6 +13,7 @@ class Index extends Controller{
 	}
 	
 	public function test2(){
+		
 		var_dump(__FUNCTION__);
 	}
 	

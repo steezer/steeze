@@ -1454,8 +1454,27 @@ class Model implements ArrayAccess{
 			$parse=func_get_args();
 			array_shift($parse);
 		}
-		$sql=$this->parseSql($sql, $parse);
-		return $this->db->query($sql);
+		$sql=$this->parseSql(trim($sql), $parse);
+		$isQuery=stripos($sql, 'select')===0;
+		
+		$options=$this->_parseOptions();
+		// 判断查询缓存
+		if($isQuery && isset($options['cache'])){
+			$cache=$options['cache'];
+			$key=is_string($cache['key']) ? $cache['key'] : md5('query:'.$sql);
+			$data=S($key, '', $cache);
+			if(false !== $data){
+				return $data;
+			}
+		}
+		
+		//查询结果
+		$result=$this->db->query($sql);
+		//设置缓存
+		if(isset($cache)){
+			S($key, $result, $cache);
+		}
+		return $result;
 	}
 
 	/**

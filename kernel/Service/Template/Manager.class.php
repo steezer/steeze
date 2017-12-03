@@ -1,35 +1,33 @@
 <?php
+namespace Service\Template;
+use Library\Container;
 
-namespace Library;
-
-/**
- * 模板解析缓存
- */
-final class TemplateParser{
+// 模版服务
+class Manager {
 	public static $dataTag='__'; // 获取数据变量名称
 	private $leftDelim; // 模版标签左边界字符
 	private $rightDelim;
 	private static $_instance=null;
-
+	
 	// 单例模式
 	public static function instance(){
 		if(is_null(self::$_instance)){
-			self::$_instance=new TemplateParser();
+			self::$_instance=new static();
 		}
 		return self::$_instance;
 	}
-
+	
 	// 模版标签右边界字符
 	public function __construct(){
 		$this->leftDelim=defined('TAGLIB_BEGIN') ? TAGLIB_BEGIN : C('TAGLIB_BEGIN', '<');
 		$this->rightDelim=defined('TAGLIB_END') ? TAGLIB_END : C('TAGLIB_END', '>');
 	}
-
+	
 	public function set_delim($ldelim,$rdelim){
 		$this->leftDelim=$ldelim;
 		$this->rightDelim=$rdelim;
 	}
-
+	
 	/**
 	 * 模版编译
 	 *
@@ -37,21 +35,21 @@ final class TemplateParser{
 	 * @param string $compiledtplfile 编译后文件路径
 	 * @return number 生成的编译文件的字节数
 	 */
-	public function template_compile($tplfile,$compiledtplfile){
+	public function compile($tplfile,$compiledtplfile){
 		if(!is_file($tplfile)){
-			E('templates' . str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile) . ' is not exists!');
+			E(L('template {0} is not exists!',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
 		}
 		$content=file_get_contents($tplfile);
 		$filepath=dirname($compiledtplfile) . DS;
 		if(!is_dir($filepath)){
 			mkdir($filepath, 0777, true);
 		}
-		$content=$this->template_parse($content);
+		$content=$this->parse($content);
 		$strlen=file_put_contents($compiledtplfile, $content);
 		chmod($compiledtplfile, 0777);
 		return $strlen;
 	}
-
+	
 	/**
 	 * 更新模板缓存
 	 *
@@ -59,31 +57,33 @@ final class TemplateParser{
 	 * @param $compiledtplfile 编译完成后，写入文件名
 	 * @return $strlen 长度
 	 */
-	public function template_refresh($tplfile,$compiledtplfile){
+	public function refresh($tplfile,$compiledtplfile){
 		$str=file_get_contents($tplfile);
-		$str=$this->template_parse($str);
+		$str=$this->parse($str);
 		$strlen=file_put_contents($compiledtplfile, $str);
 		chmod($compiledtplfile, 0777);
 		return $strlen;
 	}
-
+	
 	/**
 	 * 解析模板
 	 *
 	 * @param string $str
 	 * @return bool
 	 */
-	public function template_parse($str){
+	public function parse($str){
 		$ld=$this->leftDelim;
 		$rd=$this->rightDelim;
 		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
 		// 全局标签的解析
 		stripos($str, $ld . 'import ') !== false && ($str=preg_replace_callback('/' . $ld . 'import\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseImport'), $str));
 		(stripos($str, $ld . 'template ') !== false || stripos($str, $ld . 'include ') !== false) && ($str=preg_replace_callback('/' . $ld . '(?:template|include)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseInclude'), $str));
-		if(stripos($str, $ld . 'st:') !== false){
-			$str=preg_replace_callback('/' . $ld . 'st:(\w+)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseSt'), $str);
-			$str=preg_replace('/' . $ld . '\/st.*?' . $rd . '/is', '', $str);
-		}
+		stripos($str, $ld . 'action ') !== false && ($str=preg_replace_callback('/' . $ld . 'action\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAction'), $str));
+
+		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+([^'.$ld.$rd.']*)\s*\/' . $rd . '/is', array($this,'parseTagLib'), $str);
+		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/\1:\2' . $rd . '/is', array($this,'parseTagLib'), $str);
+		
+		
 		// PHP标签的解析
 		if(stripos($str, $ld . 'php') !== false){
 			// 单行PHP代码；php标签内不能带有'{'或'}'字符
@@ -120,19 +120,19 @@ final class TemplateParser{
 		
 		// 函数调用解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{:?(([\$@]?[a-zA-Z_][a-zA-Z0-9_:]*)\(([^{}]*)\))}/', array($this,'parseFunc'), $str); // parse function or var function call like {date('Y-m-d',$r['addtime'])}
-		          // 变量输出（支持“.”语法表示数组）
+		// 变量输出（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{(\$?[a-zA-Z_][a-zA-Z0-9_\.]*)(\|[^{}]+)?}/', array($this,'parseVar'), $str); // parse pure var like {$a_b|md5}
-		          // 数组变量常规输出
+		// 数组变量常规输出
 		$str=preg_replace_callback('/{(\$[a-zA-Z0-9_\[\]\'\"\$]+)(\|[^{}]+)?}/s', array($this,'parseArray'), $str); // parse var array var like {$r['add']|md5}
-		          // 表达式解析（支持“.”语法表示数组）
+		// 表达式解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{\((.+?)\)}/s', array($this,'parseExpression'), $str); // parse expression like "{(a=10?1:0)}"
-		          // 解析表达式转义字符
+		// 解析表达式转义字符
 		$str=str_replace(array('\\{','\\}'), array('{','}'), $str);
 		
 		$str='<?php defined(\'INI_STEEZE\') or exit(\'No permission resources.\'); ?>' . $str;
 		return $str;
 	}
-
+	
 	/**
 	 * 解析import标签
 	 *
@@ -177,7 +177,7 @@ final class TemplateParser{
 		}
 		return rtrim($res);
 	}
-
+	
 	/**
 	 * 解析include或template标签 用法：模块@主题风格/控制器/方法 例如：home@default/index/show
 	 *
@@ -233,7 +233,26 @@ final class TemplateParser{
 		$res.=' ?>';
 		return $res;
 	}
-
+	
+	/**
+	 * 解析action标签
+	 * 
+	 */
+	public function parseAction($matches){
+		$datas=$this->parseAttrs($matches[1]); // 获取属性
+		$str='unset($' . self::$dataTag . ');';
+		$return=str_replace('$', '', (isset($datas['return']) && trim($datas['return']) ? trim($datas['return']) : 'data'));
+		if(isset($datas['name'])){
+			$mcas=explode('.', $datas['name'],3);
+			$action=array_pop($mcas);
+			empty($mcas) && array_push($mcas, ROUTE_C);
+			unset($datas['name']);
+			$str.='$' . $return . ' = \Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
+		}
+		self::$dataTag=$return;
+		return '<?php ' . $str . ' ?>';
+	}
+	
 	/**
 	 * 解析if标签
 	 *
@@ -246,7 +265,7 @@ final class TemplateParser{
 		$condition=$this->changeDotArray($condition);
 		return '<?php if(' . $condition . ') { ?>';
 	}
-
+	
 	/**
 	 * 解析elseif标签
 	 *
@@ -259,7 +278,7 @@ final class TemplateParser{
 		$condition=$this->changeDotArray($condition);
 		return '<?php }elseif(' . $condition . ') { ?>';
 	}
-
+	
 	/**
 	 * 解析foreach标签
 	 *
@@ -288,7 +307,7 @@ final class TemplateParser{
 			return '<?php ' . $order . '=0;if(is_array(' . $arrs['name'] . ')) foreach(' . $arrs['name'] . ' as ' . (isset($arrs['key']) ? $arrs['key'] . '=>' . $arrs['item'] : $arrs['item']) . ') { ' . $order . '++;?>';
 		}
 	}
-
+	
 	/**
 	 * 解析数组
 	 *
@@ -302,7 +321,7 @@ final class TemplateParser{
 		}
 		return '<?php echo ' . $var_str . ';?>';
 	}
-
+	
 	/**
 	 * 解析函数 支持以“.”分割的数组表示方式
 	 *
@@ -312,7 +331,7 @@ final class TemplateParser{
 	public function parseFunc($matches){
 		return '<?php echo ' . $this->changeDotArray($matches[1]) . ';?>';
 	}
-
+	
 	/**
 	 * 解析数组变量，包括“.”操作符号的数组变量
 	 *
@@ -326,7 +345,7 @@ final class TemplateParser{
 		}
 		return '<?php echo ' . $var_str . ';?>';
 	}
-
+	
 	/**
 	 * 解析表达式 支持以“.”分割的数组表示方式
 	 *
@@ -342,101 +361,44 @@ final class TemplateParser{
 	 *
 	 * @param string $op 操作方式
 	 * @param string $datas 参数
-	 * @param string $html 匹配到的所有的HTML代码
 	 */
-	public function parseSt($matches){
-		$op=$matches[1]; // 获取操作方式
-		$datas=$this->parseAttrs($matches[2]); // 获取属性
-		$html=$matches[0]; // 匹配到的所有HTML代码
-		$tag_id=md5(stripslashes($html));
-		$tools=array('action','json','get');
+	public function parseTagLib($matches){
+		static $tagCaches=[];
+		$tag=ucfirst(strtolower($matches[1]));
+		$method='parse'.ucfirst(strtolower($matches[2]));
+		$container=Container::getInstance();
 		
-		isset($datas['where']) && ($datas['where']=$this->operator($datas['where']));
-		
-		$str='unset($' . self::$dataTag . ');';
-		$num=isset($datas['num']) && intval($datas['num']) ? intval($datas['num']) : 20;
-		$cache=isset($datas['cache']) && intval($datas['cache']) ? intval($datas['cache']) : 0;
-		$return=str_replace('$', '', (isset($datas['return']) && trim($datas['return']) ? trim($datas['return']) : 'data'));
-		
-		if(in_array($op, $tools)){
-			switch($op){
-				case 'action': 
-					/* 调用控制器的以“_”开头的方法
-					 * name属性为可以为“方法名”、“控制器名.方法名”或“模块名.控制器名.方法名”
-					 */
-					if(isset($datas['name'])){
-						$mcas=explode('.', $datas['name'],3);
-						$action=array_pop($mcas);
-						empty($mcas) && array_push($mcas, ROUTE_C);
-						unset($datas['name']);
-						$str.='$' . $return . ' = \Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
-					}
-					break;
-				case 'json': 
-					/* 获取json数据
-					 * url参数为获取json数据的地址
-					 * */
-					if(isset($datas['url']) && !empty($datas['url'])){
-						$str.='$json = get_remote_file(\'' . $datas['url'] . '\');';
-						$str.='$' . $return . ' = json_decode($json, true);';
-					}
-					break;
-				case 'get': 
-					$qtype=isset($datas['sql']) ? 1 : (isset($datas['table']) ? -1 : 0);
-					if($qtype){
-						// 设置是否解析查询中变量，默认解析
-						$isParse=isset($datas['parse']) ? intval($datas['parse']) : 1;
-						// 根据是否解析字符串变量从而过滤字符
-						$modifyArr=$qtype < 0 ? array('table','dbsource','field','where','order','group') : array('sql','dbsource');
-						foreach($modifyArr as $para){
-							if(isset($datas[$para])){
-								$tmpstr=($isParse ? str_replace('"', '\\"', $datas[$para]) : str_replace('\'', '\\\'', $datas[$para]));
-								$datas[$para]=($isParse ? '"' . $tmpstr . '"' : '\'' . $tmpstr . '\'');
-							}else{
-								$datas[$para]=($para == 'field' ? '\'*\'' : '');
-							}
-						}
-						unset($modifyArr);
-						$limit=isset($datas['limit']) ? 
-									trim(preg_replace('/[^\d,]/i', '', $datas['limit']), ',') : 
-									(isset($datas['start']) && intval($datas['start']) ? (intval($datas['start']) . ',' . $num) : $num);
-						$str.='$__dbObj=M();';
-						if(isset($datas['page'])){
-							$str.='$__pagesize = ' . $num . ';';
-							$str.='$__pagetype = \'' . (isset($datas['pagetype']) && !empty($datas['pagetype']) ? $datas['pagetype'] : 'page') . '\';';
-							$str.='$__page = max(intval(isset(' . $datas['page'] . ')?' . $datas['page'] . ':$_GET[$__pagetype]),1);';
-							$str.='$__offset = ($__page - 1) * $__pagesize;'; //
-							$str.='$__setpages = ' . (isset($datas['setpages']) && !empty($datas['setpages']) ? $datas['setpages'] : 8) . ';';
-							$limit='$__offset,$__pagesize';
-							if($qtype > 0){
-								$sql=preg_replace('/^(\'|")select([^(?:from)].*?)from/i', '${1}SELECT COUNT(*) as cntnum FROM ', trim($datas['sql']));
-								$str.='$r = $__dbObj->query(' . $sql . ');$count = $r[0][\'cntnum\'];unset($r);';
-							}else{
-								$str.='$count = $__dbObj->table('.$datas['table'].')'.($datas['where'] ? '->where('.$datas['where'].')': '').'->count();';
-							}
-							$str.='$pages=get_pager(array(' . (isset($datas['pagefunc']) ? '\'pFunc\'=> \'' . addslashes(stripcslashes($datas['pagefunc'])) . '\',' : '') . '\'total\'=> $count,\'cPage\'=> $__page,\'type\'=> $__pagetype,\'size\'=> $__pagesize),$__setpages);';
-						}
-
-						$qAction='';
-						if($qtype > 0){
-							$qAction='query(' . $this->operator($datas['sql']) . '." ' . $limit . '",false);';
-						}else{
-							$qAction='table('.$datas['table'].')->field('.$datas['field'].')'
-									. ($datas['where'] ? '->where('.$datas['where'].')' : '')
-									. ($datas['order'] ? '->order('.$datas['order'].')' : '')
-									. ($limit ? '->limit('.$limit.')' : '')
-									. ($datas['group'] ? '->group('.$datas['group'].')' : '')
-									.'->select();';
-						}
-						$str.='$' . $return . ' = $__dbObj->' . $qAction;
-					}
-					break;
+		if(!isset($tagCaches[$tag])){
+			//先尝试从应用查找标签类
+			if(defined('ROUTE_M')){
+				try{
+					$tagCaches[$tag]=$container->make('\\App\\'.ROUTE_M.'\\Taglib\\'.$tag);
+				}catch (\Exception $e){}
+			}
+			
+			//再从系统中查找标签类
+			if(!isset($tagCaches[$tag])){
+				try{
+					$tagCaches[$tag]=$container->make('\\Service\\Template\\Taglib\\'.$tag);
+				}catch (\Exception $e){
+					$tagCaches[$tag]=false;
+				}
 			}
 		}
-		self::$dataTag=$return;
-		return '<?php ' . $str . ' ?>';
+		
+		if(
+			isset($tagCaches[$tag]) && is_object($tagCaches[$tag]) && 
+			is_callable(array($tagCaches[$tag], $method))
+		){
+			return $container->callMethod($tagCaches[$tag], $method,[
+						'attrs'=>$this->parseAttrs($matches[3]),
+						'html'=>(isset($matches[4]) ? $matches[4] : ''),
+					]);
+		}else{
+			return $matches[0];
+		}
 	}
-
+	
 	// //////////////////部分工具函数//////////////////
 	
 	/**
@@ -459,7 +421,7 @@ final class TemplateParser{
 		}
 		return $var_str;
 	}
-
+	
 	/**
 	 * 解析使用点号分割的数组表示字符串
 	 *
@@ -475,7 +437,7 @@ final class TemplateParser{
 		}
 		return $var_str;
 	}
-
+	
 	/**
 	 * 解析多级函数调用的字符串表示形式， 例如：将{$addtime|date='Y-m-d','###'|md5}解析为<?php echo md5(date('Y-m-d',$addtime));?>
 	 *
@@ -501,7 +463,7 @@ final class TemplateParser{
 		}
 		return $var_str;
 	}
-
+	
 	/**
 	 * 从字符串中提取属性，并将所有的属性名称转化为小写
 	 *
@@ -534,7 +496,7 @@ final class TemplateParser{
 		}
 		return array_combine($matches[0], $matches[1]);
 	}
-
+	
 	/**
 	 * 扩展替换函数，支持数组递归替换
 	 *
@@ -553,7 +515,7 @@ final class TemplateParser{
 		}
 		return $str;
 	}
-
+	
 	/**
 	 * 替换SQL字符串条件语句中的比较操作符
 	 *
