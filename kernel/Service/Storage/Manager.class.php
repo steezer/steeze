@@ -9,7 +9,7 @@ class Manager {
      * @var string
      * @access protected
      */
-    static protected $handler;
+    static protected $handler=null;
 
     /**
      * 连接分布式文件系统
@@ -19,8 +19,10 @@ class Manager {
      * @return void
      */
     static public function connect($type='File',$options=array()) {
-        $class  =   'Service\\Storage\\Drivers\\'.ucwords($type);
-        self::$handler = new $class($options);
+    		if(is_null(self::$handler)){
+	        $class = 'Service\\Storage\\Drivers\\'.ucwords($type);
+	        self::$handler = new $class($options);
+    		}
     }
 
     static public function __callstatic($method,$args){

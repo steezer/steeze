@@ -3,9 +3,9 @@ namespace Library;
 class View{
 	protected $tVar=array(); //模板输出变量
 	protected $theme=''; //模板主题
-	protected static $_m=ROUTE_M; //默认模块
-	protected static $_c=ROUTE_C; //默认控制器
-	protected static $_a=ROUTE_A; //默认方法
+	protected static $_m=''; //默认模块
+	protected static $_c=''; //默认控制器
+	protected static $_a=''; //默认方法
 	
 	/**
 	 * 设置默认的模块、控制器和方法
@@ -81,15 +81,15 @@ class View{
 			unset($res);
 			// 模板文件不存在直接返回
 			if(!is_file($templateFile)){
-				return '';
+				return null;
 			}
 		}
 		// 页面缓存
 		ob_start();
 		ob_implicit_flush(0);
 		$_content=$content;
-		// 模板阵列变量分解成为独立变量
-		extract($this->tVar, EXTR_OVERWRITE);
+		// 模板阵列变量分解成为独立变量，如果为数字索引，则加前缀“_”
+		extract($this->tVar, EXTR_OVERWRITE|EXTR_PREFIX_INVALID,'_');
 		// 直接载入PHP模板
 		empty($_content) ? include $templateFile : eval('?>' . $_content);
 		// 获取并清空缓存
@@ -109,12 +109,13 @@ class View{
 		if(is_file($template)){
 			return $template;
 		}
-		$a=ltrim(self::$_a,'_');
-		$c=self::$_c;
+		$a=ltrim(empty(self::$_a) && defined('ROUTE_A') ? ROUTE_A : self::$_a,'_');
+		$c=empty(self::$_c) && defined('ROUTE_C') ? ROUTE_C : self::$_c;
+		$m=(empty(self::$_m) && defined('ROUTE_M') ? ROUTE_M : self::$_m);
 		$depr='/';
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
 		// 获取当前模块 home@aa/bb/cc
-		$m=($pos=strpos($template, '@')) ? substr($template, 0, $pos) : self::$_m;
+		$m=($pos=strpos($template, '@')) ? substr($template, 0, $pos) : $m;
 		if($pos){
 			$template=substr($template, $pos + 1);
 		}

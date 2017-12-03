@@ -166,6 +166,6 @@ class Pipeline{
 	protected function handleException(\Exception $e,...$passables){
 		$handler=new Exception();
 		$handler->report($e);
-		return $handler->render($e,...$passables);
+		return $handler->render($e,$passables);
 	}
 }

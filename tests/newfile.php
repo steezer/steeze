@@ -1,7 +1,8 @@
 <?php
-function test(...$args)
-{
-	print_r($args);
-}
-test();
-test(1,2,3);
+
+$arr=array(
+	'Helo sfdf'=>'你好吗',
+	'helo sfdf !'=>'你好吗',
+);
+
+var_dump($arr,isset($arr['Helo sfdf']));

@@ -15,7 +15,7 @@ class Request{
 		}
 		
 		//session_id设置，防止客户端不支持cookie设定
-		if($sessionid=self::getInput('PHPSESSID')){
+		if($sessionid=I('PHPSESSID')){
 			session_id($sessionid);
 		}
 		
@@ -52,28 +52,36 @@ class Request{
 	 * 检查路由参数是否匹配
 	 */
 	private function bind(){
-		$urls=explode('?',(!IS_CLI ? $_SERVER['REQUEST_URI']:(isset($GLOBALS['argv'][1])?$GLOBALS['argv'][1]:'')),2);
-		$url=trim(array_shift($urls),'/');
+		$urls=explode('?',(PHP_SAPI!='cli' ? $_SERVER['REQUEST_URI'] : (isset($GLOBALS['argv'][1])&&!empty($GLOBALS['argv'][1]) ? $GLOBALS['argv'][1]:'/')),2);
+		$url=array_shift($urls);
+		if(stripos($url, SYSTEM_ENTRY)===0){
+			//将"/index.php/user/list"格式地址处理为"/user/list"
+			$url=substr($url, strlen(SYSTEM_ENTRY));
+		}
+		//规范url地址必须以"/"开头，以非"/"结尾
+		$url='/'.trim($url,'/');
+		
 		//使用路径参数匹配
-		if(!empty($url)){
-			$handle=$this->matchHandle($url);
-			if(!is_null($handle)){
-				if(is_string($handle)){
-					$results=explode('@', $handle);
-					$mcs=explode('/', array_shift($results));
-					define('ROUTE_A',$results[0]);
+		$handle=$this->matchHandle($url);
+		if(is_null($handle) || is_string($handle)){
+			if(is_string($handle)){
+				$results=explode('@', $handle);
+				define('ROUTE_A',array_pop($results));
+				if(!empty($results)){
+					$mcs=explode('/', array_pop($results));
 					define('ROUTE_C',ucfirst(array_pop($mcs)));
 					!empty($mcs) && define('ROUTE_M',ucfirst(strtolower(array_pop($mcs))));
-				}else if(is_callable($handle)){
-					$this->setDisposer($handle);
 				}
 			}
+			//设置默认路由常量，同时使用传统路由方式匹配模式
+			!defined('ROUTE_M') && define('ROUTE_M', defined('BIND_MODULE') ? BIND_MODULE : ucfirst(strtolower(I('m','Home'))));
+			if($url==ROOT_URL || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
+				!defined('ROUTE_C') && define('ROUTE_C', defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
+				!defined('ROUTE_A') && define('ROUTE_A', defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
+			}
+		}else if(is_callable($handle)){
+			$this->setDisposer($handle);
 		}
-		
-		//设置默认路由常量，同时使用传统路由方式匹配模式
-		!defined('ROUTE_M') && define('ROUTE_M', defined('BIND_MODULE') ? BIND_MODULE : ucfirst(strtolower($this->getInput('m','Home'))));
-		!defined('ROUTE_C') && define('ROUTE_C', defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst($this->getInput('c', C('default_c'))));
-		!defined('ROUTE_A') && define('ROUTE_A', defined('BIND_ACTION') ? BIND_ACTION : $this->getInput('a', C('default_a')));
 	}
 
 	/*
@@ -88,7 +96,7 @@ class Request{
 			if(is_array($value)){
 				foreach($value as $k=> $v){
 					if(!is_null($result=$this->getHandle($url,$k,$v))){
-						self::setMiddleware($key);
+						self::setMiddleware(explode('&', $key));
 						return $result;
 					}
 				}
@@ -107,7 +115,16 @@ class Request{
 	 * @return string|null
 	 */
 	private function getHandle($url,$route,$handle){
-		$route=trim($route,'/');
+		$route='/'.trim($route,'/');
+		$middlewares=[];
+		if(is_string($handle)){
+			$handles=explode('>', $handle,2);
+			$handle=trim(array_pop($handles));
+			if(!empty($handles)){
+				$middlewares=array_merge($middlewares,explode('&', array_pop($handles)));
+			}
+		}
+		
 		if(substr_count($route, '/')==substr_count($url, '/')){
 			$routes=explode(':', $route, 2);
 			$route=trim(array_pop($routes));
@@ -116,6 +133,7 @@ class Request{
 				return null;
 			}
 			if(!strcasecmp($route, $url)){
+				$this->setMiddleware($middlewares);
 				//如果url完全匹配（不区分大小写），直接返回
 				return $handle;
 			}else{
@@ -150,6 +168,7 @@ class Request{
 					$mCount--;
 				}
 				if(!$mCount){
+					$this->setMiddleware($middlewares);
 					return $handle;
 				}
 			}
@@ -163,12 +182,19 @@ class Request{
 	 * @param array|string $excepts 排除的方法名称
 	 */
 	public static function setMiddleware($name,$excepts=[]){
-		$middlewares=C('middleware.*',[]);
-		if(isset($middlewares[$name])){
-			if(!isset(self::$middlewares[$name])){
-				self::$middlewares[$name]=(array)$excepts;
-			}else{
-				self::$middlewares[$name]=array_unique(array_merge(self::$middlewares[$name],(array)$excepts));
+		if(is_array($name)){
+			foreach($name as $n){
+				self::setMiddleware($n,$excepts);
+			}
+		}else{
+			$name=trim($name);
+			$middlewares=C('middleware.*',[]);
+			if(isset($middlewares[$name])){
+				if(!isset(self::$middlewares[$name])){
+					self::$middlewares[$name]=(array)$excepts;
+				}else{
+					self::$middlewares[$name]=array_unique(array_merge(self::$middlewares[$name],(array)$excepts));
+				}
 			}
 		}
 	}
@@ -194,25 +220,4 @@ class Request{
 		return $classes;
 	}
 	
-	/*
-	 *  获取输入参数，非空值，依次为GET、POST
-	 *  @param string $name 参数名称
-	 *  @param mixed $default 默认值
-	 *  @handle string|\Closure 处理函数
-	 *  @return mixed
-	 * */
-	public static function getInput($name,$default='',$handle=null){
-		$value=isset($_GET[$name]) ? $_GET[$name] : (isset($_POST[$name]) ? $_POST[$name] : $default);
-		return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ?
-					$handle($value) : $value;
-	}
-	
-	/*
-	 * 检查参数是否存在
-	 * @param string $name 参数名称
-	 * @return mixed
-	 */
-	public static function checkInput($name){
-		return isset($_GET[$name]) || isset($_POST[$name]);
-	}
 }

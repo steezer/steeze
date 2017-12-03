@@ -22,7 +22,7 @@ h1{ font-size: 32px; line-height: 48px; }
 <body>
 <div class="error">
 <p class="face">:(</p>
-<h1><?php echo strip_tags($e->getMessage());?></h1>
+<h1><?php echo strip_tags($e->getMessage());?> <?php echo strip_tags($e->getCode());?></h1>
 <div class="content">
 <?php if(null!==$e->getFile()) {?>
 	<div class="info">

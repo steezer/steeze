@@ -5,7 +5,7 @@
 // ////////////////////////////////////
 
 /**
- * 日志记录
+ * 快速日志记录
  *
  * @param unknown $content
  * @param string $file
@@ -30,7 +30,7 @@ function fastlog($content,$isAppend=true,$file='system.log'){
  * @param boolean $record 是否记录日志
  * @return void|array
  */
-function trace($value='[think]',$label='',$level='DEBUG',$record=false) {
+function trace($value='[steeze]',$label='',$level='DEBUG',$record=false) {
 	
 }
 
@@ -52,12 +52,6 @@ function dump($var,$isReturn=false){
 	}else{
 		return $return;
 	}
-}
-
-/**
- * 系统错误处理函数
- */
-function my_error_handler(){
 }
 
 /**
@@ -1009,8 +1003,8 @@ function resx($file,$type='',$check=false,$default='default'){
 function view($name,$datas=[]){
 	$viewer=new \Library\View();
 	if(is_array($datas)){
-		foreach($datas as $name=> &$value){
-			$viewer->assign($name,$value);
+		foreach($datas as $key=> &$value){
+			$viewer->assign($key,$value);
 		}
 	}
 	return $viewer->fetch($name);
@@ -1171,6 +1165,10 @@ function F($name,$value='',$path=null){
 		$path=CACHE_PATH . 'Data' . DS;
 	}
 	$filename=$path . $name . '.php';
+	
+	//初始化存储服务
+	Service\Storage\Manager::connect(STORAGE_TYPE);
+	
 	if('' !== $value){
 		if(is_null($value)){
 			// 删除缓存
@@ -1368,16 +1366,60 @@ function C($key='',$default=''){
 	return null;
 }
 
-function E($obj, $code=0){
+/*
+ *  获取输入参数，非空值，依次为GET、POST
+ *  @param string $name 参数名称
+ *  @param mixed $default 默认值
+ *  @handle string|\Closure 处理函数
+ *  @return mixed
+ */
+function I($name,$default='',$handle=null){
+	$value=isset($_GET[$name]) ? $_GET[$name] : (isset($_POST[$name]) ? $_POST[$name] : $default);
+	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ?
+				$handle($value) : $value;
+}
+
+/*
+ *  生成错误异常
+ *  @param mixed $name 参数名称
+ *  @param int|array $code 错误码，也可以传入一个包括code键的数组
+ *  @param null|bool $isRender 是否进行渲染，为默认值null抛出错误，为true返回渲染后的错误，false直接输出
+ *  @return mixed
+ */
+function E($obj, $code=404, $isRender=null){
+	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
 	if(!is_object($obj)){
-		throw new \Library\Exception($obj, $code);
+		$e=new \Library\Exception($obj, $errorCode);
 	}else if($obj instanceof \Exception){
-		throw new \Library\Exception($obj->getMessage(), $obj->getCode());
+		$e=new \Library\Exception($obj->getMessage(), $obj->getCode());
 	}else if($obj instanceof \Library\Exception){
-		throw $obj;
+		$e=&$obj;
+	}else{
+		$e=new \Library\Exception(L('An unknown error'), $errorCode);
+	}
+	if(is_null($isRender)){
+		throw $e;
+	}else{
+		return \Library\Exception::render($e,(array)$code,$isRender);
 	}
 }
 
+/*
+ * 语言转化
+ * @param string $message 语言键名
+ * @return 转换后的语言
+ * */
 function L($message){
-	return $message;
+	static $langs=null;
+	if(is_null($langs)){
+		$langs=[];
+		$lang=DS.'Lang'.DS.C('lang','zh-cn').'.php';
+		if(is_file(KERNEL_PATH.$lang)){
+			$langs=array_merge($langs,include(KERNEL_PATH.$lang));
+		}
+		if(defined('ROUTE_M') && is_file(APP_PATH.ROUTE_M.$lang)){
+			$langs=array_merge($langs,include(APP_PATH.ROUTE_M.$lang));
+		}
+	}
+	return isset($langs[$message]) ? $langs[$message] : $message;
 }
