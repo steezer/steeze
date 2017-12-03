@@ -12,7 +12,7 @@ class User extends Controller{
 	
 	
 	public function _info(Model $user){
-		$this->assign('user',$user);
+		$this->assign('info',$user);
 		$this->display();
 	}
 }

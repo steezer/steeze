@@ -137,6 +137,7 @@ class Container{
 					$depObject=$this->resolveClass($dependency);
 					//如果实现了模型类（或者是模型类的子类）
 					if($depObject instanceof Model){
+						//@!模型不缓存
 						$this->forgetInstance($depClass->name);
 						$pk=$depObject->getPk();
 						if(is_subclass_of($depObject,Model::class)){
@@ -144,6 +145,7 @@ class Container{
 							$depObject->getTableName(false)==$name && 
 								$depObject->where($pk.'='.$depDefault)->find();
 						}else{
+							
 							//则根据路由变量名称为表名，查找ID主键为路由参数值的记录，
 							$depObject->table($name)->where($pk.'='.$depDefault)->find();
 						}
@@ -154,7 +156,17 @@ class Container{
 				}
 				continue;
 			}
-			$results[]=!is_null($depClass) ? $this->resolveClass($dependency) : $this->resolvePrimitive($dependency);
+			
+			if(!is_null($depClass)){
+				$depObject=$this->resolveClass($dependency);
+				if($depObject instanceof Model){
+					//@!模型不缓存
+					$this->forgetInstance($depClass->name);
+				}
+			}else{
+				$depObject=$this->resolvePrimitive($dependency);
+			}
+			$results[]=$depObject;
 		}
 
 		return $results;
