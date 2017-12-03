@@ -105,7 +105,7 @@ class Controller{
 	 * @return void
 	 */
 	protected function error($message='',$jumpUrl='',$ajax=false){
-		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
+		$this->dispatchJump($message, 1, $jumpUrl, $ajax);
 	}
 
 	/**
@@ -118,7 +118,7 @@ class Controller{
 	 * @return void
 	 */
 	protected function success($message='',$jumpUrl='',$ajax=false){
-		$this->dispatchJump($message, 1, $jumpUrl, $ajax);
+		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
 	}
 
 	/**
@@ -135,7 +135,7 @@ class Controller{
 			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
 		}
 		if(is_null($json_option)){
-			$json_option=defined('JSON_UNESCAPED_UNICODE')?JSON_UNESCAPED_UNICODE:0;
+			$json_option=defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0;
 		}
 		switch(strtoupper($type)){
 			case 'JSON':
@@ -180,27 +180,27 @@ class Controller{
 	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
 	 *
 	 * @param string $message 提示信息
-	 * @param Boolean $status 状态
+	 * @param Boolean $code 状态
 	 * @param string $jumpUrl 页面跳转地址
 	 * @param mixed $ajax 是否为Ajax方式 当数字时指定跳转时间
 	 * @access private
 	 * @return void
 	 */
-	private function dispatchJump($message,$status=1,$jumpUrl='',$ajax=false){
+	private function dispatchJump($message,$code=0,$jumpUrl='',$ajax=false){
 		if(true === $ajax || IS_AJAX){ // AJAX提交
 			$data=is_array($ajax) ? $ajax : array();
-			$data['info']=$message;
-			$data['status']=$status;
+			$data['message']=$message;
+			$data['code']=$code;
 			$data['url']=$jumpUrl;
 			$this->ajaxReturn($data);
 		}
 		is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
 		!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
-		$this->assign('msgTitle', $status ? '操作成功！' : '操作失败！');
+		$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
 		$this->get('closeWin') && $this->assign('jumpUrl', 'close');
-		$this->assign('status', $status); // 状态
+		$this->assign('code', $code); // 状态
 		$this->assign('message', $message); // 提示信息
-		if($status){
+		if($code){
 			!isset($this->waitSecond) && $this->assign('waitSecond', 1000);
 			!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
 			$this->display(C('TMPL_ACTION_SUCCESS', '/message'));

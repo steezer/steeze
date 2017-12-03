@@ -24,8 +24,16 @@ class Exception extends \Exception {
 	 * @return string|void
 	 */
 	static public function render(\Exception $e,array $params=[],$isReturn=false){
-		//获取路由参数
-		if(is_file($tpl=C('tmpl_exception_tpl'))){
+		if(defined('IS_AJAX') && IS_AJAX){
+			$data=json_encode([
+						'code'=>$e->getCode(),
+						'message'=>$e->getMessage()
+					],JSON_UNESCAPED_UNICODE);
+			if($isReturn){
+				return $data;
+			}
+			echo $data;
+		}else if(is_file($tpl=C('tmpl_exception_tpl'))){
 			//直接访问模版
 			$viewer=new View();
 			$viewer->assign($params);

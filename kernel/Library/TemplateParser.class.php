@@ -129,7 +129,7 @@ final class TemplateParser{
 		          // 解析表达式转义字符
 		$str=str_replace(array('\\{','\\}'), array('{','}'), $str);
 		
-		$str='<?php defined(\'IN_MYCMS\') or exit(\'No permission resources.\'); ?>' . $str;
+		$str='<?php defined(\'INI_STEEZE\') or exit(\'No permission resources.\'); ?>' . $str;
 		return $str;
 	}
 

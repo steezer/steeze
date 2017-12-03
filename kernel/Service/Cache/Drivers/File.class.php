@@ -47,7 +47,7 @@ class File extends Cache {
         if(C('data_cache_subdir')) {
             // 使用子目录
             $dir   ='';
-            for($i=0;$i<C('data_path_level');$i++) {
+            for($i=0;$i<C('data_path_level',1);$i++) {
                 $dir	.=	$name{$i}.'/';
             }
             if(!is_dir($this->options['temp'].$dir)) {

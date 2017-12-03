@@ -5,13 +5,11 @@ use Loader;
 class Application{
 
 	public function __construct(){
-		// 系统配置
-		$this->setConfig();
-		
 		//路由绑定
-		$request=new Request();
-
-		// 运行应用
+		$request=new Request(); 
+		//系统配置
+		$this->setConfig(); 
+		//运行应用
 		$this->run($request);
 	}
 
@@ -79,7 +77,7 @@ class Application{
 		function_exists('date_default_timezone_set') && date_default_timezone_set(C('timezone'));
 		
 		// 定义是否为ajax请求
-		!defined('IS_AJAX') && define('IS_AJAX', ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || I(env('VAR_AJAX_SUBMIT', 'ajax'))) ? true : false);
+		!defined('IS_AJAX') && define('IS_AJAX', ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || I(C('VAR_AJAX_SUBMIT', 'ajax'))) ? true : false);
 	}
 	
 }

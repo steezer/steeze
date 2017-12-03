@@ -58,12 +58,12 @@ return [
 	'data_cache_compress'   =>  false,   // 数据缓存是否压缩缓存
 	'data_cache_check'      =>  false,   // 数据缓存是否校验缓存
 	'data_cache_prefix'     =>  '',     // 缓存前缀
-	'data_cache_type'       =>  'Redis',  // 数据缓存类型,支持:File|Memcache|Sqlite|Redis
+	'data_cache_type'       =>  env('data_cache_type','Redis'),  // 数据缓存类型,支持:File|Memcache|Sqlite|Redis
 	'data_cache_path'       =>  CACHE_PATH.'temp'.DS,// 缓存路径设置 (仅对File方式缓存有效)
 	'data_cache_key'        =>  '',	// 缓存文件KEY (仅对File方式缓存有效)
 	'data_cache_subdir'     =>  false,    // 使用子目录缓存 (自动根据缓存标识的哈希创建子目录)
 	'data_path_level'       =>  1,        // 子目录缓存级别
 
 	// 安全配置
-	'auth_key' => 'b7fa4c8fdeb29b39',  // 加密密钥
+	'auth_key' => env('auth_key','b7fa4c8fdeb29b39'),  // 加密密钥
 ];
