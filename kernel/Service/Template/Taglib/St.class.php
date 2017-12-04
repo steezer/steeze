@@ -1,28 +1,33 @@
 <?php
 namespace Service\Template\Taglib;
+use Service\Template\Manager as TagBase;
 
+/**
+ * 【标签开发说明】
+ * 标签分为系统标签类和应用标签类，系统标签由系统预定义，应用标签定义在应用里面；
+ * 当在模版中使用标签时，系统自动加载标签，当应用标签和系统标签冲突时，优先调用应用标签；
+ * 系统标签位于KERNEL_PATH/Service/Template/Taglib/，自定义标签位于APP_PATH/ROUTE_M/Taglib/
+ */
 class St{
-	public static $dataTag='__'; // 获取数据变量名称
 	
 	public function parseJson($attrs,$html=''){
-		$str='unset($' . self::$dataTag . ');';
+		$str='';
 		$return=str_replace('$', '', (isset($attrs['return']) && trim($attrs['return']) ? trim($attrs['return']) : 'data'));
 		if(isset($attrs['url']) && !empty($attrs['url'])){
 			$str.='$json = get_remote_file(\'' . $attrs['url'] . '\');';
 			$str.='$' . $return . ' = json_decode($json, true);';
 		}
-		self::$dataTag=$return;
-		return '<?php ' . $str . ' ?>'.$html;
+		return (!empty($str) ? '<?php ' . $str . ' ?>' : '') . $html;
 	}
 	
 	public function parseGet($attrs,$html=''){
-		isset($attrs['where']) && ($attrs['where']=$this->operator($attrs['where']));
-		$str='unset($' . self::$dataTag . ');';
+		isset($attrs['where']) && ($attrs['where']=TagBase::operator($attrs['where']));
 		$num=isset($attrs['num']) && intval($attrs['num']) ? intval($attrs['num']) : 20;
 		$return=str_replace('$', '', (isset($attrs['return']) && trim($attrs['return']) ? trim($attrs['return']) : 'data'));
 		
 		$qtype=isset($attrs['sql']) ? 1 : (isset($attrs['table']) ? -1 : 0);
 		$cache=isset($attrs['cache']) && intval($attrs['cache']) ? intval($attrs['cache']) : 'false';
+		$str='';
 		if($qtype){
 			// 设置是否解析查询中变量，默认解析
 			$isParse=isset($attrs['parse']) ? intval($attrs['parse']) : 1;
@@ -46,7 +51,7 @@ class St{
 				$str.='$__pagetype = \'' . (isset($attrs['pagetype']) && !empty($attrs['pagetype']) ? $attrs['pagetype'] : 'page') . '\';';
 				$str.='$__page = max(intval(isset(' . $attrs['page'] . ')?' . $attrs['page'] . ':$_GET[$__pagetype]),1);';
 				$str.='$__offset = ($__page - 1) * $__pagesize;'; //
-				$str.='$__setpages = ' . (isset($attrs['setpages']) && !empty($attrs['setpages']) ? $attrs['setpages'] : 8) . ';';
+				$str.='$__setpages = ' . (isset($attrs['setpages']) && !empty($attrs['setpages']) ? $attrs['setpages'] : 6) . ';';
 				$limit='$__offset,$__pagesize';
 				if($qtype > 0){
 					$sql=preg_replace('/^(\'|")select([^(?:from)].*?)from/i', '${1}SELECT COUNT(*) as cntnum FROM ', trim($attrs['sql']));
@@ -59,7 +64,7 @@ class St{
 			
 			$qAction='';
 			if($qtype > 0){
-				$qAction='query(' . $this->operator($attrs['sql']) . '." limit ' . $limit . '",false);';
+				$qAction='query(' . TagBase::operator($attrs['sql']) . '." limit ' . $limit . '",false);';
 			}else{
 				$qAction='table('.$attrs['table'].')->field('.$attrs['field'].')'
 						. ($attrs['where'] ? '->where('.$attrs['where'].')' : '')
@@ -70,20 +75,7 @@ class St{
 			}
 			$str.='$' . $return . ' = $__dbObj->cache('.$cache.')->' . $qAction;
 		}
-		self::$dataTag=$return;
-		return '<?php ' . $str . ' ?>'.$html;
+		return (!empty($str) ? '<?php ' . $str . ' ?>' : '').$html;
 	}
 	
-	
-	/**
-	 * 替换SQL字符串条件语句中的比较操作符
-	 *
-	 * @param string $str
-	 * @return mixed
-	 */
-	private function operator($sqlstr){
-		$search=array(' eq ',' neq ',' gt ',' egt ',' lt ',' elt ',' heq ',' nheq ');
-		$replace=array(' == ',' != ',' > ',' >= ',' < ',' <= ',' === ',' !== ');
-		return str_replace($search, $replace, $sqlstr);
-	}
 }

@@ -4,7 +4,6 @@ use Library\Container;
 
 // 模版服务
 class Manager {
-	public static $dataTag='__'; // 获取数据变量名称
 	private $leftDelim; // 模版标签左边界字符
 	private $rightDelim;
 	private static $_instance=null;
@@ -37,7 +36,7 @@ class Manager {
 	 */
 	public function compile($tplfile,$compiledtplfile){
 		if(!is_file($tplfile)){
-			E(L('template {0} is not exists!',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
+			E(L('template {0} is not exists',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
 		}
 		$content=file_get_contents($tplfile);
 		$filepath=dirname($compiledtplfile) . DS;
@@ -186,9 +185,9 @@ class Manager {
 	 */
 	public function parseInclude($matches){
 		$arrs=$this->parseAttrs($matches[1]);
-		$res='<?php ';
-		$depr='/';
+		$res='';
 		if(isset($arrs['file'])){
+			$depr='/';
 			$files=explode(',', $arrs['file']);
 			$dtype=isset($arrs['type']) ? ($arrs['type'] != 'false' && $arrs['type'] ? 'true' : 'false') : false;
 			foreach($files as $file){
@@ -230,8 +229,8 @@ class Manager {
 		}else{
 			$res.='include template(' . $matches[1] . ');';
 		}
-		$res.=' ?>';
-		return $res;
+		
+		return !empty($res) ? '<?php ' . $res . ' ?>' : '';
 	}
 	
 	/**
@@ -240,17 +239,16 @@ class Manager {
 	 */
 	public function parseAction($matches){
 		$datas=$this->parseAttrs($matches[1]); // 获取属性
-		$str='unset($' . self::$dataTag . ');';
-		$return=str_replace('$', '', (isset($datas['return']) && trim($datas['return']) ? trim($datas['return']) : 'data'));
+		$str='';
+		$return=isset($datas['return']) && trim($datas['return']) ? str_replace('$', '', trim($datas['return'])) : '';
 		if(isset($datas['name'])){
 			$mcas=explode('.', $datas['name'],3);
 			$action=array_pop($mcas);
 			empty($mcas) && array_push($mcas, ROUTE_C);
 			unset($datas['name']);
-			$str.='$' . $return . ' = \Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
+			$str.=(!empty($return) ? '$' . $return . ' = ' : '') . '\Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
 		}
-		self::$dataTag=$return;
-		return '<?php ' . $str . ' ?>';
+		return !empty($str) ? '<?php ' . $str . ' ?>' : '';
 	}
 	
 	/**
@@ -261,7 +259,7 @@ class Manager {
 	 */
 	public function parseIf($matches){
 		$arrs=$this->parseAttrs($matches[1]);
-		$condition=$this->operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
+		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
 		$condition=$this->changeDotArray($condition);
 		return '<?php if(' . $condition . ') { ?>';
 	}
@@ -274,7 +272,7 @@ class Manager {
 	 */
 	public function parseElseif($matches){
 		$arrs=$this->parseAttrs($matches[1]);
-		$condition=$this->operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
+		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
 		$condition=$this->changeDotArray($condition);
 		return '<?php }elseif(' . $condition . ') { ?>';
 	}
@@ -522,7 +520,7 @@ class Manager {
 	 * @param string $str
 	 * @return mixed
 	 */
-	private function operator($sqlstr){
+	public static function operator($sqlstr){
 		$search=array(' eq ',' neq ',' gt ',' egt ',' lt ',' elt ',' heq ',' nheq ');
 		$replace=array(' == ',' != ',' > ',' >= ',' < ',' <= ',' === ',' !== ');
 		return str_replace($search, $replace, $sqlstr);

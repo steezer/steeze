@@ -7,7 +7,7 @@ abstract class Driver {
     // PDO操作实例
     protected $PDOStatement = null;
     // 当前操作所属的模型名
-    protected $model      = '_think_';
+    protected $model      = '_steeze_';
     // 当前SQL指令
     protected $queryStr   = '';
     protected $modelSql   = array();
@@ -495,7 +495,7 @@ abstract class Driver {
                 }
                 if(0===strpos($key,'_')) {
                     // 解析特殊条件表达式
-                    $whereStr   .= $this->parseThinkWhere($key,$val);
+                    $whereStr   .= $this->parseSteezeWhere($key,$val);
                 }else{
                     // 查询字段的安全过滤
                     // if(!preg_match('/^[A-Z_\|\&\-.a-z0-9\(\)\,]+$/',trim($key))){
@@ -609,7 +609,7 @@ abstract class Driver {
      * @param mixed $val
      * @return string
      */
-    protected function parseThinkWhere($key,$val) {
+    protected function parseSteezeWhere($key,$val) {
         $whereStr   = '';
         switch($key) {
             case '_string':
@@ -1040,7 +1040,7 @@ abstract class Driver {
                 G('queryStartTime');
             }else{
                 $this->modelSql[$this->model]   =  $this->queryStr;
-                //$this->model  =   '_think_';
+                //$this->model  =   '_steeze_';
                 // 记录操作结束时间
                 G('queryEndTime');
                 trace($this->queryStr.' [ RunTime:'.G('queryStartTime','queryEndTime').'s ]','','SQL');
