@@ -30,14 +30,20 @@ class Sqlite extends Driver {
         $info   =   array();
         if($result){
             foreach ($result as $key => $val) {
-                $info[$val['field']] = array(
-                    'name'    => $val['field'],
-                    'type'    => $val['type'],
-                    'notnull' => (bool) ($val['null'] === ''), // not null is empty, null is yes
-                    'default' => $val['default'],
-                    'primary' => (strtolower($val['dey']) == 'pri'),
-                    'autoinc' => (strtolower($val['extra']) == 'auto_increment'),
-                );
+            		if(isset($val['field']) || isset($val['name'])){
+	            		$name=(isset($val['field'])?$val['field']:$val['name']);
+	            		$default=isset($val['default']) ? $val['default'] : $val['dflt_value'];
+	            		$primary=isset($val['dey']) ? (strtolower($val['dey']) == 'pri') : ($val['pk']=='1');
+	            		$notnull=(isset($val['null']) ? ($val['null'] === '') : ($val['notnull']=='1')) ;
+	            		$info[$name] = array(
+	            			'name'    => $name,
+	                    'type'    => $val['type'],
+	            			'notnull' => (bool) $notnull, // not null is empty, null is yes
+	            			'default' => $default,
+	            			'primary' => $primary,
+	            			'autoinc' => isset($val['extra']) && (strtolower($val['extra']) == 'auto_increment'),
+	                );
+	            	}
             }
         }
         return $info;

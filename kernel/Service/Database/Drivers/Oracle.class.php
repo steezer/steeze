@@ -45,7 +45,7 @@ class Oracle extends Driver{
         }
         $flag = false;
         if(preg_match("/^\s*(INSERT\s+INTO)\s+(\w+)\s+/i", $str, $match)) {
-            $this->table = C("DB_SEQUENCE_PREFIX").str_ireplace(C("db_prefix"), "", $match[2]);
+        		$this->table = C("DB_SEQUENCE_PREFIX").str_ireplace($this->config['prefix'], "", $match[2]);
             $flag = (boolean)$this->query("SELECT * FROM user_sequences WHERE sequence_name='" . strtoupper($this->table) . "'");
         }
         //释放前次的查询结果

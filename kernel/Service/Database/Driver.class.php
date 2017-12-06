@@ -84,11 +84,26 @@ abstract class Driver {
                 if(empty($config['dsn'])) {
                     $config['dsn']  =   $this->parseDsn($config);
                 }
-                if(version_compare(PHP_VERSION,'5.3.6','<=')){ 
+                if(version_compare(PHP_VERSION,'5.3.6','<=')){
                     // 禁用模拟预处理语句
                     $this->options[PDO::ATTR_EMULATE_PREPARES]  =   false;
                 }
+                
+                //为sqlite数据库创建目录 sqlite:
+                if($config['type']=='sqlite'){
+                		if(strpos($config['dsn'], 'sqlite:')!==0){
+                			$config['dsn']='sqlite:'.$config['dsn'];
+                		}
+                		$dsn=substr($config['dsn'],7);
+                		strtolower($dsn) != ':memory:' && 
+                			!is_dir($dirname=dirname($dsn)) &&
+		                		mkdir($dirname, 0777, true);
+                }
+                
+                	//建立数据库连接对象
                 $this->linkID[$linkNum] = new PDO( $config['dsn'], $config['username'], $config['password'],$this->options);
+				
+                //连接对象后期处理
 				if($config['type']=='mysql'){
 					$this->linkID[$linkNum]->exec('SET sql_mode=\'\'');
 				}
@@ -97,7 +112,7 @@ abstract class Driver {
                     trace($e->getMessage(),'','ERR');
                     return $this->connect($autoConnection,$linkNum);
                 }elseif($config['debug']){
-                    E($e->getMessage());
+                    E($e);
                 }
             }
         }
@@ -189,7 +204,6 @@ abstract class Driver {
         //释放前次的查询结果
         if ( !empty($this->PDOStatement) ) $this->free();
         $this->executeTimes++;
-        N('db_write',1); // 兼容代码
         // 记录开始执行时间
         $this->debug(true);
         $this->PDOStatement =   $this->_linkID->prepare($str);

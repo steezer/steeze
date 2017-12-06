@@ -75,19 +75,41 @@ class Model implements ArrayAccess{
 		}elseif(empty($this->name)){
 			$this->name=$this->getModelName();
 		}
+		
+		$connection=empty($this->connection) ? $connection : $this->connection;
+		
+		// 支持读取配置参数
+		if(is_string($connection) && !empty($databases=C('database.*'))){
+			if(false === strpos($connection, '/')){
+				$connName=empty($connection) ? C('db_conn','default') : $connection;
+				$connection=$databases[(isset($databases[$connName]) ? $connName:'default')];
+			}else{
+				$connName=C('db_conn','default');
+				$connection=array_merge(
+						$databases[(isset($databases[$connName]) ? $connName:'default')],
+						DB::parseDsn($connection)
+						);
+			}
+		}
+
 		// 设置表前缀
-		if(is_null($tablePrefix)){ // 前缀为Null表示没有前缀
+		if(is_null($tablePrefix)){ // 前缀为null表示没有前缀
 			$this->tablePrefix='';
 		}elseif('' != $tablePrefix){
 			$this->tablePrefix=$tablePrefix;
 		}elseif(!isset($this->tablePrefix)){
-			$this->tablePrefix=C('db_prefix');
+			$this->tablePrefix=is_array($connection) && isset($connection['prefix']) ? $connection['prefix'] : '';
+		}
+		
+		//同步数据库表名前缀
+		if(is_array($connection)){
+			$connection['prefix']=$this->tablePrefix;
 		}
 		
 		// 数据库初始化操作
 		// 获取数据库操作对象
 		// 当前模型有独立的数据库连接信息
-		$this->db(0, empty($this->connection) ? $connection : $this->connection, true);
+		$this->db(0, $connection, true);
 	}
 
 	/**
@@ -1543,9 +1565,6 @@ class Model implements ArrayAccess{
 		
 		if(!isset($this->_db[$linkNum]) || $force){
 			// 创建一个新的实例
-			if(!empty($config) && is_string($config) && false === strpos($config, '/')){ // 支持读取配置参数
-				$config=C($config);
-			}
 			$this->_db[$linkNum]=Db::getInstance($config);
 		}elseif(NULL === $config){
 			$this->_db[$linkNum]->close(); // 关闭数据库连接

@@ -24,17 +24,51 @@ class Manager {
             $options    =   self::parseConfig($config);
             // 兼容mysqli
             if('mysqli' == $options['type']) $options['type']   =   'mysql';
-            // 如果采用lite方式 仅支持原生SQL 包括query和execute方法
+            //兼任sqlite3和sqlite2
+            if('sqlite3' == $options['type'] || 'sqlite2' == $options['type']) $options['type']   =   'sqlite';
+            
             $class = 'Service\\Database\\Drivers\\'.ucwords(strtolower($options['type']));
             if(class_exists($class)){
                 self::$instance[$md5]   =   new $class($options);
             }else{
                 // 类没有定义
-                E(L('_NO_DB_DRIVER_').': ' . $class);
+            		E(L('no database driver: {0}',$class).': ' . $class);
             }
         }
         self::$_instance    =   self::$instance[$md5];
         return self::$_instance;
+    }
+    
+    /**
+     * DSN解析
+     * 格式： mysql://username:passwd@localhost:3306/DbName?param1=val1&param2=val2#utf8
+     * @static
+     * @access private
+     * @param string $dsnStr
+     * @return array
+     */
+    static public function parseDsn($dsnStr) {
+	    	if( empty($dsnStr) ){return [];}
+	    	$info = parse_url($dsnStr);
+	    	if(!$info) {
+	    		return [];
+	    	}
+	    	$converts=[
+	    		'scheme'=>'type',
+    			'pass'=>'pwd',
+    			'path'=>'name',
+    			'fragment'=>'charset',
+	    		'query'=>'params',
+	    	];
+	    	$dsn=[];
+	    	foreach($info as $k=> $v){
+	    		$dsn[(isset($converts[$k]) ? $converts[$k] : $k)] = ($k=='path' ? trim($v,'/') : $v);
+	    	}
+	    	
+	    	if(isset($info['query'])) {
+	    		parse_str($info['query'],$dsn['params']);
+	    	}
+	    	return $dsn;
     }
 
     /**
@@ -45,80 +79,49 @@ class Manager {
      * @return array
      */
     static private function parseConfig($config){
+	    	$default = [
+    			'type'          =>  'mysql',
+    			'username'      =>  'root',
+    			'password'      =>  '',
+    			'hostname'      =>  '127.0.0.1',
+    			'hostport'      =>  '3306',
+    			'database'      =>  'test',
+    			'dsn'           =>  '',
+    			'params'        =>  '',
+    			'charset'       =>  'utf-8',
+    			'deploy'        =>  '',
+    			'rw_separate'   =>  '',
+    			'master_num'    =>  '',
+    			'slave_no'      =>  '',
+    			'debug'         =>  APP_DEBUG,
+    			'lite'          =>  '',
+	    	];
         if(!empty($config)){
-            if(is_string($config)) {
-                return self::parseDsn($config);
-            }
-            $config =   array_change_key_case($config);
-            $config = array (
-                'type'          =>  $config['db_type'],
-                'username'      =>  $config['db_user'],
-                'password'      =>  $config['db_pwd'],
-                'hostname'      =>  $config['db_host'],
-                'hostport'      =>  $config['db_port'],
-                'database'      =>  $config['db_name'],
-                'dsn'           =>  isset($config['db_dsn'])?$config['db_dsn']:null,
-                'params'        =>  isset($config['db_params'])?$config['db_params']:null,
-                'charset'       =>  isset($config['db_charset'])?$config['db_charset']:'utf8',
-                'deploy'        =>  isset($config['db_deploy_type'])?$config['db_deploy_type']:0,
-                'rw_separate'   =>  isset($config['db_rw_separate'])?$config['db_rw_separate']:false,
-                'master_num'    =>  isset($config['db_master_num'])?$config['db_master_num']:1,
-                'slave_no'      =>  isset($config['db_slave_no'])?$config['db_slave_no']:'',
-                'debug'         =>  isset($config['db_debug'])?$config['db_debug']:APP_DEBUG,
-                'lite'          =>  isset($config['db_lite'])?$config['db_lite']:false,
-            );
-        }else {
-            $config = array (
-                'type'          =>  C('db_type'),
-                'username'      =>  C('db_user'),
-                'password'      =>  C('db_pwd'),
-                'hostname'      =>  C('db_host'),
-                'hostport'      =>  C('db_port'),
-                'database'      =>  C('db_name'),
-                'dsn'           =>  C('DB_DSN'),
-                'params'        =>  C('db_params'),
-                'charset'       =>  C('db_charset'),
-                'deploy'        =>  C('db_deploy_type'),
-                'rw_separate'   =>  C('db_rw_separate'),
-                'master_num'    =>  C('db_master_num'),
-                'slave_no'      =>  C('db_slave_no'),
-                'debug'         =>  C('db_debug',null,APP_DEBUG),
-                'lite'          =>  C('DB_LITE'),
-            );
-        }
-        return $config;
-    }
-
-    /**
-     * DSN解析
-     * 格式： mysql://username:passwd@localhost:3306/DbName?param1=val1&param2=val2#utf8
-     * @static
-     * @access private
-     * @param string $dsnStr
-     * @return array
-     */
-    static private function parseDsn($dsnStr) {
-        if( empty($dsnStr) ){return false;}
-        $info = parse_url($dsnStr);
-        if(!$info) {
-            return false;
-        }
-        $dsn = array(
-            'type'      =>  $info['scheme'],
-            'username'  =>  isset($info['user']) ? $info['user'] : '',
-            'password'  =>  isset($info['pass']) ? $info['pass'] : '',
-            'hostname'  =>  isset($info['host']) ? $info['host'] : '',
-            'hostport'  =>  isset($info['port']) ? $info['port'] : '',
-            'database'  =>  isset($info['path']) ? substr($info['path'],1) : '',
-            'charset'   =>  isset($info['fragment'])?$info['fragment']:'utf8',
-        );
-        
-        if(isset($info['query'])) {
-            parse_str($info['query'],$dsn['params']);
+           $config =   is_string($config) ? self::parseDsn($config) : array_change_key_case($config);
+           //将字符串参数转换为数组
+           if(isset($config['params']) && is_string($config['params']) && !empty(trim($config['params']))){
+          		parse_str(trim($config['params']),$config['params']);
+           }
+           return [
+            		'type'          =>  (isset($config['type']) ? $config['type'] : $default['type']),
+            		'username'      =>  (isset($config['user']) ? $config['user'] : $default['username']),
+            		'password'      =>  (isset($config['pwd']) ? $config['pwd'] : $default['password']),
+            		'hostname'      =>  (isset($config['host']) ? $config['host'] : $default['hostname']),
+            		'hostport'      =>  (isset($config['port']) ? $config['port'] : $default['hostport']),
+            		'database'      =>  (isset($config['name']) ? $config['name'] : $default['database']),
+            		'dsn'           =>  isset($config['dsn']) ? $config['dsn'] : $default['dsn'],
+            		'params'        =>  isset($config['params']) ? $config['params'] : $default['params'],
+            		'charset'       =>  (isset($config['charset']) ? $config['charset'] : $default['charset']),
+            		'deploy'        =>  isset($config['deploy_type']) ? $config['deploy_type'] : $default['deploy'],
+            		'rw_separate'   =>  isset($config['rw_separate']) ? $config['rw_separate'] : $default['rw_separate'],
+            		'master_num'    =>  isset($config['master_num']) ? $config['master_num'] : $default['master_num'],
+            		'slave_no'      =>  isset($config['slave_no']) ? $config['slave_no'] : $default['slave_no'],
+            		'debug'         =>  isset($config['debug']) ? $config['debug'] : $default['debug'],
+            		'lite'          =>  isset($config['lite']) ? $config['lite'] : $default['lite'],
+            ];
         }else{
-            $dsn['params']  =   array();
+        		return $default;
         }
-        return $dsn;
     }
 
     // 调用驱动类的方法

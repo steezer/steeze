@@ -1104,7 +1104,7 @@ function G($start,$end='',$dec=4) {
 		$_info[$start]  =   $end;
 	}elseif(!empty($end)){ // 统计时间和内存使用
 		if(!isset($_info[$end])) $_info[$end]       =  microtime(TRUE);
-		if(MEMORY_LIMIT_ON && $dec=='m'){
+		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON && $dec=='m'){
 			if(!isset($_mem[$end])) $_mem[$end]     =  memory_get_usage();
 			return number_format(($_mem[$end]-$_mem[$start])/1024);
 		}else{
@@ -1113,7 +1113,7 @@ function G($start,$end='',$dec=4) {
 		
 	}else{ // 记录时间和内存使用
 		$_info[$start]  =  microtime(TRUE);
-		if(MEMORY_LIMIT_ON) $_mem[$start]           =  memory_get_usage();
+		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON) $_mem[$start] =  memory_get_usage();
 	}
 	return null;
 }
@@ -1202,14 +1202,27 @@ function F($name,$value='',$path=null){
 /**
  * 模型快速操作
  *
- * @param string $tb 需要操作的表
- * @return DbExtend 数据库拓展模型
+ * @param string $name 需要操作的表
+ * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
+ * @return object 数据库模型对象
+ * $conn参数为字符串类型时举例说明：
+ * 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置；
+ * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
+ * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
  */
-function M($name='', $tablePrefix='',$connection='') {
+function M($name='', $conn='') {
 	static $_model  = array();
-	$guid  = (is_array($connection) ? implode('',$connection) : $connection).$tablePrefix . $name;
+	$tablePrefix=''; //使用连接配置
+	if(is_string($conn) && strpos($conn,'^')===0){
+		$conns=explode('@', trim($conn,'^'),2);
+		//如果为"^@xxx"或"^"则不使用前缀
+		$tablePrefix=$conns[0]!=='' ? $conns[0] : null; 
+		//"^@xxx"或"^aaa@xxx"则使用xxx为连接名;"^"或"^aaa"则连接名使用系统配置
+		$conn=count($conns)>1 ? $conns[1] : '';
+	}
+	$guid  = (is_array($conn) ? implode('',$conn) : $conn).$tablePrefix.$name;
 	if (!isset($_model[$guid])){
-		$_model[$guid] = new Library\Model($name,$tablePrefix,$connection);
+		$_model[$guid] = new Library\Model($name,$tablePrefix,$conn);
 	}
 	return $_model[$guid];
 }
