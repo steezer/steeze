@@ -88,7 +88,7 @@ class Manager {
     			'database'      =>  'test',
     			'dsn'           =>  '',
     			'params'        =>  '',
-    			'charset'       =>  'utf-8',
+    			'charset'       =>  'utf8',
     			'deploy'        =>  '',
     			'rw_separate'   =>  '',
     			'master_num'    =>  '',
