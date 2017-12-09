@@ -6,6 +6,7 @@ use Library\Container;
 class Manager {
 	private $leftDelim; // 模版标签左边界字符
 	private $rightDelim;
+	private $depr;
 	private static $_instance=null;
 	
 	// 单例模式
@@ -20,6 +21,7 @@ class Manager {
 	public function __construct(){
 		$this->leftDelim=defined('TAGLIB_BEGIN') ? TAGLIB_BEGIN : C('TAGLIB_BEGIN', '<');
 		$this->rightDelim=defined('TAGLIB_END') ? TAGLIB_END : C('TAGLIB_END', '>');
+		$this->depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 	}
 	
 	public function set_delim($ldelim,$rdelim){
@@ -74,6 +76,12 @@ class Manager {
 		$ld=$this->leftDelim;
 		$rd=$this->rightDelim;
 		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
+		
+		//布局标签解析
+		if(stripos($str, $ld . 'layout ') !== false){
+			$str=$this->parseLayout($str);
+		}
+		
 		// 全局标签的解析
 		stripos($str, $ld . 'import ') !== false && ($str=preg_replace_callback('/' . $ld . 'import\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseImport'), $str));
 		(stripos($str, $ld . 'template ') !== false || stripos($str, $ld . 'include ') !== false) && ($str=preg_replace_callback('/' . $ld . '(?:template|include)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseInclude'), $str));
@@ -129,7 +137,49 @@ class Manager {
 		$str=str_replace(array('\\{','\\}'), array('{','}'), $str);
 		
 		$str='<?php defined(\'INI_STEEZE\') or exit(\'No permission resources.\'); ?>' . $str;
-		return $str;
+		
+		return preg_replace('/^\s*$/m','',$str);
+	}
+
+	/**
+	 * 解析layout标签
+	 * @param $str 模版文件内容
+	 * @return 处理后的模版
+	 */
+	public function parseLayout($str){
+		$ld=$this->leftDelim;
+		$rd=$this->rightDelim;
+		if(preg_match('/' . $ld . 'layout\s+(.+?)\s*\/?' . $rd . '/is', $str, $matches)){
+			$datas=$this->parseAttrs($matches[1]); // 获取属性
+			unset($matches);
+			if(isset($datas['name'])){
+				$r=$this->resolvePath($datas['name'],$this->depr);
+				$tplfile=template($r['a'],$r['c'],$r['style'],$r['m'],false);
+				if(is_file($tplfile)){
+					$content=file_get_contents($tplfile);
+					$sections=[];
+					//获取所有section
+					if(preg_match_all('/' . $ld . 'section\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/section' . $rd . '/is', $str, $matches)){
+						foreach ($matches[1] as $index => $value){
+							$names=$this->parseAttrs($value);
+							if(isset($names['name'])){
+								$sections[$names['name']]=$matches[2][$index];
+							}
+						}
+					}
+					
+					return preg_replace_callback(
+							'/' . $ld . 'section\s+(.+?)\s*\/?' . $rd . '/is',
+							function($matches) use($sections){
+								$data=$this->parseAttrs($matches[1]);
+								return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
+							},
+							$content
+							);
+				}
+			}
+		}
+		return preg_replace('/' . $ld . 'layout.*?\/?' . $rd . '/is' , '' , $str);
 	}
 	
 	/**
@@ -187,43 +237,10 @@ class Manager {
 		$arrs=$this->parseAttrs($matches[1]);
 		$res='';
 		if(isset($arrs['file'])){
-			$depr='/';
 			$files=explode(',', $arrs['file']);
-			$dtype=isset($arrs['type']) ? ($arrs['type'] != 'false' && $arrs['type'] ? 'true' : 'false') : false;
 			foreach($files as $file){
-				$m=($pos=strpos($file, '@')) ? substr($file, 0, $pos) : ROUTE_M;
-				if($pos){
-					$file=substr($file, $pos + 1);
-				}
-				$c=!defined('STWMS_TMPL_C') ? ROUTE_C : STWMS_TMPL_C;
-				$a=!defined('STWMS_TMPL_A') ? ROUTE_A : STWMS_TMPL_A;
-				$style='';
-				if($file !== ''){
-					$dpos=strpos($file, $depr);
-					if($dpos === false){ // "a"
-						$a=$file;
-					}elseif($dpos === 0){
-						$file=substr($file, 1);
-						$dpos=strpos($file, $depr);
-						if($dpos === false){ // "/a"
-							$c='';
-							$a=$file;
-						}elseif(substr_count($file, $depr) > 1){ // eg:"/style/c/a"
-							list($style, $c, $a)=explode($depr, $file);
-						}else{ // eg:"/style/a"
-							list($style, $a)=explode($depr, $file);
-							$c='';
-						}
-					}elseif(substr_count($file, $depr) > 1){ // eg:"style/c/a"
-						list($style, $c, $a)=explode($depr, $file);
-					}else{ // eg:"c/a"
-						list($c, $a)=explode($depr, $file);
-					}
-				}
-				$paras=array('\'' . $a . '\'','\'' . $c . '\'','\'' . $style . '\'','\'' . $m . '\'');
-				if($dtype){
-					array_push($paras, $dtype);
-				}
+				$r=$this->resolvePath($file,$this->depr);
+				$paras=array('\'' . $r['a'] . '\'','\'' . $r['c'] . '\'','\'' . $r['style'] . '\'','\'' . $r['m'] . '\'');
 				$res.='include template(' . implode(',', $paras) . ');';
 			}
 		}else{
@@ -235,7 +252,7 @@ class Manager {
 	
 	/**
 	 * 解析action标签
-	 * 
+	 * @param $matches 匹配集合
 	 */
 	public function parseAction($matches){
 		$datas=$this->parseAttrs($matches[1]); // 获取属性
@@ -513,6 +530,46 @@ class Manager {
 		}
 		return $str;
 	}
+	
+	/**
+	 * 将路径解析为变量 
+	 * @param $name 模版名称
+	 * @param $depr 模版分隔符
+	 * @return 返回数组：['m'=>M,'c'=>C,'a'=>A,'style'=>STYLE]
+	 */
+	private function resolvePath($name,$depr){
+		$m=($pos=strpos($name, '@')) ? substr($name, 0, $pos) : (defined('ROUTE_M') ? ROUTE_M : '');
+		if($pos){
+			$name=substr($name, $pos + 1);
+		}
+		$c=defined('ROUTE_C') ? ROUTE_C : '';
+		$a=defined('ROUTE_A') ? ROUTE_A : '';
+		$style='';
+		if($name !== ''){
+			$dpos=strpos($name, $depr);
+			if($dpos === false){ // "a"
+				$a=$name;
+			}elseif($dpos === 0){
+				$name=substr($name, 1);
+				$dpos=strpos($name, $depr);
+				if($dpos === false){ // "/a"
+					$c='';
+					$a=$name;
+				}elseif(substr_count($name, $depr) > 1){ // eg:"/style/c/a"
+					list($style, $c, $a)=explode($depr, $name);
+				}else{ // eg:"/style/a"
+					list($style, $a)=explode($depr, $name);
+					$c='';
+				}
+			}elseif(substr_count($name, $depr) > 1){ // eg:"style/c/a"
+				list($style, $c, $a)=explode($depr, $name);
+			}else{ // eg:"c/a"
+				list($c, $a)=explode($depr, $name);
+			}
+		}
+		return compact('m','c','a','style');
+	}
+	
 	
 	/**
 	 * 替换SQL字符串条件语句中的比较操作符

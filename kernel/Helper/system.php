@@ -377,9 +377,11 @@ function sys_crypt($string,$type=1,$key=''){
  * @param string $template 模板文件名，不包括扩展名（.html）
  * @param string|bool $dir 为string时为模板在目录，相对于模板目录；为bool时是否强制调用（true：后台模板，false:前台模板）
  * @param string|bool $style 为string时为使用的风格；为bool时是否强制调用（true：后台模板，false:前台模板）
+ * @param string $module 模块名称
+ * @param bool $isCompile 是否需要编译，如果为true，返回编译后的路径，否则返回模版路径
  * @return string 返回模板路径
  */
-function template($template='index',$dir='',$style='',$module=''){
+function template($template='index',$dir='',$style='',$module='',$isCompile=true){
 	$tplExists=false;
 	is_bool($dir) && ($dir='');
 	is_bool($style) && ($style='');
@@ -397,7 +399,6 @@ function template($template='index',$dir='',$style='',$module=''){
 	$style === '' && ($style=C('default_tpl'));
 	
 	$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . $style . DS . $dir . DS . $template);
-	$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . $style . DS . $dir . DS . $phpfile);
 	$tplExists=is_file($templatefile);
 	
 	//调用默认模版
@@ -405,6 +406,12 @@ function template($template='index',$dir='',$style='',$module=''){
 		$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . 'default' . DS . $dir . DS . $template);
 		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . 'default' . DS . $dir . DS . $phpfile);
 		$tplExists=is_file($templatefile);
+	}else{
+		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . $style . DS . $dir . DS . $phpfile);
+	}
+	
+	if(!$isCompile){
+		return $templatefile;
 	}
 	
 	if($tplExists && (!is_file($compiledtplfile) || (filemtime($templatefile) > filemtime($compiledtplfile)) || (APP_DEBUG && defined('TEMPLATE_REPARSE') && TEMPLATE_REPARSE))){
