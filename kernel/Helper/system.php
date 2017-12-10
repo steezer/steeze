@@ -980,18 +980,18 @@ function resx($file,$type='',$check=false,$default='default'){
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
-				return is_file(RESX_PATH.$style.DS.$file) ? STATIC_URL.$style.'/'.$file : '';
+				return is_file(RESX_PATH.$style.DS.$file) ? RESX_URL.$style.'/'.$file : '';
 			}else{
 				if(!is_file(RESX_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
 					return is_file(RESX_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
-							 STATIC_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
+							 RESX_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
 				}
 			}
 		}
 		return $isRemote ? $style.'/'.$file :
-				STATIC_URL . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
+				RESX_URL . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
 	}else{
-		return STATIC_URL . ltrim($file, '/');
+		return RESX_URL . ltrim($file, '/');
 	}
 }
 

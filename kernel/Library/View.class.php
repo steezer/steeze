@@ -76,7 +76,7 @@ class View{
 	 */
 	public function fetch($templateFile='',$content=''){
 		if(empty($content)){
-			$res=$this->parseTemplate($templateFile);
+			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
 			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
@@ -90,6 +90,7 @@ class View{
 		$_content=$content;
 		// 模板阵列变量分解成为独立变量，如果为数字索引，则加前缀“_”
 		extract($this->tVar, EXTR_OVERWRITE|EXTR_PREFIX_INVALID,'_');
+		$this->tVar=[];
 		// 直接载入PHP模板
 		empty($_content) ? include $templateFile : eval('?>' . $_content);
 		// 获取并清空缓存
@@ -105,14 +106,11 @@ class View{
 	 * @param string $template 模板文件规则
 	 * @return string
 	 */
-	public function parseTemplate($template=''){
-		if(is_file($template)){
-			return $template;
-		}
+	public static function resolvePath($template=''){
 		$a=ltrim(empty(self::$_a) && defined('ROUTE_A') ? ROUTE_A : self::$_a,'_');
 		$c=empty(self::$_c) && defined('ROUTE_C') ? ROUTE_C : self::$_c;
 		$m=(empty(self::$_m) && defined('ROUTE_M') ? ROUTE_M : self::$_m);
-		$depr='/';
+		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
 		// 获取当前模块 home@aa/bb/cc
 		$m=($pos=strpos($template, '@')) ? substr($template, 0, $pos) : $m;

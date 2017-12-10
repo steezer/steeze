@@ -22,8 +22,8 @@ define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
 define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); //缓存目录
 define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS); //日志目录
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS); //网站根目录路径
-define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS); //文件上传目录路径
 define('RESX_PATH', ROOT_PATH . 'resx' . DS); //资源文件路径
+define('UPLOAD_PATH', RESX_PATH . 'ufs' . DS); //文件上传目录路径
 !defined('STORAGE_TYPE') && define('STORAGE_TYPE', (function_exists('saeAutoLoader') ? 'Sae' : 'File'));
 
 /* 【定义客户端访问路径】 */
@@ -37,9 +37,9 @@ define('SITE_PORT', (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] !
 define('SITE_HOST',(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : DEFAULT_HOST)));
 define('SITE_URL', SITE_PROTOCOL . SITE_HOST . (SITE_PROTOCOL=='https://'?'' : SITE_PORT)); // 网站首页地址
 define('ROOT_URL', rtrim(dirname(SYSTEM_ENTRY),'/').'/'); //系统根目录路径
-define('UPLOAD_URL', ROOT_URL . 'ufs/'); //上传图片访问路径
-define('STATIC_URL', ROOT_URL . 'resx/'); //静态文件路径
-define('SYS_VENDOR_URL', STATIC_URL . 'resx/vendor/'); //外部资源扩展路径
+define('RESX_URL', ROOT_URL . 'resx/'); //静态文件路径
+define('UPLOAD_URL', RESX_URL . 'ufs/'); //上传图片访问路径
+define('SYS_VENDOR_URL', RESX_URL . 'resx/vendor/'); //外部资源扩展路径
 
 //加载系统函数库和环境变量
 Loader::helper('system') && env();

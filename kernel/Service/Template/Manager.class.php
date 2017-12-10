@@ -7,7 +7,6 @@ use Library\View;
 class Manager {
 	private $leftDelim; // 模版标签左边界字符
 	private $rightDelim;
-	private $depr;
 	private static $_instance=null;
 	
 	// 单例模式
@@ -22,7 +21,6 @@ class Manager {
 	public function __construct(){
 		$this->leftDelim=defined('TAGLIB_BEGIN') ? TAGLIB_BEGIN : C('TAGLIB_BEGIN', '<');
 		$this->rightDelim=defined('TAGLIB_END') ? TAGLIB_END : C('TAGLIB_END', '>');
-		$this->depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 	}
 	
 	public function set_delim($ldelim,$rdelim){
@@ -78,13 +76,13 @@ class Manager {
 		$rd=$this->rightDelim;
 		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
 		
-		//模版变量标签解析
-		stripos($str, $ld . 'assign ') !== false && ($str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str));
-		
 		//布局标签解析
 		if(stripos($str, $ld . 'layout ') !== false){
 			$str=$this->parseLayout($str);
 		}
+		
+		//模版变量标签解析
+		stripos($str, $ld . 'assign ') !== false && ($str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str));
 		
 		// 全局标签的解析
 		stripos($str, $ld . 'import ') !== false && ($str=preg_replace_callback('/' . $ld . 'import\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseImport'), $str));
@@ -172,10 +170,14 @@ class Manager {
 			$datas=$this->parseAttrs($matches[1]); // 获取属性
 			unset($matches);
 			if(isset($datas['name'])){
-				$r=$this->resolvePath($datas['name'],$this->depr);
-				$tplfile=template($r['a'],$r['c'],$r['style'],$r['m'],false);
-				if(is_file($tplfile)){
-					$content=file_get_contents($tplfile);
+				$r=View::resolvePath($datas['name']);
+				$layout=template($r['a'],$r['c'],$r['style'],$r['m'],false);
+				if(is_file($layout)){
+					//获取模版中的模版变量
+					if(stripos($str, $ld . 'assign ') !== false){
+						$str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str);
+					}
+					$content=file_get_contents($layout);
 					$sections=[];
 					//获取所有section
 					if(preg_match_all('/' . $ld . 'section\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/section' . $rd . '/is', $str, $matches)){
@@ -194,7 +196,7 @@ class Manager {
 								return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
 							},
 							$content
-							);
+						);
 				}
 			}
 		}
@@ -258,7 +260,7 @@ class Manager {
 		if(isset($arrs['file'])){
 			$files=explode(',', $arrs['file']);
 			foreach($files as $file){
-				$r=$this->resolvePath($file,$this->depr);
+				$r=View::resolvePath($file);
 				$paras=array('\'' . $r['a'] . '\'','\'' . $r['c'] . '\'','\'' . $r['style'] . '\'','\'' . $r['m'] . '\'');
 				$res.='include template(' . implode(',', $paras) . ');';
 			}
@@ -549,47 +551,7 @@ class Manager {
 		}
 		return $str;
 	}
-	
-	/**
-	 * 将路径解析为变量 
-	 * @param $name 模版名称
-	 * @param $depr 模版分隔符
-	 * @return 返回数组：['m'=>M,'c'=>C,'a'=>A,'style'=>STYLE]
-	 */
-	private function resolvePath($name,$depr){
-		$m=($pos=strpos($name, '@')) ? substr($name, 0, $pos) : (defined('ROUTE_M') ? ROUTE_M : '');
-		if($pos){
-			$name=substr($name, $pos + 1);
-		}
-		$c=defined('ROUTE_C') ? ROUTE_C : '';
-		$a=defined('ROUTE_A') ? ROUTE_A : '';
-		$style='';
-		if($name !== ''){
-			$dpos=strpos($name, $depr);
-			if($dpos === false){ // "a"
-				$a=$name;
-			}elseif($dpos === 0){
-				$name=substr($name, 1);
-				$dpos=strpos($name, $depr);
-				if($dpos === false){ // "/a"
-					$c='';
-					$a=$name;
-				}elseif(substr_count($name, $depr) > 1){ // eg:"/style/c/a"
-					list($style, $c, $a)=explode($depr, $name);
-				}else{ // eg:"/style/a"
-					list($style, $a)=explode($depr, $name);
-					$c='';
-				}
-			}elseif(substr_count($name, $depr) > 1){ // eg:"style/c/a"
-				list($style, $c, $a)=explode($depr, $name);
-			}else{ // eg:"c/a"
-				list($c, $a)=explode($depr, $name);
-			}
-		}
-		return compact('m','c','a','style');
-	}
-	
-	
+
 	/**
 	 * 替换SQL字符串条件语句中的比较操作符
 	 *
