@@ -220,7 +220,7 @@ class Controller{
 	 */
 	private function view(){
 		if(is_null($this->view)){
-			$this->view=new View();
+			$this->view=make(View::class);
 		}
 		return $this->view;
 	}

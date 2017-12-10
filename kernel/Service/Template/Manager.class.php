@@ -1,6 +1,7 @@
 <?php
 namespace Service\Template;
 use Library\Container;
+use Library\View;
 
 // 模版服务
 class Manager {
@@ -77,6 +78,9 @@ class Manager {
 		$rd=$this->rightDelim;
 		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
 		
+		//模版变量标签解析
+		stripos($str, $ld . 'assign ') !== false && ($str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str));
+		
 		//布局标签解析
 		if(stripos($str, $ld . 'layout ') !== false){
 			$str=$this->parseLayout($str);
@@ -142,6 +146,21 @@ class Manager {
 	}
 
 	/**
+	 * 解析assign标签
+	 * @param $str 模版文件内容
+	 * @param array $matches
+	 * @return string
+	 */
+	public function parseAssign($matches){
+		$datas=$this->parseAttrs($matches[1]); // 获取属性
+		if(isset($datas['name']) && isset($datas['value'])){
+			$view=make(view::class);
+			$view->assign($datas['name'],$datas['value']);
+		}
+		return '';
+	}
+	
+	/**
 	 * 解析layout标签
 	 * @param $str 模版文件内容
 	 * @return 处理后的模版
@@ -185,7 +204,7 @@ class Manager {
 	/**
 	 * 解析import标签
 	 *
-	 * @param unknown $matches
+	 * @param array $matches
 	 * @return string
 	 */
 	public function parseImport($matches){

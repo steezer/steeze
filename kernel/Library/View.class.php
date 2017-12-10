@@ -1,7 +1,7 @@
 <?php
 namespace Library;
 class View{
-	protected $tVar=array(); //模板输出变量
+	protected $tVar=[]; //模板输出变量
 	protected $theme=''; //模板主题
 	protected static $_m=''; //默认模块
 	protected static $_c=''; //默认控制器

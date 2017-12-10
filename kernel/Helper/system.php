@@ -657,6 +657,59 @@ function redirect($url,$time=0,$msg=''){
 }
 
 /**
+ * 获取远程文件
+ *
+ * @param string $url 文件地址
+ * @param string $data POST请求时为数组
+ * @param string $savepath 文件保存路径，如果为空则返回获取的文件内容
+ * @return number|mixed
+ */
+function get_remote_file($url,$data=null,$headers=null,$savepath=null){
+	if(trim($url) == ''){
+		return null;
+	}
+	if(is_string($data)){
+		$savepath=$data;
+	}
+	if(is_string($headers)){
+		$savepath=$headers;
+	}
+	
+	$ch=curl_init();
+	$timeout=5;
+	
+	if(stripos($url, 's://')!=='false'){
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // 从证书中检查SSL加密算法是否存在
+	}
+	
+	curl_setopt($ch, CURLOPT_URL, $url);
+	if(is_array($headers)){
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	}
+	if(is_array($data)){
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+	}
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+	$content=curl_exec($ch);
+	$httpCode=curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	curl_close($ch);
+	
+	if($httpCode != 200){
+		return null;
+	}
+	if(empty($savepath)){
+		return $content;
+	}
+	$pathname=dirname($savepath);
+	!is_dir($pathname) && mkdir($pathname, 0777, true);
+	return file_put_contents($savepath, $content);
+}
+
+/**
  * session管理函数
  * 
  * @param string|array $name session名称 如果为数组则表示进行session设置
@@ -874,65 +927,6 @@ function cookie($name='',$value='',$option=null){
 }
 
 /**
- * memcache操作函数
- *
- * @param string $key
- * @param mixed $val
- * @param number $expire 过期时间，默认为0，不过期
- * @param bool $is_compress 是否启用压缩，默认为false
- * @return unknown|Ambigous <NULL, unknown>|NULL
- */
-function memcache($key,$val='',$expire=0,$is_compress=false){
-	static $mem=null;
-	
-	// 初始化缓存对象
-	if(is_null($mem) && class_exists('Memcache', false)){
-		$mem=new Memcache();
-		$config=explode(':', C('MEMCACHE_HOST', '127.0.0.1:11211'));
-		// 此处为memcache的连接主机与端口
-		if(!$mem->connect($config[0], $config[1])){
-			$mem=null;
-			$mem=false;
-		}
-	}
-	
-	if(is_object($mem)){
-		if(strpos($key, '.')){
-			$keyArr=explode('.', $key);
-			$key=$keyArr[0];
-			$skey=$keyArr[1];
-		}
-		
-		$key=C('MEMCACHE_PRE', (defined('STYLE_MODULE') ? STYLE_MODULE : ROUTE_M)) . $key;
-		if($val === ''){ // 获取值
-			return is_array($result=$mem->get($key)) && isset($skey) && $skey !== '' ? $result[$skey] : $result;
-		}elseif(is_null($val)){ // 删除值
-			if(is_array($result=$mem->get($key)) && isset($skey) && $skey !== ''){
-				unset($result[$skey]);
-				return memcache($key, $result, $expire, $is_compress);
-			}else{
-				return $mem->delete($key);
-			}
-		}else{ // 设置值
-			if(isset($skey)){
-				if(!is_array($result=$mem->get($key))){
-					$result=array();
-				}
-				if($skey !== ''){
-					$result[$skey]=$val;
-				}else{
-					$result[]=$val;
-				}
-				return memcache($key, $result, $expire, $is_compress);
-			}else{
-				return $mem->set($key, $val, $is_compress, $expire);
-			}
-		}
-	}
-	return null;
-}
-
-/**
  * 导入静态文件路径 
  * 如：'js/show.js@daoke:home'，则返回/resx/app/home/daoke/js/show.js
  *
@@ -1002,13 +996,25 @@ function resx($file,$type='',$check=false,$default='default'){
 }
 
 /**
+ * 从容器中返回给定类型名称的实例
+ *
+ * @param string $concrete 类型名称
+ * @param array $parameters 参数
+ * @return object 类型实例
+ */
+function make($concrete,array $parameters=[]){
+	$container=\Library\Container::getInstance();
+	return $container->make($concrete,$parameters);
+}
+
+/**
  * 获取渲染后的视图内容
  * @param string $name 视图名称，可以是直接的文件路径，或者视图路径
  * @param array $datas 视图变量
  * @return string 渲染后的视图内容
  */
 function view($name,$datas=[]){
-	$viewer=new \Library\View();
+	$viewer=make(\Library\View::class);
 	if(is_array($datas)){
 		foreach($datas as $key=> &$value){
 			$viewer->assign($key,$value);
@@ -1032,59 +1038,6 @@ function env($key=null,$default=null){
 		return $_ENV;
 	}
 	return isset($_ENV[$key]) ? $_ENV[$key] : $default;
-}
-
-/**
- * 获取远程文件
- * 
- * @param string $url 文件地址
- * @param string $data POST请求时为数组
- * @param string $savepath 文件保存路径，如果为空则返回获取的文件内容
- * @return number|mixed
- */
-function get_remote_file($url,$data=null,$headers=null,$savepath=null){
-	if(trim($url) == ''){
-		return null;
-	}
-	if(is_string($data)){
-		$savepath=$data;
-	}
-	if(is_string($headers)){
-		$savepath=$headers;
-	}
-	
-	$ch=curl_init();
-	$timeout=5;
-	
-	if(stripos($url, 's://')!=='false'){
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // 从证书中检查SSL加密算法是否存在
-	}
-	
-	curl_setopt($ch, CURLOPT_URL, $url);
-	if(is_array($headers)){
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-	}
-	if(is_array($data)){
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-	}
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-	$content=curl_exec($ch);
-	$httpCode=curl_getinfo($ch, CURLINFO_HTTP_CODE);
-	curl_close($ch);
-	
-	if($httpCode != 200){
-		return null;
-	}
-	if(empty($savepath)){
-		return $content;
-	}
-	$pathname=dirname($savepath);
-	!is_dir($pathname) && mkdir($pathname, 0777, true);
-	return file_put_contents($savepath, $content);
 }
 
 /**

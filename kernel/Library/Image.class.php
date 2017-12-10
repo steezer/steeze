@@ -3,15 +3,7 @@ namespace Library;
 
 class Image{
 	private $setting=null;
-	private static $_instance=null;
 	
-	//单例模式
-	public static function instance(){
-		if(is_null(self::$_instance)){
-			self::$_instance=new Image();
-		}
-		return self::$_instance;
-	}
 	// 获取图片文件信息
 	function info($img){
 		$imageinfo=getimagesize($img);
@@ -536,7 +528,7 @@ class Image{
 			return $IMG_URL . $newimgurl;
 		}
 		
-		$res=self::instance()->thumbImg($oldimg_path, $IMG_PATH . $newimgurl, $maxWidth, $maxHeight, $cutType, $forceExec);
+		$res=make(static::class)->thumbImg($oldimg_path, $IMG_PATH . $newimgurl, $maxWidth, $maxHeight, $cutType, $forceExec);
 		return $res ? $IMG_URL . $newimgurl : ($res === false ? $oldimg_url : $defaultImg);
 	}
 }
