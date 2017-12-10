@@ -51,6 +51,7 @@ class Application{
 				//运行控制器方法
 				return Controller::run($disposer, ROUTE_A,$params);
 			}elseif(
+				USE_VIEW_ROUTE &&
 				defined('ROUTE_M') && defined('ROUTE_C') && defined('ROUTE_A') &&
 				!(is_null($viewer=view(ROUTE_M.'@'.ROUTE_C.'/'.ROUTE_A,$params)))
 			){

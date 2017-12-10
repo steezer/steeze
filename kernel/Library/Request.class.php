@@ -90,8 +90,20 @@ class Request{
 	 * @return string|null
 	 */
 	private function matchHandle($url){
-		$default=C('route.default');
-		$routes=empty(SITE_HOST) ? $default : C('route.'.strtolower(SITE_HOST),$default);
+		$routes=[];
+		if(!empty(SITE_HOST)){
+			$host=strtolower(SITE_HOST);
+			$routes=C('route.'.$host,$routes);
+			$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
+			if(is_file($file) && is_array($confs=include($file))){
+				$routes=array_merge($routes,$confs);
+			}
+		}
+		
+		if(empty($routes)){
+			$routes=C('route.default',[]);
+		}
+		
 		foreach($routes as $key=> $value){
 			if(is_array($value)){
 				foreach($value as $k=> $v){

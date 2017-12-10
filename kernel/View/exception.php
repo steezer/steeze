@@ -24,7 +24,10 @@ h1{ font-size: 32px; line-height: 48px; }
 <p class="face">:(</p>
 <h1><?php echo strip_tags($e->getMessage());?> <?php echo strip_tags($e->getCode());?></h1>
 <div class="content">
-<?php if(null!==$e->getFile()) {?>
+<?php
+if(defined('APP_DEBUG') && APP_DEBUG){
+	if(null!==$e->getFile()) {
+?>
 	<div class="info">
 		<div class="title">
 			<h3>错误位置</h3>
@@ -33,8 +36,10 @@ h1{ font-size: 32px; line-height: 48px; }
 			<p>FILE: <?php echo $e->getFile() ;?> &#12288;LINE: <?php echo $e->getLine();?></p>
 		</div>
 	</div>
-<?php }?>
-<?php if(null!==$e->getTraceAsString()) {?>
+<?php 
+	}
+	if(null!==$e->getTraceAsString()) {
+?>
 	<div class="info">
 		<div class="title">
 			<h3>TRACE</h3>
@@ -43,7 +48,10 @@ h1{ font-size: 32px; line-height: 48px; }
 			<p><?php echo nl2br($e->getTraceAsString());?></p>
 		</div>
 	</div>
-<?php }?>
+<?php 
+	}
+}
+?>
 </div>
 </div>
 </body>
