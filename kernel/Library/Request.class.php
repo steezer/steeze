@@ -90,20 +90,40 @@ class Request{
 	 * @return string|null
 	 */
 	private function matchHandle($url){
+		$configs=C('route.*',[]);
 		$routes=[];
 		if(!empty(SITE_HOST)){
 			$host=strtolower(SITE_HOST);
-			$routes=C('route.'.$host,$routes);
+			
+			//从总配置文件和分布文件读取
+			if(isset($configs[$host])){
+				$routes=$configs[$host];
+			}
 			$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
 			if(is_file($file) && is_array($confs=include($file))){
 				$routes=array_merge($routes,$confs);
 			}
+			
+			//尝试从泛解析域名读取，例如：*.steeze.cn
+			if(empty($routes) && strpos($host, '.')){
+				$host='*'.strstr($host,'.');
+				if(isset($configs[$host])){
+					$routes=$configs[$host];
+				}
+				$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
+				if(is_file($file) && is_array($confs=include($file))){
+					$routes=array_merge($routes,$confs);
+				}
+			}
+			
 		}
 		
-		if(empty($routes)){
-			$routes=C('route.default',[]);
+		//如果域名没有匹配到路由配置，则使用默认
+		if(empty($routes) && isset($configs['default'])){
+			$routes=$configs['default'];
 		}
 		
+		//对URL访问路径进行路由匹配
 		foreach($routes as $key=> $value){
 			if(is_array($value)){
 				foreach($value as $k=> $v){

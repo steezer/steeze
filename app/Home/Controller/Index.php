@@ -9,7 +9,7 @@ class Index extends Controller{
 	}
 	
 	public function index(){
-		var_dump(__FILE__);
+		var_dump(__FUNCTION__);
 	}
 	
 	public function test2(){

@@ -29,11 +29,10 @@ define('UPLOAD_PATH', RESX_PATH . 'ufs' . DS); //文件上传目录路径
 Loader::helper('system') && env();
 
 /**** 【从环境变量初始化常量】 ****/
-!defined('APP_DEBUG') && define('APP_DEBUG', env('APP_DEBUG',true)); // 系统默认在开发模式下运行
-define('BIND_MODULE', env('BIND_MODULE','Home')); //系统前端默认模块
-define('USE_VIEW_ROUTE', env('USE_VIEW_ROUTE',true)); //是否使用视图路由，开启后如果找不到路由处理器，可以直接返回路由匹配的模版
-define('USE_DEFUALT_HANDLE', env('USE_DEFUALT_HANDLE',false)); //当找不到处理器时，是否使用默认处理器
-define('DEFAULT_HOST',env('DEFAULT_HOST','127.0.0.1'));//默认主机，命令行模式时使用
+!defined('APP_DEBUG') && define('APP_DEBUG', env('app_debug',true)); // 系统默认在开发模式下运行
+define('BIND_MODULE', env('bind_module','Home')); //系统前端默认模块
+define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false)); //当找不到处理器时，是否使用默认处理器
+define('DEFAULT_HOST',env('default_host','127.0.0.1'));//默认主机，命令行模式时使用
 
 /**** 【定义客户端访问路径】 ****/
 //系统唯一入口定义，兼任windows系统和cli模式

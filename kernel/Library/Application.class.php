@@ -64,7 +64,7 @@ class Application{
 	}
 
 	/**
-	 * 初始化系统模块配置
+	 * 初始化系统模块配置（此处配置可作用于模块中）
 	 */
 	private function setConfig(){
 		// 设置错误处理函数
@@ -76,6 +76,9 @@ class Application{
 		}
 		// 设置本地时差
 		function_exists('date_default_timezone_set') && date_default_timezone_set(C('timezone'));
+		
+		//是否使用视图路由，开启后如果找不到路由处理器，可以直接返回路由匹配的模版
+		define('USE_VIEW_ROUTE', C('use_view_route',env('use_view_route',true))); 
 		
 		// 定义是否为ajax请求
 		!defined('IS_AJAX') && define('IS_AJAX', ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || I(C('VAR_AJAX_SUBMIT', 'ajax'))) ? true : false);

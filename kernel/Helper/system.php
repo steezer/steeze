@@ -1024,7 +1024,7 @@ function view($name,$datas=[]){
 }
 
 /**
- * 获取环境变量
+ * 获取环境变量（键名不区分大小写）
  * @param string $key 键名称
  * @param array $default 默认值
  * @return string 环境变量值
@@ -1033,10 +1033,11 @@ function env($key=null,$default=null){
 	if(is_null($key)){ //加载环境变量
 		$path=KERNEL_PATH.'..'.DS.'.env';
 		if(is_file($path) && is_array($result=parse_ini_file($path))){
-			$_ENV=array_merge($_ENV,$result);
+			$_ENV=array_merge($_ENV,array_change_key_case($result,CASE_UPPER));
 		}
 		return $_ENV;
 	}
+	$key=strtoupper($key); 
 	return isset($_ENV[$key]) ? $_ENV[$key] : $default;
 }
 
