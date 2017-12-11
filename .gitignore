@@ -1,5 +1,0 @@
-.*
-!/public/.htaccess
-!.gitignore
-/storage/Cache/
-/storage/Logs/
