@@ -25,6 +25,7 @@ git clone https://github.com/springwind2006/steeze.git
 #### Apache
 Steeze 使用 public/.htaccess 文件来为前端控制器提供隐藏了 index.php 的优雅链接。如果你的 Steeze 使用了 Apache 作为服务容器，请务必启用 mod_rewrite模块，让服务器能够支持 .htaccess 文件的解析。
 如果 Steeze 附带的 .htaccess 文件不起作用，就尝试用下面的方法代替：
+
 ```
 Options +FollowSymLinks
 RewriteEngine On
@@ -35,8 +36,12 @@ RewriteRule ^ index.php [L]
 ```
 #### Nginx
 如果你使用的是 Nginx，在你的站点配置中加入以下内容，它将会将所有请求都引导到 index.php 前端控制器：
+
 ```
 location / {
     try_files $uri $uri/ /index.php?$query_string;
 }
 ```
+
+## 开发手册
+[点击查看开发文档](docs/index.md)
