@@ -141,8 +141,12 @@ class Loader{
 		
 		// 如果为第二个参数为数组则直接写入配置
 		if(is_array($key)){
-			$configs[$name]=isset($configs[$name]) ? array_merge($configs[$name], $key) : $key;
+			$configs[$name]=array_change_key_case((isset($configs[$name]) ? array_merge($configs[$name], $key) : $key),CASE_UPPER);
 			return $configs[$name];
+		}
+		
+		if(is_string($key)){
+			$key=strtoupper($key);
 		}
 		
 		if(!$reload && isset($configs[$name])){
@@ -158,10 +162,14 @@ class Loader{
 		if(defined('ROUTE_M')){
 			$modulePath=APP_PATH . ROUTE_M . DS . 'Conf' . DS . $name . '.php';
 			if(is_file($modulePath)){
-				if(isset($configs[$name])){
-					$configs[$name]=array_merge($configs[$name],include($modulePath));
-				}else{
-					$configs[$name]=include($modulePath);
+				$moduleConfig=include($modulePath);
+				if(is_array($moduleConfig)){
+					$moduleConfig=array_change_key_case($moduleConfig,CASE_UPPER);
+					if(isset($configs[$name])){
+						$configs[$name]=array_merge($configs[$name],$moduleConfig);
+					}else{
+						$configs[$name]=$moduleConfig;
+					}
 				}
 			}
 		}

@@ -57,7 +57,8 @@ function dump($var,$isReturn=false){
 /**
  * 获取真实IP地址
  *
- * @return unknown
+ * @param int $isOnline 是否在线获取本地IP
+ * @return string
  */
 function getip($isOnline=0){
 	return Library\Client::getIpAddr($isOnline);
