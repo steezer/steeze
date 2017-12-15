@@ -1,7 +1,8 @@
 <?php
-/**** 【定义网站基础常量】 ****/
+/**** 【定义系统基础常量】 ****/
 function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/GMT-8'); //设置时区
-define('INI_STEEZE', true);
+define('STEEZE_VERSION','1.0.1'); //系统版本
+define('INI_STEEZE', true); //初始化标识
 define('SYS_START_TIME', microtime()); // 设置系统开始时间
 define('NOW_TIME', $_SERVER['REQUEST_TIME']); // 设置此次请求时间
 

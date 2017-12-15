@@ -4,7 +4,7 @@
  */
 return [
 	// 常规设置
-	'version' => '1.0.0',
+	'version' => '1.0.0', // 应用版本
 	'charset' => 'utf-8', // 网站字符集
 	'timezone' => 'Etc/GMT-8', // 网站时区（只对php 5.1以上版本有效），Etc/GMT-8 实际表示的是 GMT+8
 	'lang' => 'zh-cn', // 网站语言包

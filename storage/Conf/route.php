@@ -7,10 +7,5 @@ return [
 			'/{c}/{a}'=>'{c}/{a}',
 			'/{c}/{a}/{user|d}'=>'{c}/{a}',
 		]
-	],
-	'demo1.stwms.cn@home' => [
-		'/{c}/{a}' => function($c,$a){
-			return view($c.'/'.$a);
-		}
-	],
+	]
 ];

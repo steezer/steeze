@@ -109,7 +109,7 @@ class View{
 	public static function resolvePath($template=''){
 		$a=ltrim(empty(self::$_a) && defined('ROUTE_A') ? ROUTE_A : self::$_a,'_');
 		$c=empty(self::$_c) && defined('ROUTE_C') ? ROUTE_C : self::$_c;
-		$m=(empty(self::$_m) && defined('ROUTE_M') ? ROUTE_M : self::$_m);
+		$m=empty(self::$_m) && defined('ROUTE_M') ? ROUTE_M : self::$_m;
 		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
 		// 获取当前模块 home@aa/bb/cc
