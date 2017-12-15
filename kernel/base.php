@@ -30,7 +30,6 @@ Loader::helper('system') && env();
 
 /**** 【从环境变量初始化常量】 ****/
 !defined('APP_DEBUG') && define('APP_DEBUG', env('app_debug',true)); // 系统默认在开发模式下运行
-define('BIND_MODULE', env('bind_module','Home')); //系统前端默认模块
 define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false)); //当找不到处理器时，是否使用默认处理器
 define('DEFAULT_HOST',env('default_host','127.0.0.1'));//默认主机，命令行模式时使用
 
@@ -39,7 +38,7 @@ define('DEFAULT_HOST',env('default_host','127.0.0.1'));//默认主机，命令�
 define('SYSTEM_ENTRY','/'.trim(str_replace(DS,'/',str_replace(ROOT_PATH,'/',str_replace('/',DS,$_SERVER['SCRIPT_NAME']))),'/'));
 define('SITE_PROTOCOL', (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://'));
 define('SITE_PORT', (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : ''));
-define('SITE_HOST',(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : DEFAULT_HOST)));
+define('SITE_HOST',strtolower(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : DEFAULT_HOST)));
 define('SITE_URL', SITE_PROTOCOL . SITE_HOST . (SITE_PROTOCOL=='https://'?'' : SITE_PORT)); // 网站首页地址
 define('ROOT_URL', rtrim(dirname(SYSTEM_ENTRY),'/').'/'); //系统根目录路径
 define('RESX_URL', ROOT_URL . 'resx/'); //静态文件路径
@@ -141,12 +140,8 @@ class Loader{
 		
 		// 如果为第二个参数为数组则直接写入配置
 		if(is_array($key)){
-			$configs[$name]=array_change_key_case((isset($configs[$name]) ? array_merge($configs[$name], $key) : $key),CASE_UPPER);
+			$configs[$name]=(isset($configs[$name]) ? array_merge($configs[$name], $key) : $key);
 			return $configs[$name];
-		}
-		
-		if(is_string($key)){
-			$key=strtoupper($key);
 		}
 		
 		if(!$reload && isset($configs[$name])){
@@ -164,7 +159,6 @@ class Loader{
 			if(is_file($modulePath)){
 				$moduleConfig=include($modulePath);
 				if(is_array($moduleConfig)){
-					$moduleConfig=array_change_key_case($moduleConfig,CASE_UPPER);
 					if(isset($configs[$name])){
 						$configs[$name]=array_merge($configs[$name],$moduleConfig);
 					}else{

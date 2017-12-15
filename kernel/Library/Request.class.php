@@ -64,17 +64,15 @@ class Request{
 		//使用路径参数匹配
 		$handle=$this->matchHandle($url);
 		if(is_null($handle) || is_string($handle)){
+			//获取路由处理器，如：index/show@home
 			if(is_string($handle)){
-				$results=explode('@', $handle);
-				define('ROUTE_A',array_pop($results));
-				if(!empty($results)){
-					$mcs=explode('/', array_pop($results));
-					define('ROUTE_C',ucfirst(array_pop($mcs)));
-					!empty($mcs) && define('ROUTE_M',ucfirst(strtolower(array_pop($mcs))));
-				}
+				$res=explode('@', $handle);
+				$cas=explode('/', array_unshift($res));
+				define('ROUTE_A',array_pop($cas));
+				!empty($cas) && define('ROUTE_C',ucfirst(array_pop($cas)));
+				!empty($res) && define('ROUTE_M',ucfirst(strtolower(array_pop($res))));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
-			!defined('ROUTE_M') && define('ROUTE_M', defined('BIND_MODULE') ? BIND_MODULE : ucfirst(strtolower(I('m','Home'))));
 			if($url==ROOT_URL || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
 				!defined('ROUTE_C') && define('ROUTE_C', defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
 				!defined('ROUTE_A') && define('ROUTE_A', defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
@@ -82,6 +80,9 @@ class Request{
 		}else if(is_callable($handle)){
 			$this->setDisposer($handle);
 		}
+		
+		//绑定模块
+		!defined('ROUTE_M') && define('ROUTE_M', defined('BIND_MODULE') ? BIND_MODULE : ucfirst(strtolower(I('m',env('bind_module','Home')))));
 	}
 
 	/*
@@ -91,37 +92,11 @@ class Request{
 	 */
 	private function matchHandle($url){
 		$configs=C('route.*',[]);
-		$routes=[];
-		if(!empty(SITE_HOST)){
-			$host=strtolower(SITE_HOST);
-			
-			//从总配置文件和分布文件读取
-			if(isset($configs[$host])){
-				$routes=$configs[$host];
-			}
-			$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
-			if(is_file($file) && is_array($confs=include($file))){
-				$routes=array_merge($routes,$confs);
-			}
-			
-			//尝试从泛解析域名读取，例如：*.steeze.cn
-			if(empty($routes) && strpos($host, '.')){
-				$host='*'.strstr($host,'.');
-				if(isset($configs[$host])){
-					$routes=$configs[$host];
-				}
-				$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
-				if(is_file($file) && is_array($confs=include($file))){
-					$routes=array_merge($routes,$confs);
-				}
-			}
-			
-		}
-		
-		//如果域名没有匹配到路由配置，则使用默认
-		if(empty($routes) && isset($configs['default'])){
-			$routes=$configs['default'];
-		}
+		$default=isset($configs['default']) ? $configs['default'] : [];
+		unset($configs['default']);
+		//通过主机名获取路由配置
+		$routes = $this->getRoutesByHost(SITE_HOST, $configs,$default);
+		unset($configs,$default);
 		
 		//对URL访问路径进行路由匹配
 		foreach($routes as $key=> $value){
@@ -137,6 +112,87 @@ class Request{
 			}
 		}
 		return null;
+	}
+	
+	/*
+	 * 获取路由
+	 * @param string $host 域名
+	 * @param array &$configs 所有路由配置
+	 * @param array &$default 默认路由
+	 * @return 匹配的路由配置
+	 */
+	private function getRoutesByHost($host,&$configs,&$default=[]){
+		$routes=[];
+		//从总配置文件和分布文件读取
+		if(isset($configs[$host])){
+			$routes=$configs[$host];
+		}
+		$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
+		if(is_file($file) && is_array($confs=include($file))){
+			$routes=array_merge($routes,$confs);
+		}
+		
+		//尝试从泛解析域名读取，例如：*.steeze.cn
+		if(empty($routes) && strpos($host, '.')){
+			$domain='*'.strstr($host,'.');
+			if(isset($configs[$domain])){
+				$routes=$configs[$domain];
+			}
+			$file=STORAGE_PATH . 'Routes' . DS .$domain.'.php';
+			if(is_file($file) && is_array($confs=include($file))){
+				$routes=array_merge($routes,$confs);
+			}
+		}
+		
+		//从绑定模块的路由中获取，如：home@*.h928.com
+		if(empty($routes)){
+			//从全局配置中查找
+			$domains=array_keys($configs);
+			$bindModule='';
+			foreach($domains as $domain){
+				$cRoutes=explode('@',$domain);
+				$cDomain=array_shift($cRoutes);
+				if(
+					$host == $cDomain ||
+					(strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
+				){
+					$routes=$configs[$domain];
+					if(!empty($cRoutes)){
+						$bindModule=array_shift($cRoutes);
+					}
+					break;
+				}
+			}
+			
+			//如果在全局中未找到，则从路由配置目录中查找
+			if(empty($routes)){
+				$path=STORAGE_PATH.'Routes'.DS;
+				if(is_dir($path) && ($handle = opendir($path))){
+					while (false !== ($file = readdir($handle))) {
+						if($file != '.' && $file != '..' && is_file($path.$file)){
+							$domain=basename($file,'.php');
+							$cRoutes=explode('@',$domain);
+							$cDomain=array_shift($cRoutes);
+							if(
+								$host == $cDomain ||
+								(strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
+							){
+								$routes=include($path.$file);
+								if(!empty($cRoutes)){
+									$bindModule=array_shift($cRoutes);
+								}
+								break;
+							}
+						}
+					}
+					closedir($handle);
+				}
+			}
+			if(!empty($bindModule)){
+				define('BIND_MODULE', ucfirst(strtolower($bindModule)));
+			}
+		}
+		return !empty($routes) ? $routes : $default;
 	}
 	
 	/*

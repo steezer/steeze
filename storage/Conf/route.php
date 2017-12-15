@@ -2,10 +2,15 @@
 //此配置文件只能在全局配置
 return [
 	'default' => [
-		'/'=> 'auth&convert>home/index@index',
+		'/'=> 'auth&convert>index/index',
 		'auth&convert' => [
-			'/{c}/{a}'=>'home/{c}@{a}',
-			'/{c}/{a}/{user|d}'=>'home/{c}@{a}',
+			'/{c}/{a}'=>'{c}/{a}',
+			'/{c}/{a}/{user|d}'=>'{c}/{a}',
 		]
-	]
+	],
+	'demo1.stwms.cn@home' => [
+		'/{c}/{a}' => function($c,$a){
+			return view($c.'/'.$a);
+		}
+	],
 ];

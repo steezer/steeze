@@ -944,6 +944,7 @@ function resx($file,$type='',$check=false,$default='default'){
 		$check=boolval($type);
 		$type='';
 	}
+	
 	if(($pos=strpos($file, '/')) !== 0){
 		$module='';
 		$style='';
@@ -978,6 +979,7 @@ function resx($file,$type='',$check=false,$default='default'){
 		}
 		$module=strtolower($module);
 		$style=rtrim($style,'/');
+		
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
@@ -1315,11 +1317,12 @@ function U($url='',$vars='',$domain=false,$type=-1){
  */
 function C($key='',$default=''){
 	if(is_string($key)){
-		$keys=explode('.', $key,2);
+		$keys=explode('.', $key);
 		count($keys) < 2 && array_unshift($keys, 'system');
 		$len=count($keys);
 		$file=trim($keys[0]);
 		$key=trim($keys[1],' *');
+		
 		if($len < 3){
 			return Loader::config($file, $key, $default);
 		}else{
