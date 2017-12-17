@@ -67,7 +67,7 @@ class Request{
 			//获取路由处理器，如：index/show@home
 			if(is_string($handle)){
 				$res=explode('@', $handle);
-				$cas=explode('/', array_unshift($res));
+				$cas=explode('/', array_shift($res));
 				define('ROUTE_A',array_pop($cas));
 				!empty($cas) && define('ROUTE_C',ucfirst(array_pop($cas)));
 				!empty($res) && define('ROUTE_M',ucfirst(strtolower(array_pop($res))));

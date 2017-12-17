@@ -1,17 +1,18 @@
-<include file="Common/header"/>
-<assign name="title" value="测试" />
-<div style="text-align:left;padding:30px 40px;">
-	<st:get table="news" field="id,title" return="newses" order="id asc" page="$page">
-		<table cellpadding="0" cellspacing="0">
-			<foreach name="newses" item="item">
-				<tr><td>{$item.id}</td><td>{$item.title}</td></tr>
-			</foreach>
-		</table>
-	</st:get>
-	<st:json name="show"/>
-	<p>{$pages}</p>
-	<p>{$user.id}:{$user.username}</p>
-	<action name="user.info" user="4"/>
-	<p><a href="{U('/index/index',$_GET)}">{$user.id}:{$user.username}</a></p>
-</div>
-<include file="Common/footer"/>
+<layout name="Layout/base"/>
+<assign name="title" value="测试1" />
+<snippet name="body">
+	<div style="text-align:left;padding:30px 40px;">
+		<st:get table="news" field="id,title" return="newses" order="id asc" page="$page">
+			<table cellpadding="0" cellspacing="0">
+				<foreach name="newses" item="item">
+					<tr><td>{$item.id}</td><td>{$item.title}</td></tr>
+				</foreach>
+			</table>
+		</st:get>
+		<st:json name="show"/>
+		<p>{$pages}</p>
+		<p>{$user.id}:{$user.username}</p>
+		<action name="user.info" user="4"/>
+		<p><a href="{U('/index/index',$_GET)}">{$user.id}:{$user.username}</a></p>
+	</div>
+</snippet>

@@ -74,7 +74,8 @@ class Manager {
 	public function parse($str){
 		$ld=$this->leftDelim;
 		$rd=$this->rightDelim;
-		$str=preg_replace('/\<\!--\s*%.*?%\s*--\>/is', '', $str);
+		//处理模版注释
+		$str=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $str);
 		
 		//布局标签解析
 		if(stripos($str, $ld . 'layout ') !== false){
@@ -178,9 +179,10 @@ class Manager {
 						$str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str);
 					}
 					$content=file_get_contents($layout);
+					$content=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $content);
 					$sections=[];
 					//获取所有section
-					if(preg_match_all('/' . $ld . 'section\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/section' . $rd . '/is', $str, $matches)){
+					if(preg_match_all('/' . $ld . 'snippet\s+(.+?)\s*' . $rd . '(.*?)' . $ld . '\/snippet' . $rd . '/is', $str, $matches)){
 						foreach ($matches[1] as $index => $value){
 							$names=$this->parseAttrs($value);
 							if(isset($names['name'])){
@@ -190,7 +192,7 @@ class Manager {
 					}
 					
 					return preg_replace_callback(
-							'/' . $ld . 'section\s+(.+?)\s*\/?' . $rd . '/is',
+							'/' . $ld . 'snippet\s+(.+?)\s*\/?' . $rd . '/is',
 							function($matches) use($sections){
 								$data=$this->parseAttrs($matches[1]);
 								return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
