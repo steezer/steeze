@@ -929,14 +929,14 @@ function cookie($name='',$value='',$option=null){
 
 /**
  * 导入静态文件路径 
- * 如：'js/show.js@daoke:home'，则返回/resx/app/home/daoke/js/show.js
+ * 如：'js/show.js@daoke:home'，则返回/assets/app/home/daoke/js/show.js
  *
  * @param unknown $file 文件模式路径
  * @param string $type 文件类型
  * @param bool $check 是否检查存在，如果不存在返回空
  * @param string $default='default' 如果不存在，默认检查的风格名称
  */
-function resx($file,$type='',$check=false,$default='default'){
+function assets($file,$type='',$check=false,$default='default'){
 	if(!is_string($type)){
 		if(is_string($check)){
 			$default=$check;
@@ -961,7 +961,7 @@ function resx($file,$type='',$check=false,$default='default'){
 			}
 		}else{
 			$module=ROUTE_M;
-			$style=C('default_resx');
+			$style=C('default_assets');
 		}
 		
 		if($file === ''){
@@ -983,18 +983,18 @@ function resx($file,$type='',$check=false,$default='default'){
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
-				return is_file(RESX_PATH.$style.DS.$file) ? RESX_URL.$style.'/'.$file : '';
+				return is_file(ASSETS_PATH.$style.DS.$file) ? ASSETS_URL.$style.'/'.$file : '';
 			}else{
-				if(!is_file(RESX_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
-					return is_file(RESX_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
-							 RESX_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
+				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
+					return is_file(ASSETS_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
+							 ASSETS_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
 				}
 			}
 		}
 		return $isRemote ? $style.'/'.$file :
-				RESX_URL . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
+				ASSETS_URL . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
 	}else{
-		return RESX_URL . ltrim($file, '/');
+		return ASSETS_URL . ltrim($file, '/');
 	}
 }
 

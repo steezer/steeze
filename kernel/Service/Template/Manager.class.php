@@ -224,7 +224,7 @@ class Manager {
 			$default=isset($defaults[$k]) ? $defaults[$k] : $defaults[0];
 			
 			$ext=$type !== '' ? $type : fileext(($pos=strpos($file, '@')) == false ? $file : substr($file, 0, $pos));
-			$file=resx($file, $type, ($check != 'false' && $check), $default);
+			$file=assets($file, $type, ($check != 'false' && $check), $default);
 			if($file !== ''){
 				switch($ext){
 					case 'css':
