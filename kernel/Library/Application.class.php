@@ -6,7 +6,7 @@ class Application{
 
 	public function __construct(){
 		//路由绑定
-		$request=new Request();
+		$request=make(Request::class);
 		//系统配置
 		$this->setConfig(); 
 		//运行应用

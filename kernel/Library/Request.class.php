@@ -215,9 +215,10 @@ class Request{
 		
 		$routeLen=substr_count($route, '/');
 		$urlLen=substr_count($url, '/');
+		$optCount=substr_count($route, '?');
 		
 		//无参数或有参数的路径匹配
-		if($routeLen==$urlLen || (strpos($route, '?') && $urlLen < $routeLen)){
+		if($routeLen==$urlLen || $urlLen + $optCount == $routeLen){
 			//请求方法匹配
 			$routes=explode(':', $route, 2);
 			$route=trim(array_pop($routes));
@@ -239,13 +240,17 @@ class Request{
 				$mCount=count($kArrs);
 				foreach($kArrs as $ki=> $kv){
 					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
-						if(strpos($kv, '{')!==false){ //变量匹配检查
+						/**
+						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
+						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
+						 * */
+						if(strpos($kv, '{')!==false){ // 变量匹配检查
 							$kval=trim($kv,'{} ');
 							$isOptional=substr($kval,-1)=='?';
 							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
 							$kvName=$kvnts[0];
 							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
-							if($kvType=='d'){
+							if($kvType=='d'){  // 变量类型检查
 								if(is_numeric($urlArrs[$ki])){
 									$this->params[$kvName]=$urlArrs[$ki];
 								}else{
@@ -254,7 +259,7 @@ class Request{
 							}else{
 								$this->params[$kvName]=$urlArrs[$ki];
 							}
-							if($isVar){
+							if($isVar){ // 路由控制器变量处理
 								$handle=str_replace('{'.$kvName.'}',$urlArrs[$ki],$handle);
 							}
 						}else{

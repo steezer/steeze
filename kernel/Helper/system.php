@@ -1339,7 +1339,7 @@ function C($key='',$default=''){
 			return $res;
 		}
 	}elseif(is_array($key)){
-		return Loader::config('system', $key);
+		return Loader::config((empty($default)?'system':$default), $key);
 	}
 	return null;
 }

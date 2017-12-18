@@ -15,4 +15,3 @@ return [
 		'prefix' => env('db_prefix','')
 	]
 ];
-?>
