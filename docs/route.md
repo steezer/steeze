@@ -43,6 +43,17 @@ return [
 	],
 ];
 ```
+同时支持将特定客户端访问（如GET或POST）方法绑定到路由  
+如果不指定方法，默认使用GET方法，例如：
+
+```
+return [
+	'm.steeze.cn@mobile' => [
+		'POST:/show'=>'index/show',
+		'/info'=>'index/show@home'
+	],
+];
+```
 
 **特别说明**：
 - 1). 如果在路由处理器和域名绑定中同时指定模块名称，则优先使用路由控制器中指定的模块名称；
@@ -163,6 +174,18 @@ return [
 return [
 	'default'=> [
 		'/test/{page|d}'=> function($page){
+			echo $page;
+		}
+	]
+];
+```
+在参数后面使用“?”，可以将路由参数设置为可选，例如：
+
+```
+return [
+	'default'=> [
+		'/{c}/{a}/{page?}'=> '{c}/{a}@home',
+		'/test/{page|d?}'=> function($page){
 			echo $page;
 		}
 	]

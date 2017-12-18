@@ -213,13 +213,19 @@ class Request{
 			}
 		}
 		
-		if(substr_count($route, '/')==substr_count($url, '/')){
+		$routeLen=substr_count($route, '/');
+		$urlLen=substr_count($url, '/');
+		
+		//无参数或有参数的路径匹配
+		if($routeLen==$urlLen || (strpos($route, '?') && $urlLen < $routeLen)){
+			//请求方法匹配
 			$routes=explode(':', $route, 2);
 			$route=trim(array_pop($routes));
 			$method=count($routes) ? strtoupper(array_pop($routes)) : 'GET';
 			if($method!=REQUEST_METHOD){
 				return null;
 			}
+			
 			if(!strcasecmp($route, $url)){
 				$this->setMiddleware($middlewares);
 				//如果url完全匹配（不区分大小写），直接返回
@@ -232,9 +238,11 @@ class Request{
 				$isVar=is_string($handle) && strpos($handle, '}')!==false;
 				$mCount=count($kArrs);
 				foreach($kArrs as $ki=> $kv){
-					if(strcasecmp($kv, $urlArrs[$ki])){
+					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
 						if(strpos($kv, '{')!==false){ //变量匹配检查
-							$kvnts=explode('|',trim($kv,'{} '));
+							$kval=trim($kv,'{} ');
+							$isOptional=substr($kval,-1)=='?';
+							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
 							$kvName=$kvnts[0];
 							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
 							if($kvType=='d'){
