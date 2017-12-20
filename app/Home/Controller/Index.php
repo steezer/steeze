@@ -5,15 +5,8 @@ use Library\Model;
 
 class Index extends Controller{
 	
-	public function __construct(){
-	}
-	
 	public function index(){
-		var_dump(__FUNCTION__);
-	}
-	
-	public function test2(){
-		var_dump(__FUNCTION__);
+		return var_export(__FUNCTION__,true);
 	}
 	
 	public function test(Model $user){
