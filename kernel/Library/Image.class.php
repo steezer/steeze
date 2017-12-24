@@ -142,7 +142,19 @@ class Image{
 	}
 
 	/**
-	 * 功能：生成缩略图，并提供最佳位置截取功能 参数：($image 原始图片地址, $filename='' 生成后存放地址, $maxwidth=200 最大宽度, $maxheight=200 最大高度, $autocut=0 是否自动剪裁, $forece=0 是否强制执行, $ftp=0 是否处理后删除原始图片) 说明： 如果第二个参数为空则发送缩略图至浏览器，否则保存至路径； 如果图片是gif格式，只能处理单帧的gif； 自动剪裁将会根据图片尺寸自动寻找最佳位置检测； 强制执行检查实在原始文件宽高都小于或等于生成的宽高时强制执行
+	 * 生成缩略图，并提供最佳位置截取功能 
+	 * @param $image string 原始图片地址
+	 * @param $filename='' string 生成后存放地址
+	 * @param $maxwidth=200 int 最大宽度
+	 * @param $maxheight=200 int 最大高度
+	 * @param $autocut=0 int 是否自动剪裁
+	 * @param $forece=0 int 是否强制执行
+	 * @param $ftp=0 int 是否处理后删除原始图片) 
+	 * 说明： 
+	 * 1. 如果第二个参数为空则发送缩略图至浏览器，否则保存至路径； 
+	 * 2. 如果图片是gif格式，只能处理单帧的gif； 
+	 * 3. 自动剪裁将会根据图片尺寸自动寻找最佳位置检测； 
+	 * 4. 强制执行检查实在原始文件宽高都小于或等于生成的宽高时强制执行
 	 */
 	public function thumbImg($image,$filename='',$maxwidth=200,$maxheight=200,$autocut=0,$forece=0,$ftp=0){
 		// //获取图片信息////
@@ -158,6 +170,11 @@ class Image{
 		}
 		unset($info);
 		
+		// 缩小模式忽略条件
+		if(!$autocut && ((!$maxwidth && $srcheight <= $maxheight) || (!$maxheight && $srcwidth <= $maxwidth) )){
+			return false;
+		}
+		
 		// 原始宽度和高度都大于或等于设定范围，强制重新设置宽度和高度
 		if($srcwidth <= $maxwidth && $srcheight <= $maxheight && !empty($filename) && !$forece){
 			return false;
@@ -168,7 +185,7 @@ class Image{
 	}
 
 	private function cutImg($image,$filename,$sizeSetting,$autocut=0,$ftp=0){
-		@extract($sizeSetting);
+		extract($sizeSetting);
 		
 		// //计算图片比例////
 		$isZoom=($maxwidth >= $srcwidth && $maxheight >= $srcheight);
@@ -182,7 +199,7 @@ class Image{
 		// //执行剪裁功能前宽度、高度及限定点的设置////
 		if($autocut && ($maxwidth > 0 || $maxheight > 0)){
 			$cutSetting=$this->getcut($autocut, $sizeSetting);
-			@extract($cutSetting);
+			extract($cutSetting);
 			unset($cutSetting);
 		}
 		
@@ -441,7 +458,7 @@ class Image{
 	public static function thumb($imgUrl,$maxWidth=0,$maxHeight=0,$cutType=0,$defaultImg='',$isGetRemot=0){
 		$isGetRemot=is_int($defaultImg) ? $defaultImg : $isGetRemot;
 		$smallpic=is_string($defaultImg) && $defaultImg ? $defaultImg : basename(C('default_thumb'));
-		$defaultImg=strpos($smallpic, '/') === false ? dirname(C('default_thumb')) '/' . $smallpic : $smallpic;
+		$defaultImg= strpos($smallpic, '/') === false ? dirname(C('default_thumb')). '/' . $smallpic : $smallpic;
 		if(empty($imgUrl)){
 			return $defaultImg;
 		}
