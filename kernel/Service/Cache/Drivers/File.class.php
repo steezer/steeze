@@ -13,14 +13,16 @@ class File extends Cache {
      * @access public
      */
     public function __construct($options=array()) {
-        if(!empty($options)) {
-            $this->options =  $options;
-        }
-        $this->options['temp']      =   !empty($options['temp'])?   $options['temp']    :   C('data_cache_path');
-        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');
-        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
-        $this->options['length']    =   isset($options['length'])?  $options['length']  :   0;
-        if(substr($this->options['temp'], -1) != '/')    $this->options['temp'] .= '/';
+        $options = array_merge(array (
+        		'temp'        =>  C('data_cache_path',env('data_cache_path','')),
+        		'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
+        		'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
+        		'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
+        ),$options);
+        
+        if(substr($this->options['temp'], -1) != '/'){
+        		$this->options['temp'] .= '/';
+       	}
         $this->init();
     }
 

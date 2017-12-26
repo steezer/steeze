@@ -30,7 +30,7 @@ define('UPLOAD_PATH', ASSETS_PATH . 'ufs' . DS); //文件上传目录路径
 Loader::helper('system') && env();
 
 /**** 【从环境变量初始化常量】 ****/
-!defined('APP_DEBUG') && define('APP_DEBUG', env('app_debug',true)); // 系统默认在开发模式下运行
+!defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug',true)); // 系统默认在开发模式下运行
 define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false)); //当找不到处理器时，是否使用默认处理器
 define('DEFAULT_HOST',env('default_host','127.0.0.1'));//默认主机，命令行模式时使用
 

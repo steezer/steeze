@@ -19,16 +19,16 @@ class Memcache extends Cache {
         }
 
         $options = array_merge(array (
-            'host'        =>  C('MEMCACHE_HOST') ? : '127.0.0.1',
-            'port'        =>  C('MEMCACHE_PORT') ? : 11211,
-            'timeout'     =>  C('data_cache_timeOUT') ? : false,
-            'persistent'  =>  false,
+        		'host'        =>  C('memcache_host',env('memcache_host','127.0.0.1')),
+        		'port'        =>  C('memcache_port',env('memcache_port',11211)),
+        		'timeout'     =>  C('memcache_timeout',env('memcache_timeout',false)),
+        		'persistent'    => boolval(C('memcache_persistent',env('memcache_persistent',false))),
+        		'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
+        		'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
+        		'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
         ),$options);
 
-        $this->options      =   $options;
-        $this->options['expire'] =  isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
-        $this->options['prefix'] =  isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');        
-        $this->options['length'] =  isset($options['length'])?  $options['length']  :   0;        
+        $this->options      =   $options;           
         $func               =   $options['persistent'] ? 'pconnect' : 'connect';
         $this->handler      =   new \Memcache;
         $options['timeout'] === false ?

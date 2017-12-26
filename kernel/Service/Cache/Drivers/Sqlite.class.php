@@ -16,17 +16,18 @@ class Sqlite extends Cache {
         if ( !extension_loaded('sqlite') ) {
             E(L('_NOT_SUPPORT_').':sqlite');
         }
-        if(empty($options)) {
-            $options = array (
-                'db'        =>  ':memory:',
-                'table'     =>  'sharedmemory',
-            );
-        }
-        $this->options  =   $options;      
-        $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');
-        $this->options['length']    =   isset($options['length'])?  $options['length']  :   0;        
-        $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
         
+        $options = array_merge(array (
+        		'db'        =>  ':memory:',
+        		'table'     =>  'sharedmemory',
+        		'temp'        =>  C('data_cache_path',env('data_cache_path','')),
+        		'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
+        		'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
+        		'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
+        		'persistent'    => C('data_cache_persistent',env('data_cache_persistent',false)),
+        ),$options);
+        
+        $this->options  =   $options;      
         $func = $this->options['persistent'] ? 'sqlite_popen' : 'sqlite_open';
         $this->handler      = $func($this->options['db']);
     }

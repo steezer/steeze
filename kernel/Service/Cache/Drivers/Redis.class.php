@@ -18,23 +18,29 @@ class Redis extends Cache {
             E(L('_NOT_SUPPORT_').':redis');
         }
         $options = array_merge(array (
-            'host'          => C('REDIS_HOST') ? : '127.0.0.1',
-            'port'          => C('REDIS_PORT') ? : 6379,
-            'timeout'       => C('data_cache_timeOUT') ? : false,
-            'persistent'    => false,
+        		'host'          => C('redis_host',env('redis_host','127.0.0.1')),
+        		'port'          => C('redis_port',env('redis_port',6379)),
+        		'timeout'       => C('redis_timeout',env('redis_timeout',false)),
+        		'password'      => C('redis_password',env('redis_password',null)),
+        		'db'            => intval(C('redis_db',env('redis_db',0))),
+        		'persistent'    => boolval(C('data_cache_persistent',env('data_cache_persistent',false))),
+        		'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
+        		'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
+        		'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
         ),$options);
 
-        $this->options =  $options;
-        $this->options['expire'] =  isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
-        $this->options['prefix'] =  isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');        
-        $this->options['length'] =  isset($options['length'])?  $options['length']  :   0;        
+        $this->options =  $options;    
         $func = $options['persistent'] ? 'pconnect' : 'connect';
+        
         $this->handler  = new \Redis;
-        $options['timeout'] === false ?
-            $this->handler->$func($options['host'], $options['port']) :
-            $this->handler->$func($options['host'], $options['port'], $options['timeout']);
+        $options['timeout'] === false ? 
+        		$this->handler->$func($options['host'], $options['port']) :
+            	$this->handler->$func($options['host'], $options['port'], $options['timeout']);
+        
+        !is_null($options['password']) && $this->handler->auth($options['password']);
+        $this->handler->select(intval($options['db']));
     }
-
+            
     /**
      * 读取缓存
      * @access public
