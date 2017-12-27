@@ -107,9 +107,9 @@ class View{
 	 * @return string
 	 */
 	public static function resolvePath($template=''){
-		$a=ltrim(empty(self::$_a) && defined('ROUTE_A') ? ROUTE_A : self::$_a,'_');
-		$c=empty(self::$_c) && defined('ROUTE_C') ? ROUTE_C : self::$_c;
-		$m=empty(self::$_m) && defined('ROUTE_M') ? ROUTE_M : self::$_m;
+		$a=ltrim(empty(self::$_a) && env('ROUTE_A',false) ? env('ROUTE_A') : self::$_a,'_');
+		$c=empty(self::$_c) && env('ROUTE_C',false) ? env('ROUTE_C') : self::$_c;
+		$m=empty(self::$_m) && env('ROUTE_M',false) ? env('ROUTE_M') : self::$_m;
 		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
 		// 获取当前模块 home@aa/bb/cc
@@ -154,20 +154,21 @@ class View{
 	 * @return mixed
 	 */
 	public static function render($content,$charset='',$contentType=''){
-		if(!headers_sent()){
+		$response=make(Response::class);
+		if(!$response->hasSendHeader()){
 			if(empty($charset) || !is_string($charset)){
 				$charset=C('charset', 'utf-8');
 			}
 			if(empty($contentType) || !is_string($contentType)){
 				$contentType='text/html';
 			}
-			header('Content-Type:' . $contentType . '; charset=' . $charset);// 网页字符编码
-			header('Cache-control: ' . C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			header('X-Powered-By:STWMS');
+			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
+			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
+			$response->header('X-Powered-By','STWMS');
 		}
 		//输出内容
 		if(!is_null($content)){
-			echo (is_array($content) ? json_encode($content,JSON_UNESCAPED_UNICODE) : $content);
+			$response->write($content);
 		}
 	}
 }

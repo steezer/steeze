@@ -971,8 +971,9 @@ class Model implements ArrayAccess{
 	 * @return false|integer
 	 */
 	protected function lazyWrite($guid,$step,$lazyTime){
+		$now_time=time();
 		if(false !== ($value=S($guid))){ // 存在缓存写入数据
-			if(NOW_TIME > S($guid . '_time') + $lazyTime){
+			if($now_time > S($guid . '_time') + $lazyTime){
 				// 延时更新时间到了，删除缓存数据 并实际写入数据库
 				S($guid, NULL);
 				S($guid . '_time', NULL);
@@ -985,7 +986,7 @@ class Model implements ArrayAccess{
 		}else{ // 没有缓存数据
 			S($guid, $step);
 			// 计时开始
-			S($guid . '_time', NOW_TIME);
+			S($guid . '_time', $now_time);
 			return false;
 		}
 	}
@@ -1447,11 +1448,12 @@ class Model implements ArrayAccess{
 				}
 			case 'expire':
 				list($start, $end)=explode(',', $rule);
+				$now_time=time();
 				if(!is_numeric($start))
 					$start=strtotime($start);
 				if(!is_numeric($end))
 					$end=strtotime($end);
-				return NOW_TIME >= $start && NOW_TIME <= $end;
+				return $now_time >= $start && $now_time <= $end;
 			case 'ip_allow': // IP 操作许可验证
 				return in_array(get_client_ip(), explode(',', $rule));
 			case 'ip_deny': // IP 操作禁止验证

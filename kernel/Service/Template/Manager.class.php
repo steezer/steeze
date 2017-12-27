@@ -284,7 +284,7 @@ class Manager {
 		if(isset($datas['name'])){
 			$mcas=explode('.', $datas['name'],3);
 			$action=array_pop($mcas);
-			empty($mcas) && array_push($mcas, ROUTE_C);
+			empty($mcas) && array_push($mcas, env('ROUTE_C'));
 			unset($datas['name']);
 			$str.=(!empty($return) ? '$' . $return . ' = ' : '') . '\Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
 		}
@@ -378,6 +378,10 @@ class Manager {
 	 */
 	public function parseVar($matches){
 		$var_str=$this->parseDoVar($matches[1]);
+		//常量的特殊处理，支持获取环境变量作为常量
+		if(preg_match('/^\w+$/', $var_str)){
+			$var_str='(defined(\''.$var_str.'\')?'.$var_str.':env(\''.$var_str.'\',\''.$var_str.'\'))';
+		}
 		if(isset($matches[2])){
 			$var_str=$this->parseVarFuncs($var_str, $matches[2]);
 		}
@@ -408,9 +412,9 @@ class Manager {
 		
 		if(!isset($tagCaches[$tag])){
 			//先尝试从应用查找标签类
-			if(defined('ROUTE_M')){
+			if(env('ROUTE_M',false)!==false){
 				try{
-					$tagCaches[$tag]=$container->make('\\App\\'.ROUTE_M.'\\Taglib\\'.$tag);
+					$tagCaches[$tag]=$container->make('\\App\\'.env('ROUTE_M').'\\Taglib\\'.$tag);
 				}catch (\Exception $e){}
 			}
 			

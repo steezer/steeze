@@ -2,11 +2,11 @@
 namespace Library;
 
 class Request{
-	static private $middlewares=[]; //中间件数组
-	private $params=[]; //绑定的路由参数
-	private $disposer=null; //请求处理器
+	private $route=null;
+	private $request=null;
 	
 	public function __construct(){
+		
 		if(get_magic_quotes_gpc()){
 			$_POST=slashes($_POST, 0);
 			$_GET=slashes($_GET, 0);
@@ -19,306 +19,165 @@ class Request{
 			session_id($sessionid);
 		}
 		
-		//路由绑定
-		$this->bind();
 	}
 	
-	/*
-	 * 获取路由匹配参数
-	 * @param string $name 参数名称 如果为null，则返回参数数组
-	 * return string|array
+	/**
+	 * 设置外部请求对象
+	 * @param $request 外部响应对象
 	 */
-	public function getParam($name=null){
-		return is_null($name) ? $this->params : $this->params[$name];
+	public function setRequest($request){
+		if(!empty($request) && is_a($request,'Swoole\\Http\\Request')){
+			$this->request=$request;
+			$_GET=$request->get;
+			$_POST=$request->post;
+		}
 	}
 	
-	/*
-	 * 设置绑定的控制器
-	 * @param object $disposer 绑定的控制器
+	/**
+	 * 获取Http请求的头部信息（键名为小写）
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param mixed $default 如果key不存在，则返回默认值
+	 * @return string|array 
 	 */
-	public function setDisposer($disposer){
-		$this->disposer=$disposer;
+	public function header($key=null,$default=null){
+		$headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders());
+		if(!is_null($key)){
+			$key=strtolower($key);
+			return isset($headers[$key]) ? $headers[$key] : $default;
+		}
+		return $headers;
 	}
 	
-	/*
-	 * 获取绑定的控制器
-	 * @return object $disposer 绑定的控制器
+	/**
+	 * 获取Http请求相关的服务器信息（键名为小写）
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param mixed $default 如果key不存在，则返回默认值
+	 * @return string|array 
 	 */
-	public function getDisposer(){
-		return $this->disposer;
-	}
-
-	/*
-	 * 检查路由参数是否匹配
-	 */
-	private function bind(){
-		$urls=explode('?',(PHP_SAPI!='cli' ? $_SERVER['REQUEST_URI'] : (isset($GLOBALS['argv'][1])&&!empty($GLOBALS['argv'][1]) ? $GLOBALS['argv'][1]:'/')),2);
-		$url=array_shift($urls);
-		if(stripos($url, SYSTEM_ENTRY)===0){
-			//将"/index.php/user/list"格式地址处理为"/user/list"
-			$url=substr($url, strlen(SYSTEM_ENTRY));
+	public function server($key=null,$default=null){
+		$servers=array_change_key_case(!is_null($this->request) ? $this->request->server : $_SERVER,CASE_LOWER);
+		if(!is_null($key)){
+			$key=strtolower($key);
+			return isset($servers[$key]) ? $servers[$key] : $default;
 		}
-		//规范url地址必须以"/"开头，以非"/"结尾
-		$url='/'.trim($url,'/');
-		
-		//使用路径参数匹配
-		$handle=$this->matchHandle($url);
-		if(is_null($handle) || is_string($handle)){
-			//获取路由处理器，如：index/show@home
-			if(is_string($handle)){
-				$res=explode('@', $handle);
-				$cas=explode('/', array_shift($res));
-				define('ROUTE_A',array_pop($cas));
-				!empty($cas) && define('ROUTE_C',ucfirst(array_pop($cas)));
-				!empty($res) && define('ROUTE_M',ucfirst(strtolower(array_pop($res))));
-			}
-			//设置默认路由常量，同时使用传统路由方式匹配模式
-			if($url==ROOT_URL || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
-				!defined('ROUTE_C') && define('ROUTE_C', defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
-				!defined('ROUTE_A') && define('ROUTE_A', defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
-			}
-		}else if(is_callable($handle)){
-			$this->setDisposer($handle);
-		}
-		
-		//绑定模块
-		!defined('ROUTE_M') && define('ROUTE_M', defined('BIND_MODULE') ? BIND_MODULE : ucfirst(strtolower(I('m',env('bind_module','Home')))));
-	}
-
-	/*
-	 * 查找路由处理器
-	 * @param string $url URL地址
-	 * @return string|null
-	 */
-	private function matchHandle($url){
-		$configs=C('route.*',[]);
-		$default=isset($configs['default']) ? $configs['default'] : [];
-		unset($configs['default']);
-		//通过主机名获取路由配置
-		$routes = $this->getRoutesByHost(SITE_HOST, $configs,$default);
-		unset($configs,$default);
-		
-		//对URL访问路径进行路由匹配
-		foreach($routes as $key=> $value){
-			if(is_array($value)){
-				foreach($value as $k=> $v){
-					if(!is_null($result=$this->getHandle($url,$k,$v))){
-						self::setMiddleware(explode('&', $key));
-						return $result;
-					}
-				}
-			}elseif(!is_null($result=$this->getHandle($url,$key,$value))){
-				return $result;
-			}
-		}
-		return null;
+		return $servers;
 	}
 	
-	/*
-	 * 获取路由
-	 * @param string $host 域名
-	 * @param array &$configs 所有路由配置
-	 * @param array &$default 默认路由
-	 * @return 匹配的路由配置
+	/**
+	 * 获取Http请求的GET参数
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param mixed $default 如果key不存在，则返回默认值
+	 * @return string|array 
 	 */
-	private function getRoutesByHost($host,&$configs,&$default=[]){
-		$routes=[];
-		//从总配置文件和分布文件读取
-		if(isset($configs[$host])){
-			$routes=$configs[$host];
-		}
-		$file=STORAGE_PATH . 'Routes' . DS .$host.'.php';
-		if(is_file($file) && is_array($confs=include($file))){
-			$routes=array_merge($routes,$confs);
-		}
-		
-		//尝试从泛解析域名读取，例如：*.steeze.cn
-		if(empty($routes) && strpos($host, '.')){
-			$domain='*'.strstr($host,'.');
-			if(isset($configs[$domain])){
-				$routes=$configs[$domain];
-			}
-			$file=STORAGE_PATH . 'Routes' . DS .$domain.'.php';
-			if(is_file($file) && is_array($confs=include($file))){
-				$routes=array_merge($routes,$confs);
-			}
-		}
-		
-		//从绑定模块的路由中获取，如：home@*.h928.com
-		if(empty($routes)){
-			//从全局配置中查找
-			$domains=array_keys($configs);
-			$bindModule='';
-			foreach($domains as $domain){
-				$cRoutes=explode('@',$domain);
-				$cDomain=array_shift($cRoutes);
-				if(
-					$host == $cDomain ||
-					(strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
-				){
-					$routes=$configs[$domain];
-					if(!empty($cRoutes)){
-						$bindModule=array_shift($cRoutes);
-					}
-					break;
-				}
-			}
-			
-			//如果在全局中未找到，则从路由配置目录中查找
-			if(empty($routes)){
-				$path=STORAGE_PATH.'Routes'.DS;
-				if(is_dir($path) && ($handle = opendir($path))){
-					while (false !== ($file = readdir($handle))) {
-						if($file != '.' && $file != '..' && is_file($path.$file)){
-							$domain=basename($file,'.php');
-							$cRoutes=explode('@',$domain);
-							$cDomain=array_shift($cRoutes);
-							if(
-								$host == $cDomain ||
-								(strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
-							){
-								$routes=include($path.$file);
-								if(!empty($cRoutes)){
-									$bindModule=array_shift($cRoutes);
-								}
-								break;
-							}
-						}
-					}
-					closedir($handle);
-				}
-			}
-			if(!empty($bindModule)){
-				define('BIND_MODULE', ucfirst(strtolower($bindModule)));
-			}
-		}
-		return !empty($routes) ? $routes : $default;
-	}
-	
-	/*
-	 * 获取路由处理器
-	 * @param string $url URL参数
-	 * @param string $route 路由
-	 * @param string|function $handle 处理器 
-	 * @return string|null
-	 */
-	private function getHandle($url,$route,$handle){
-		$route='/'.trim($route,'/');
-		$middlewares=[];
-		if(is_string($handle)){
-			$handles=explode('>', $handle,2);
-			$handle=trim(array_pop($handles));
-			if(!empty($handles)){
-				$middlewares=array_merge($middlewares,explode('&', array_pop($handles)));
-			}
-		}
-		
-		$routeLen=substr_count($route, '/');
-		$urlLen=substr_count($url, '/');
-		$optCount=substr_count($route, '?');
-		
-		//无参数或有参数的路径匹配
-		if($routeLen==$urlLen || $urlLen + $optCount == $routeLen){
-			//请求方法匹配
-			$routes=explode(':', $route, 2);
-			$route=trim(array_pop($routes));
-			$method=count($routes) ? strtoupper(array_pop($routes)) : 'GET';
-			if($method!=REQUEST_METHOD){
-				return null;
-			}
-			
-			if(!strcasecmp($route, $url)){
-				$this->setMiddleware($middlewares);
-				//如果url完全匹配（不区分大小写），直接返回
-				return $handle;
-			}else{
-				//否则进行变量类型查找
-				$kArrs=explode('/',$route);
-				$urlArrs=explode('/',$url);
-				
-				$isVar=is_string($handle) && strpos($handle, '}')!==false;
-				$mCount=count($kArrs);
-				foreach($kArrs as $ki=> $kv){
-					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
-						/**
-						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
-						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
-						 * */
-						if(strpos($kv, '{')!==false){ // 变量匹配检查
-							$kval=trim($kv,'{} ');
-							$isOptional=substr($kval,-1)=='?';
-							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
-							$kvName=$kvnts[0];
-							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
-							if($kvType=='d'){  // 变量类型检查
-								if(is_numeric($urlArrs[$ki])){
-									$this->params[$kvName]=$urlArrs[$ki];
-								}else{
-									break;
-								}
-							}else{
-								$this->params[$kvName]=$urlArrs[$ki];
-							}
-							if($isVar){ // 路由控制器变量处理
-								$handle=str_replace('{'.$kvName.'}',$urlArrs[$ki],$handle);
-							}
-						}else{
-							break;
-						}
-					}
-					$mCount--;
-				}
-				if(!$mCount){
-					$this->setMiddleware($middlewares);
-					return $handle;
-				}
-			}
-		}
-		return null;
-	}
-	
-	/*
-	 * 设置中间件
-	 * @param string $name 中间名称
-	 * @param array|string $excepts 排除的方法名称
-	 */
-	public static function setMiddleware($name,$excepts=[]){
-		if(is_array($name)){
-			foreach($name as $n){
-				self::setMiddleware($n,$excepts);
-			}
+	public function get($key=null,$default=null){
+		if(!is_null($this->request)){
+			$gets=&$this->request->get;
 		}else{
-			$name=trim($name);
-			$middlewares=C('middleware.*',[]);
-			if(isset($middlewares[$name])){
-				if(!isset(self::$middlewares[$name])){
-					self::$middlewares[$name]=(array)$excepts;
-				}else{
-					self::$middlewares[$name]=array_unique(array_merge(self::$middlewares[$name],(array)$excepts));
-				}
-			}
+			$gets=&$_GET;
 		}
+		return !is_null($key) ? (isset($gets[$key]) ? $gets[$key] : $default) : $gets;
 	}
 	
-	/*
-	 * 获取中间件（或根据方法名称返回可用中间件）
-	 * @param string $name 方法名称
-	 * @return array 中间数组
-	 * 说明：如果提供方法名称，则根据方法名称返回可用中间件
+	/**
+	 * 获取Http请求的POST参数
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param mixed $default 如果key不存在，则返回默认值
+	 * @return string|array
 	 */
-	public static function getMiddleware($name=null){
-		$classes=[];
-		$middlewares=C('middleware.*',[]);
-		foreach(self::$middlewares as $key => $values){
-			if(!is_null($name)){
-				if(!in_array($name, $values)){
-					$classes[]=$middlewares[$key];
-				}
-			}else{
-				$classes[]=$middlewares[$key];
+	public function post($key=null,$default=null){
+		if(!is_null($this->request)){
+			$posts=&$this->request->post;
+		}else{
+			$posts=&$_POST;
+		}
+		return !is_null($key) ? (isset($posts[$key]) ? $posts[$key] : $default) : $posts;
+	}
+	
+	/**
+	 * 获取Http请求携带的COOKIE信息
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param mixed $default 如果key不存在，则返回默认值
+	 * @return string|array
+	 */
+	public function cookie($key=null,$default=null){
+		if(!is_null($this->request)){
+			$cookies=&$this->request->cookie;
+		}else{
+			$cookies=&$_COOKIE;
+		}
+		return !is_null($key) ? (isset($cookies[$key]) ? $cookies[$key] : $default) : $cookies;
+	}
+	
+	/**
+	 * 获取文件上传信息
+	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @return array
+	 */
+	public function files($key=null){
+		if(!is_null($this->request)){
+			$files=&$this->request->files;
+		}else{
+			$files=&$_FILES;
+		}
+		return !is_null($key) ? $files[$key] : $files;
+	}
+	
+	/**
+	 * 获取原始的POST包体
+	 * @return 返回原始POST数据
+	 * 说明：用于非application/x-www-form-urlencoded格式的Http POST请求
+	 * */
+	public function rawContent(){
+		return !is_null($this->request)  ? $this->request->rawContent() : file_get_contents('php://input');
+	}
+	
+	/**
+	 * 设置路由对象
+	 * @param Route $route 路由对象
+	 */
+	public function setRoute(Route $route){
+		return $this->route=$route;
+	}
+	
+	/**
+	 * 获取路由对象
+	 * @return Route $route 路由对象
+	 */
+	public function getRoute(){
+		return $this->route;
+	}
+	
+	/**
+	 * 获取系统运行模式 
+	 */
+	public function getSapiName(){
+		return !is_null($this->request) ? 'swoole' : PHP_SAPI;
+	}
+
+	/**
+	 * 获取所有header信息
+	 * @return array
+	 */
+	private function getAllHeaders(){
+		$headers=array();
+		foreach($_SERVER as $key=>$value){
+			if('HTTP_' == substr($key, 0, 5)){
+				$headers[str_replace('_', '-', substr($key, 5))]=$value;
 			}
 		}
-		return $classes;
+		if(isset($_SERVER['PHP_AUTH_DIGEST'])){
+			$headers['AUTHORIZATION'] = $_SERVER['PHP_AUTH_DIGEST'];
+		}else if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
+			$headers['AUTHORIZATION'] = base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . $_SERVER['PHP_AUTH_PW']);
+		}
+		
+		if(isset($_SERVER['CONTENT_LENGTH'])){
+			$headers['CONTENT-LENGTH']=$_SERVER['CONTENT_LENGTH'];
+		}
+		if(isset($_SERVER['CONTENT_TYPE'])){
+			$headers['CONTENT-TYPE']=$_SERVER['CONTENT_TYPE'];
+		}
+		return $headers;
 	}
 	
 }

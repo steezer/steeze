@@ -1,5 +1,6 @@
 <?php
 
+
 // ////////////////////////////////////
 // //////////公共函数库////////////////
 // ////////////////////////////////////
@@ -395,7 +396,7 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
 		$phpfile=substr($template, 0, strrpos($template, '.')) . '.php';
 	}
 	
-	$module=ucfirst(strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : ROUTE_M)));
+	$module=ucfirst(strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M'))));
 	$dir=str_replace('/', DS, $dir);
 	$style === '' && ($style=C('default_tpl'));
 	
@@ -874,6 +875,9 @@ function cookie($name='',$value='',$option=null){
 	if(!empty($config['httponly'])){
 		ini_set('session.cookie_httponly', 1);
 	}
+	
+	$respose=make(Library\Response);
+	
 	// 清除指定前缀的所有cookie
 	if(is_null($name)){
 		if(empty($_COOKIE)){
@@ -894,6 +898,7 @@ function cookie($name='',$value='',$option=null){
 		// 获取全部的cookie
 		return $_COOKIE;
 	}
+	
 	$name=$config['prefix'] . str_replace('.', '_', $name);
 	if('' === $value){
 		if(isset($_COOKIE[$name])){
@@ -909,13 +914,14 @@ function cookie($name='',$value='',$option=null){
 			return null;
 		}
 	}else{
+		
 		if(is_null($value)){
 			setcookie($name, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
 			unset($_COOKIE[$name]); // 删除指定cookie
 		}else{
 			// 设置cookie
 			if(is_array($value)){
-				$value='stwms:' . json_encode(array_map_deep($value, 'urlencode', true));
+				$value='steeze:' . json_encode(array_map_deep($value, 'urlencode', true));
 			}
 			$value=sys_crypt($value, 1);
 			
@@ -954,13 +960,13 @@ function assets($file,$type='',$check=false,$default='default'){
 			$styles=explode(':', $styles[1], 2);
 			if(count($styles) == 1){
 				$style=$styles[0];
-				$module=ROUTE_M;
+				$module=env('ROUTE_M');
 			}else{
 				$style=$styles[0];
 				$module=$styles[1];
 			}
 		}else{
-			$module=ROUTE_M;
+			$module=env('ROUTE_M');
 			$style=C('default_assets');
 		}
 		
@@ -983,18 +989,18 @@ function assets($file,$type='',$check=false,$default='default'){
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
-				return is_file(ASSETS_PATH.$style.DS.$file) ? ASSETS_URL.$style.'/'.$file : '';
+				return is_file(ASSETS_PATH.$style.DS.$file) ? env('ASSETS_URL').$style.'/'.$file : '';
 			}else{
 				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
 					return is_file(ASSETS_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
-							 ASSETS_URL . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
+							 env('ASSETS_URL') . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
 				}
 			}
 		}
 		return $isRemote ? $style.'/'.$file :
-				ASSETS_URL . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
+			env('ASSETS_URL') . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
 	}else{
-		return ASSETS_URL . ltrim($file, '/');
+		return env('ASSETS_URL') . ltrim($file, '/');
 	}
 }
 
@@ -1032,16 +1038,8 @@ function view($name,$datas=[]){
  * @param array $default 默认值
  * @return string 环境变量值
  */
-function env($key=null,$default=null){
-	if(is_null($key)){ //加载环境变量
-		$path=KERNEL_PATH.'..'.DS.'.env';
-		if(is_file($path) && is_array($result=parse_ini_file($path))){
-			$_ENV=array_merge($_ENV,array_change_key_case($result,CASE_UPPER));
-		}
-		return $_ENV;
-	}
-	$key=strtoupper($key); 
-	return isset($_ENV[$key]) ? $_ENV[$key] : $default;
+function env($key,$default=null){
+	return Loader::env($key,null,$default);
 }
 
 /**
@@ -1271,8 +1269,8 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		
 		$var_c=C('VAR_CONTROLLER','c');
 		$var_a=C('VAR_ACTION','a');
-		$var[$var_a]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_A')?ROUTE_A:'');
-		$var[$var_c]=!empty($paths) ? array_pop($paths) : (defined('ROUTE_C')?ROUTE_C:'');
+		$var[$var_a]=!empty($paths) ? array_pop($paths) : env('ROUTE_A','');
+		$var[$var_c]=!empty($paths) ? array_pop($paths) : env('ROUTE_C','');
 		if(!empty($paths)){
 			$var_m=C('VAR_MODULE','m');
 			$var[$var_m]=implode($depr, $paths);
@@ -1289,7 +1287,7 @@ function U($url='',$vars='',$domain=false,$type=-1){
 			if(!empty($var[$var_a])){
 				unset($vars[$var_a]);
 			}
-			$url=SYSTEM_ENTRY . '?' . http_build_query(array_reverse(array_filter($var)));
+			$url=env('SYSTEM_ENTRY') . '?' . http_build_query(array_reverse(array_filter($var)));
 		}
 	}
 	
@@ -1303,7 +1301,7 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		$url.='#' . $anchor;
 	}
 	if($domain){
-		$url=(!empty($info['scheme'])?$info['scheme'].'://':SITE_PROTOCOL) .$domain.$url;
+		$url=(!empty($info['scheme'])?$info['scheme'].'://':env('SITE_PROTOCOL')) .$domain.$url;
 	}
 	return $url;
 }
@@ -1391,10 +1389,11 @@ function L($message,$datas=[]){
 		$langs=[];
 		$lang=DS.'Lang'.DS.C('lang','zh-cn').'.php';
 		if(is_file(KERNEL_PATH.$lang)){
-			$langs=array_merge($langs,include(KERNEL_PATH.$lang));
+			$langs=array_merge($langs,include_once(KERNEL_PATH.$lang));
 		}
-		if(defined('ROUTE_M') && is_file(APP_PATH.ROUTE_M.$lang)){
-			$langs=array_merge($langs,include(APP_PATH.ROUTE_M.$lang));
+		$route_m=env('ROUTE_M',false);
+		if($route_m && is_file(APP_PATH.$route_m.$lang)){
+			$langs=array_merge($langs,include_once(APP_PATH.$route_m.$lang));
 		}
 	}
 	$message=isset($langs[$message]) ? $langs[$message] : $message;

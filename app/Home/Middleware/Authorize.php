@@ -2,7 +2,7 @@
 namespace App\Home\Middleware;
 
 class Authorize{
-	public function handle(\Closure $next,$request){
-		return $next($request);
+	public function handle(\Closure $next,$request,$response){
+		return $next($request,$response);
 	}
 }

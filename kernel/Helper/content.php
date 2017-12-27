@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 获取列表分页
  * @param array $info 分页信息数组
@@ -260,20 +261,21 @@ function url_par($par,$url='',$key='page'){
  * @return string 获取的URL，类型由$type决定
  */
 function get_url($type=0){
-	$sys_protocal=isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://';
-	$php_self=$_SERVER['PHP_SELF'] ? safe_replace($_SERVER['PHP_SELF']) : safe_replace($_SERVER['SCRIPT_NAME']);
-	$path_info=isset($_SERVER['PATH_INFO']) ? safe_replace($_SERVER['PATH_INFO']) : '';
-	$relate_url=isset($_SERVER['REQUEST_URI']) ? safe_replace($_SERVER['REQUEST_URI']) : $php_self . (isset($_SERVER['QUERY_STRING']) ? '?' . safe_replace($_SERVER['QUERY_STRING']) : $path_info);
+	$server=make(Library\Request::class)->server();
+	$sys_protocal=env('SITE_PROTOCOL');
+	$php_self=$server['php_self'] ? $server['php_self'] : $server['script_name'];
+	$path_info=isset($server['path_info']) ? $server['path_info'] : '';
+	$relate_url=isset($server['request_uri']) ? $server['request_uri'] : $php_self . (isset($server['query_string']) ? '?' . safe_replace($server['query_string']) : $path_info);
 	$relate_url_nopara=strpos($relate_url, '?') === false ? $relate_url : substr($relate_url, 0, strpos($relate_url, '?'));
 	switch($type){
 		case 0:
-			return $sys_protocal . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '') . $relate_url;
+			return $sys_protocal . env('SITE_HOST') . $relate_url;
 			break;
 		case 1:
 			return $relate_url;
 			break;
 		case 2:
-			return $sys_protocal . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '') . $relate_url_nopara;
+			return $sys_protocal . env('SITE_HOST') . $relate_url_nopara;
 			break;
 		case 3:
 			return $relate_url_nopara;

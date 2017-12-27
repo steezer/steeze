@@ -462,15 +462,18 @@ class Image{
 		if(empty($imgUrl)){
 			return $defaultImg;
 		}
-		$isUpload=strpos($imgUrl, UPLOAD_URL) === 0;
-		$oldimgurl=($isUpload ? substr($imgUrl, strlen(UPLOAD_URL)) : (strpos($imgUrl, ROOT_URL) === 0 ? substr($imgUrl, strlen(ROOT_URL)) : $imgUrl));
+		$upload_url=env('UPLOAD_URL','');
+		$root_url=env('ROOT_URL','');
+		
+		$isUpload=strpos($imgUrl, $upload_url) === 0;
+		$oldimgurl=($isUpload ? substr($imgUrl, strlen($upload_url)) : (strpos($imgUrl, $root_url) === 0 ? substr($imgUrl, strlen($root_url)) : $imgUrl));
 		$isRemot=strpos($oldimgurl, '://');
 		
 		// 此参数会导致强制执行，会对图片进行缩放
 		$forceExec=!$isRemot ? ($cutType > 0) : $isGetRemot;
 		
 		$IMG_PATH=$isUpload || $isRemot ? UPLOAD_PATH : ROOT_PATH; // 本地文件的路径
-		$IMG_URL=$isUpload || $isRemot ? UPLOAD_URL : ROOT_URL; // 本地文件的地址
+		$IMG_URL=$isUpload || $isRemot ? $upload_url : $root_url; // 本地文件的地址
 		
 		if(!extension_loaded('gd') || ($isRemot && !$isGetRemot)){
 			// gd库没有加载或外链时不获取远程则不处理

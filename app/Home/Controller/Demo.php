@@ -6,7 +6,7 @@ class Demo extends Controller{
 	
 	// 外部访问的方法名称
 	public function hello(){
-		return 'Hello world!';
+		return 'Hello world!'.__FUNCTION__;
 	}
 	
 }
