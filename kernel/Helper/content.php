@@ -266,6 +266,9 @@ function get_url($type=0){
 	$php_self=$server['php_self'] ? $server['php_self'] : $server['script_name'];
 	$path_info=isset($server['path_info']) ? $server['path_info'] : '';
 	$relate_url=isset($server['request_uri']) ? $server['request_uri'] : $php_self . (isset($server['query_string']) ? '?' . safe_replace($server['query_string']) : $path_info);
+	if(strpos($relate_url, '?')===false && !empty($server['query_string'])){
+		$relate_url.='?'.$server['query_string'];
+	}
 	$relate_url_nopara=strpos($relate_url, '?') === false ? $relate_url : substr($relate_url, 0, strpos($relate_url, '?'));
 	switch($type){
 		case 0:

@@ -1346,11 +1346,12 @@ function C($key='',$default=''){
  *  获取输入参数，非空值，依次为GET、POST
  *  @param string $name 参数名称
  *  @param mixed $default 默认值
- *  @handle string|\Closure 处理函数
+ *  @handle string|\Closure 处理器，可以是函数名称或者回调函数
  *  @return mixed
  */
 function I($name,$default='',$handle=null){
-	$value=isset($_GET[$name]) ? $_GET[$name] : (isset($_POST[$name]) ? $_POST[$name] : $default);
+	$request=make(Library\Request::class);
+	$value=$request->get($name,$request->post($name,$default));
 	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ?
 				$handle($value) : $value;
 }

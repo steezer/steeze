@@ -24,7 +24,7 @@ class Exception extends \Exception {
 	 * @return string|void
 	 */
 	static public function render($e,array $params=[],$isReturn=false){
-		if(PHP_SAPI=='cli'){ //命令行模式运行
+		if(env('PHP_SAPI','cli')=='cli'){ //命令行模式运行
 			$data='('.$e->getCode().')'.$e->getMessage()."\n";
 			$data.='File: '.str_replace(dirname(ROOT_PATH), '', $e->getFile()).'['.$e->getLine()."]\n";
 			if($isReturn){

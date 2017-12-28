@@ -56,26 +56,31 @@ class Route{
 		
 		//使用路径参数匹配
 		$handle=$this->matchHandle($url);
+		$route_m=$route_c=$route_a=null;
 		if(is_null($handle) || is_string($handle)){
 			//获取路由处理器，如：index/show@home
 			if(is_string($handle)){
 				$res=explode('@', $handle);
 				$cas=explode('/', array_shift($res));
-				Loader::env('ROUTE_A',array_pop($cas));
-				!empty($cas) && Loader::env('ROUTE_C',ucfirst(array_pop($cas)));
-				!empty($res) && Loader::env('ROUTE_M',ucfirst(strtolower(array_pop($res))));
+				$route_a=array_pop($cas);
+				!empty($cas) && ($route_c=ucfirst(array_pop($cas)));
+				!empty($res) && ($route_m=ucfirst(strtolower(array_pop($res))));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
 			if($url==env('ROOT_URL') || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
-				!env('ROUTE_C',false) && Loader::env('ROUTE_C', defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
-				!env('ROUTE_A',false) && Loader::env('ROUTE_A', defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
+				!isset($route_c) && ($route_c=defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
+				!isset($route_a) && ($route_a=defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
 			}
 		}else if(is_callable($handle)){
 			$this->setDisposer($handle);
 		}
 		
+		//绑定方法
+		Loader::env('ROUTE_A',(isset($route_a) ? $route_a : false));
+		//绑定控制器
+		Loader::env('ROUTE_C',(isset($route_c) ? $route_c : false));
 		//绑定模块
-		!env('ROUTE_M',false) && Loader::env('ROUTE_M', env('BIND_MODULE',ucfirst(strtolower(I('m','Home')))));
+		Loader::env('ROUTE_M',(isset($route_m) ? $route_m : env('BIND_MODULE')));
 	}
 
 	/*
@@ -138,10 +143,10 @@ class Route{
 		}
 		
 		//从绑定模块的路由中获取，如：home@*.h928.com
+		$bindModule=null;
 		if(empty($routes)){
 			//从全局配置中查找
 			$domains=array_keys($configs);
-			$bindModule='';
 			foreach($domains as $domain){
 				$cRoutes=explode('@',$domain);
 				$cDomain=array_shift($cRoutes);
@@ -181,10 +186,9 @@ class Route{
 					closedir($handle);
 				}
 			}
-			if(!empty($bindModule)){
-				Loader::env('BIND_MODULE', ucfirst(strtolower($bindModule)));
-			}
 		}
+		
+		Loader::env('BIND_MODULE', ucfirst(strtolower(isset($bindModule) ? $bindModule : I('m','Home'))));
 		return !empty($routes) ? $routes : $default;
 	}
 	

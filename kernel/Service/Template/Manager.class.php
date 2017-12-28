@@ -286,7 +286,7 @@ class Manager {
 			$action=array_pop($mcas);
 			empty($mcas) && array_push($mcas, env('ROUTE_C'));
 			unset($datas['name']);
-			$str.=(!empty($return) ? '$' . $return . ' = ' : '') . '\Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).');';
+			$str.=(!empty($return) ? '$' . $return . ' = ' : 'echo \Library\Response::toString') . '(\Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).',true));';
 		}
 		return !empty($str) ? '<?php ' . $str . ' ?>' : '';
 	}

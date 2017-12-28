@@ -220,27 +220,46 @@ class Controller{
 	 */
 	private function view(){
 		if(is_null($this->view)){
-			$this->view=make(View::class);
+			$this->view=new View();
 		}
 		return $this->view;
 	}
-	
+
 	/**
 	 * 运行控制器方法
-	 * 
+	 *
 	 * @param string|object $concrete 控制器对象或类型
 	 * @param string $method 方法名称
 	 * @param array $parameters 参数
-	 * return mixed
-	 * 说明：增加对调用控制器类和方法的感知
-	 * */
-	public static function run($concrete,$method,array $parameters=[]){
-		$classes=explode('\\', is_object($concrete)?get_class($concrete):$concrete);
+	 * @param array $isInCalled 是否在模版内部调用 return mixed 说明：增加对调用控制器类和方法的感知
+	 */
+	public static function run($concrete,$method,array $parameters=[],$isInCalled=false){
+		static $classStacks=[];
+		
+		// 获取控制器类名
+		$classname=is_object($concrete) ? get_class($concrete) : $concrete;
+		
+		// 入栈操作
+		array_push($classStacks, $classname);
+		
+		// 记录控制器的调用信息
+		$classes=explode('\\', $classname);
 		array_shift($classes);
 		self::$_m=array_shift($classes);
 		self::$_c=array_pop($classes);
 		self::$_a=$method;
-		return Container::getInstance()->callMethod($concrete, $method,$parameters);
+		
+		// 设置内部调用标识
+		View::setInCalled($isInCalled);
+		$container=Container::getInstance();
+		$result=$container->callMethod($concrete, $method, $parameters);
+		
+		// 出栈操作
+		$container->forgetInstance(array_pop($classStacks));
+		
+		// 重置内部调用标识
+		View::setInCalled(false);
+		return $result;
 	}
 	
 }

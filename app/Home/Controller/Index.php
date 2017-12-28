@@ -2,11 +2,17 @@
 namespace App\Home\Controller;
 use Library\Controller;
 use Library\Model;
+use Library\Request;
+use Library\Response;
 
 class Index extends Controller{
 	
+	public function __construct(Request $request,Response $response){
+		
+	}
+	
 	public function index(){
-		return var_export(__FUNCTION__,true);
+		
 	}
 	
 	public function test(Model $user){

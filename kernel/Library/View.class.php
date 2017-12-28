@@ -6,6 +6,7 @@ class View{
 	protected static $_m=''; //默认模块
 	protected static $_c=''; //默认控制器
 	protected static $_a=''; //默认方法
+	protected static $isInCalled=false; //是否在内部调用
 	
 	/**
 	 * 设置默认的模块、控制器和方法
@@ -145,6 +146,14 @@ class View{
 	}
 	
 	/**
+	 * 设置是否内部调用
+	 * @param bool $isInCalled 是否在内部调用
+	 */
+	public static function setInCalled($isInCalled){
+		self::$isInCalled=$isInCalled;
+	}
+	
+	/**
 	 * 输出内容文本可以包括Html
 	 *
 	 * @access private
@@ -160,15 +169,16 @@ class View{
 				$charset=C('charset', 'utf-8');
 			}
 			if(empty($contentType) || !is_string($contentType)){
-				$contentType='text/html';
+				$type=is_array($content) && is_object($content) ? 'json' : 'html';
+				$contentType=C('mimetype.'.$type,'text/html');
 			}
 			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
 			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
 			$response->header('X-Powered-By','STWMS');
 		}
+		
 		//输出内容
-		if(!is_null($content)){
-			$response->write($content);
-		}
+		!is_null($content) && 
+			$response->write($content,self::$isInCalled);
 	}
 }

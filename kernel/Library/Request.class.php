@@ -15,7 +15,7 @@ class Request{
 		}
 		
 		//session_id设置，防止客户端不支持cookie设定
-		if($sessionid=I('PHPSESSID')){
+		if($sessionid=$this->get('PHPSESSID',$this->post('PHPSESSID'))){
 			session_id($sessionid);
 		}
 		

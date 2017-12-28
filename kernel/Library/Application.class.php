@@ -48,7 +48,7 @@ class Application{
 				->then($this->dispatchToRouter())
 			);
 		
-		//输出到浏览器
+		//输出到前端
 		$this->response->end();
 	}
 	
@@ -101,6 +101,8 @@ class Application{
 		}
 		
 		$server=$this->request->server();
+		//设置应用环境
+		Loader::env('PHP_SAPI',$this->request->getSapiName());
 		//请求时间
 		Loader::env('NOW_TIME',$server['request_time']);
 		//检查是否微信登录

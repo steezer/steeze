@@ -186,5 +186,3 @@ class Loader{
 	}
 	
 }
-
-?>

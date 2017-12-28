@@ -14,7 +14,7 @@ class Model implements ArrayAccess{
 	const MUST_VALIDATE=1; // 必须验证
 	const EXISTS_VALIDATE=0; // 表单存在字段则验证
 	const VALUE_VALIDATE=2; // 表单值不为空则验证
-	                                   
+	
 	// 当前数据库操作对象
 	protected $db=null;
 	// 数据库对象池

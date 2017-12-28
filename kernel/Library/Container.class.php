@@ -42,7 +42,6 @@ class Container{
 			}
 			$reflector=new ReflectionClass($concrete);
 			$constructor=$reflector->getConstructor();
-			
 			//没有构造函数的构建
 			if(is_null($constructor)){
 				return new $concrete();

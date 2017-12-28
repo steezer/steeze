@@ -74,19 +74,20 @@ class Response{
 	 * 		必须在write/end发送内容之前执行gzip，否则会抛出错误
 	 */
 	public function gzip(int $level = 0){
-		
+		!is_null($this->response) && $this->response->gzip($level);
 	}
 	
 	/**
 	 * 启用Http Chunk分段向浏览器发送相应内容
 	 * @param string $data 要发送的数据内容，最大长度不得超过2M
+	 * @param bool $isConsole 是否直接写入到控制台
 	 * 
 	 */
-	public function write($data){
-		if(!is_null($this->response)){
-			$this->response->write(is_array($data) ? json_encode($data,JSON_UNESCAPED_UNICODE) : $data);
+	public function write($data,$isConsole=false){
+		if(!$isConsole && !is_null($this->response)){
+			$this->response->write(self::toString($data));
 		}else{
-			echo (is_array($data) ? json_encode($data,JSON_UNESCAPED_UNICODE) : $data);
+			echo self::toString($data);
 		}
 	}
 	
@@ -119,6 +120,18 @@ class Response{
 			$isAsyn && function_exists('fastcgi_finish_request') && 
 				fastcgi_finish_request();
 		}
+	}
+	
+	/**
+	 * 输出内容格式化
+	 * @param mixed $data 数据
+	 * @return string
+	 */
+	public static function toString($data){
+		if(is_object($data) && is_a($data,Model::class)){
+			return json_encode($data->data(),JSON_UNESCAPED_UNICODE);
+		}
+		return is_array($data) || is_object($data) ? json_encode($data,JSON_UNESCAPED_UNICODE) : $data;
 	}
 	
 }
