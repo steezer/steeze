@@ -44,7 +44,7 @@ class Exception extends \Exception {
 			echo $data;
 		}else if(is_file($tpl=C('tmpl_exception_tpl'))){  //web模式运行
 			//直接访问模版
-			$viewer=new View();
+			$viewer=make(View::class);
 			$viewer->assign($params);
 			$viewer->assign('e',$e);
 			if($isReturn){

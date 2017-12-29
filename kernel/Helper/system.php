@@ -44,7 +44,7 @@ function trace($value='[steeze]',$label='',$level='DEBUG',$record=false) {
 function dump($var,$isReturn=false){
 	if(is_array($var)){
 		foreach($var as $k=>$v){
-			$var[$k]=dump($v,false);
+			$var[$k]=dump($v,$isReturn);
 		}
 	}
 	$return=trim((is_object($var) ? get_class($var) : var_export($var,true)),'\'"');

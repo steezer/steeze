@@ -9,7 +9,8 @@ define('SYS_START_TIME', microtime()); // 设置系统开始时间
 define('DS', DIRECTORY_SEPARATOR); //简化目录分割符
 define('KERNEL_PATH', dirname(__FILE__) . DS); //框架目录
 define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); //应用目录
-define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
+define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS); //外部库目录
+define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS); //数据存储目录
 define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); //缓存目录
 define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS); //日志目录
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS); //网站根目录路径
@@ -77,8 +78,9 @@ class Loader{
 		if(strpos($path, DS)){
 			try{
 				include (strpos($path, 'App'.DS)===0 ? 
-						APP_PATH.substr($path,4).'.php' : 
-						KERNEL_PATH.$path.'.class.php');
+							APP_PATH.substr($path,4).'.php' :  
+							(strpos($path, 'Vendor'.DS)===0 ? VENDOR_PATH.substr($path,7).'.php' : KERNEL_PATH.$path.'.class.php')
+						);
 			}catch (\Library\Exception $e){
 				E($e->getMessage(),$e->getCode());
 			}
@@ -145,44 +147,45 @@ class Loader{
 	 * @param string $name 配置文件
 	 * @param string $key 要获取的配置键值
 	 * @param string $default 默认配置，当获取配置项目失败时该值发生作用
-	 * @param string $reload 强制重新加载
 	 * @return object
 	 */
-	public static function config($name,$key='',$default='',$reload=false){
-		static $configs=[];
+	public static function config($name,$key='',$default=''){
+		static $appConfigs=[]; //应用缓存
+		static $globalConfigs=[]; //全局缓存
 		
 		// 如果为第二个参数为数组则直接写入配置
 		if(is_array($key)){
-			$configs[$name]=(isset($configs[$name]) ? array_merge($configs[$name], $key) : $key);
-			return $configs[$name];
+			$appConfigs[$name]=(isset($appConfigs[$name]) ? array_merge($appConfigs[$name], $key) : $key);
+			return $appConfigs[$name];
 		}
 		
-		if(!$reload && isset($configs[$name])){
-			return empty($key) ? $configs[$name] : 
-					(isset($configs[$name][$key]) ? $configs[$name][$key] : $default);
+		if(
+			!isset($globalConfigs[$name]) && 
+			is_file($globalPath=STORAGE_PATH . 'Conf' . DS . $name . '.php')
+		){
+			$globalConfigs[$name]=include($globalPath);
 		}
 		
-		$globalPath=STORAGE_PATH . 'Conf' . DS . $name . '.php';
-		if(is_file($globalPath)){
-			$configs[$name]=include_once($globalPath);
+		$appName=env('ROUTE_M',false);
+		if(
+			$appName &&
+			!isset($appConfigs[$appName][$name]) &&
+			is_file($appPath=APP_PATH . $appName . DS . 'Conf' . DS . $name . '.php')
+		){
+			$moduleConfig=include($appPath);
+			$appConfigs[$appName][$name]= is_array($moduleConfig) ? $moduleConfig : null;
 		}
 		
-		if(env('ROUTE_M',false)){
-			$modulePath=APP_PATH . env('ROUTE_M') . DS . 'Conf' . DS . $name . '.php';
-			if(is_file($modulePath)){
-				$moduleConfig=include_once($modulePath);
-				if(is_array($moduleConfig)){
-					if(isset($configs[$name])){
-						$configs[$name]=array_merge($configs[$name],$moduleConfig);
-					}else{
-						$configs[$name]=$moduleConfig;
-					}
-				}
-			}
-		}
+		return $key!=='' ? (
+					$appName && isset($appConfigs[$appName][$name][$key]) ?
+						$appConfigs[$appName][$name][$key] :
+						(isset($globalConfigs[$name][$key]) ? $globalConfigs[$name][$key] : $default)
+				) : (
+					$appName && isset($appConfigs[$appName][$name]) ?
+						$appConfigs[$appName][$name] :
+						(isset($globalConfigs[$name]) ? $globalConfigs[$name] : $default)
+			);
 		
-		return empty($key) ? (!empty($configs[$name]) ? $configs[$name] : $default) : 
-				(isset($configs[$name][$key]) ? $configs[$name][$key] : $default);
 	}
 	
 }

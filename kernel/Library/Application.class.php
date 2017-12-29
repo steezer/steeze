@@ -41,12 +41,15 @@ class Application{
 			$route->setDisposer(Loader::controller($route_c,$route->getParam()));
 		}
 		
-		//启动应用
+		//启动应用，并渲染返回结果
 		View::render((new Pipeline(Container::getInstance()))
 				->send($this->request,$this->response)
 				->through($route->getMiddleware(!$isClosure && $route_a ? $route_a : null))
 				->then($this->dispatchToRouter())
 			);
+		
+		//释放视图对象
+		Container::getInstance()->forgetInstance(View::class);
 		
 		//输出到前端
 		$this->response->end();
