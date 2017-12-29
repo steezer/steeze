@@ -123,7 +123,12 @@ class Route{
 	 * @return string|null
 	 */
 	private function getHandle($url,$route,$handle){
+		//请求方法匹配
+		$routes=explode(':', $route, 2);
+		$route=trim(array_pop($routes));
+		$method=count($routes) ? strtoupper(array_pop($routes)) : 'ANY';
 		$route='/'.trim($route,'/');
+		
 		$middlewares=[];
 		if(is_string($handle)){
 			$handles=explode('>', $handle,2);
@@ -132,21 +137,15 @@ class Route{
 				$middlewares=array_merge($middlewares,explode('&', array_pop($handles)));
 			}
 		}
-		
 		$routeLen=substr_count($route, '/');
 		$urlLen=substr_count($url, '/');
 		$optCount=substr_count($route, '?');
 		
 		//无参数或有参数的路径匹配
-		if($routeLen==$urlLen || $urlLen + $optCount == $routeLen){
-			//请求方法匹配
-			$routes=explode(':', $route, 2);
-			$route=trim(array_pop($routes));
-			$method=count($routes) ? strtoupper(array_pop($routes)) : 'GET';
-			if($method!=env('REQUEST_METHOD')){
-				return null;
-			}
-			
+		if(
+			($method=='ANY' || $method==env('REQUEST_METHOD')) && 
+			($routeLen==$urlLen || $urlLen + $optCount == $routeLen)
+		){
 			if(!strcasecmp($route, $url)){
 				$this->setMiddleware($middlewares);
 				//如果url完全匹配（不区分大小写），直接返回

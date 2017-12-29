@@ -100,8 +100,13 @@ class Response{
 	 * 说明：调用sendfile前不得使用write方法发送Http-Chunk
 	 */
 	public function sendfile(string $filename, int $offset = 0, int $length = 0){
+		$ext=fileext($filename);
+		$mimetype=C('mimetype.'.$ext,'application/octet-stream');
+		$this->header('Content-Type', $mimetype);
 		if(!is_null($this->response)){
 			$this->response->sendfile($filename, $offset,$length);
+		}else{
+			readfile($filename);
 		}
 	}
 	
