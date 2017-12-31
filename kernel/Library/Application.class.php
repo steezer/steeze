@@ -128,7 +128,7 @@ class Application{
 		//设置访问域名
 		$host=strtolower($this->request->header('host',(isset($server['server_name']) ? $server['server_name'] : DEFAULT_HOST)));
 		Loader::env('SITE_HOST',strpos($host, ':')!==false ? substr($host,0,strpos($host, ':')) : $host);
-		Loader::env('SITE_URL', $protocol . env('site_host') . ($protocol=='https://'?'' : $port)); // 网站首页地址
+		Loader::env('SITE_URL', $protocol . env('SITE_HOST') . ($protocol=='https://'?'' : $port)); // 网站首页地址
 		Loader::env('ROOT_URL', rtrim(dirname($entry),'/').'/'); //系统根目录路径
 		Loader::env('ASSETS_URL', env('ROOT_URL') . 'assets/'); //静态文件路径
 		Loader::env('UPLOAD_URL', env('ASSETS_URL') . 'ufs/'); //上传图片访问路径

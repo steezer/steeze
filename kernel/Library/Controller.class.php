@@ -143,23 +143,23 @@ class Controller{
 				// 返回JSON数据格式到客户端 包含状态信息
 				$response->header('Content-Type','text/html; charset=utf-8');
 				$response->end(json_encode($data, $json_option));
-			case 'XML':
-				// 返回xml格式数据
-				$response->header('Content-Type','text/xml; charset=utf-8');
-				$response->end(xml_encode($data));
+				break;
 			case 'JSONP':
 				// 返回JSON数据格式到客户端 包含状态信息
 				$response->header('Content-Type','text/html; charset=utf-8');
 				$var_hdl=C('VAR_JSONP_HANDLER', 'callback');
 				$handler=isset($_GET[$var_hdl]) ? $_GET[$var_hdl] : C('DEFAULT_JSONP_HANDLER', 'jsonpReturn');
 				$response->end($handler . '(' . json_encode($data, $json_option) . ');');
+				break;
 			case 'EVAL':
 				// 返回可执行的js脚本
 				$response->header('Content-Type','text/javascript; charset=utf-8');
 				$response->end($data);
+				break;
 			default:
 				$response->header('Content-Type','text/html; charset=utf-8');
 				$response->end(var_export($data, true));
+				break;
 		}
 	}
 
