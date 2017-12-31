@@ -153,8 +153,7 @@ class Manager {
 	public function parseAssign($matches){
 		$datas=$this->parseAttrs($matches[1]); // 获取属性
 		if(isset($datas['name']) && isset($datas['value'])){
-			$view=make(view::class);
-			$view->assign($datas['name'],$datas['value']);
+			return '<?php $'.$this->parseDoVar($datas['name']).'='.var_export($datas['value'],true).';?>';
 		}
 		return '';
 	}
