@@ -24,24 +24,29 @@ class Exception extends \Exception {
 	 * @return string|void
 	 */
 	static public function render($e,array $params=[],$isReturn=false){
+		$error=[
+			'url'=>make(Request::class)->server('REQUEST_URI'),
+			'code'=>$e->getCode(),
+			'message'=>$e->getMessage(),
+			'line'=> $e->getLine(),
+			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
+		];
+		//将错误写入日志
+		fastlog(json_encode($error,JSON_UNESCAPED_UNICODE),true,'exception.log');
+		
 		if(env('PHP_SAPI','cli')=='cli'){ //命令行模式运行
-			$data='('.$e->getCode().')'.$e->getMessage()."\n";
-			$data.='File: '.str_replace(dirname(ROOT_PATH), '', $e->getFile()).'['.$e->getLine()."]\n";
+			$data='('.$error['code'].')'.$error['message']."\n";
+			$data.='File: '.$error['file'].'['.$error['line']."]\n";
 			if($isReturn){
 				return $data;
 			}
-			echo $data;
+			make(Response::class)->write($data);
 		}else if((defined('IS_AJAX') && IS_AJAX)){ //ajax模式运行
-			$data=json_encode([
-						'code'=>$e->getCode(),
-						'message'=>$e->getMessage(),
-						'line'=> $e->getLine(),
-						'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
-					],JSON_UNESCAPED_UNICODE);
+			$data=json_encode($error,JSON_UNESCAPED_UNICODE);
 			if($isReturn){
 				return $data;
 			}
-			echo $data;
+			make(Response::class)->write($data);
 		}else if(is_file($tpl=C('tmpl_exception_tpl'))){  //web模式运行
 			//直接访问模版
 			$viewer=make(View::class);

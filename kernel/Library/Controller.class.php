@@ -137,27 +137,29 @@ class Controller{
 		if(is_null($json_option)){
 			$json_option=defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0;
 		}
+		$response=make(Response::class);
 		switch(strtoupper($type)){
 			case 'JSON':
 				// 返回JSON数据格式到客户端 包含状态信息
-				header('Content-Type:text/html; charset=utf-8');
-				exit(json_encode($data, $json_option));
+				$response->header('Content-Type','text/html; charset=utf-8');
+				$response->end(json_encode($data, $json_option));
 			case 'XML':
 				// 返回xml格式数据
-				header('Content-Type:text/xml; charset=utf-8');
-				exit(xml_encode($data));
+				$response->header('Content-Type','text/xml; charset=utf-8');
+				$response->end(xml_encode($data));
 			case 'JSONP':
 				// 返回JSON数据格式到客户端 包含状态信息
-				header('Content-Type:text/html; charset=utf-8');
+				$response->header('Content-Type','text/html; charset=utf-8');
 				$var_hdl=C('VAR_JSONP_HANDLER', 'callback');
 				$handler=isset($_GET[$var_hdl]) ? $_GET[$var_hdl] : C('DEFAULT_JSONP_HANDLER', 'jsonpReturn');
-				exit($handler . '(' . json_encode($data, $json_option) . ');');
+				$response->end($handler . '(' . json_encode($data, $json_option) . ');');
 			case 'EVAL':
 				// 返回可执行的js脚本
-				header('Content-Type:text/html; charset=utf-8');
-				exit($data);
+				$response->header('Content-Type','text/javascript; charset=utf-8');
+				$response->end($data);
 			default:
-				exit(var_export($data, true));
+				$response->header('Content-Type','text/html; charset=utf-8');
+				$response->end(var_export($data, true));
 		}
 	}
 
@@ -192,25 +194,25 @@ class Controller{
 			$data['message']=$message;
 			$data['code']=$code;
 			$data['url']=$jumpUrl;
-			$this->ajaxReturn($data);
-		}
-		is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
-		!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
-		$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
-		$this->get('closeWin') && $this->assign('jumpUrl', 'close');
-		$this->assign('code', $code); // 状态
-		$this->assign('message', $message); // 提示信息
-		if($code){
-			!isset($this->waitSecond) && $this->assign('waitSecond', 1000);
-			!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
-			$this->display(C('TMPL_ACTION_SUCCESS', '/message'));
+			make(Response::class)->end($data);
 		}else{
-			$this->assign('error', $message);
-			!isset($this->waitSecond) && $this->assign('waitSecond', 3000);
-			!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
-			$this->display(C('TMPL_ACTION_ERROR', '/message'));
+			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
+			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
+			$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
+			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
+			$this->assign('code', $code); // 状态
+			$this->assign('message', $message); // 提示信息
+			if($code){
+				!isset($this->waitSecond) && $this->assign('waitSecond', 1000);
+				!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
+				$this->display(C('TMPL_ACTION_SUCCESS', '/message'));
+			}else{
+				$this->assign('error', $message);
+				!isset($this->waitSecond) && $this->assign('waitSecond', 3000);
+				!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
+				$this->display(C('TMPL_ACTION_ERROR', '/message'));
+			}
 		}
-		exit();
 	}
 
 	/**

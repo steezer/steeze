@@ -635,26 +635,25 @@ function safe_replace($string){
  * @return void
  */
 function redirect($url,$time=0,$msg=''){
+	$response=make(Library\Response::class);
 	// 多行URL地址支持
 	$url=str_replace(array("\n","\r"), '', $url);
 	if(empty($msg)){
 		$msg="系统将在{$time}秒之后自动跳转到{$url}！";
 	}
-	if(!headers_sent()){
-		// redirect
+	if(!$response->hasSendHeader()){
 		if(0 === $time){
-			header('Location: ' . $url);
+			$response->header('Location',$url);
 		}else{
-			header("refresh:{$time};url={$url}");
-			echo ($msg);
+			$response->header("refresh",$time.';url='.$url);
+			$response->end($msg);
 		}
-		exit();
 	}else{
 		$str="<meta http-equiv='Refresh' content='{$time};URL={$url}'>";
 		if($time != 0){
 			$str.=$msg;
 		}
-		exit($str);
+		$response->end($str);
 	}
 }
 
