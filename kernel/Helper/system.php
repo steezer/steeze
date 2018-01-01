@@ -139,8 +139,13 @@ function thumb($imgUrl,$maxWidth=0,$maxHeight=0,$cutType=0,$defaultImg='',$isGet
 
 /**
  * 简化路径
- * */
+ * @param string $path 路径名称
+ * @return string 
+ */
 function simplify_ds($path){
+	if(DS!='/'){
+		$path=str_replace('/', DS, $path);
+	}
 	while(strpos($path,DS.DS)!==false){
 		$path=str_replace(DS.DS, DS, $path);
 	}
@@ -983,12 +988,14 @@ function assets($file,$type='',$check=false,$default='default'){
 			}
 		}
 		$module=strtolower($module);
-		$style=rtrim($style,'/');
+		if($style!='/'){
+			$style=rtrim($style,'/');
+		}
 		
 		if($check && !$isRemote){
 			if(strpos($style,'/')===0){
 				$style=ltrim($style,'/');
-				return is_file(ASSETS_PATH.$style.DS.$file) ? env('ASSETS_URL').$style.'/'.$file : '';
+				return is_file(ASSETS_PATH.($style!='' ? $style.DS : '').$file) ? env('ASSETS_URL').($style!='' ? $style.'/' : '').$file : '';
 			}else{
 				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
 					return is_file(ASSETS_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
@@ -997,7 +1004,7 @@ function assets($file,$type='',$check=false,$default='default'){
 			}
 		}
 		return $isRemote ? $style.'/'.$file :
-			env('ASSETS_URL') . (strpos($style,'/')===0 ? ltrim($style,'/') .'/' : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
+		env('ASSETS_URL') . (strpos($style,'/')===0 ? ($style!='/' ? ltrim($style,'/') .'/' : '') : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
 	}else{
 		return env('ASSETS_URL') . ltrim($file, '/');
 	}
