@@ -77,12 +77,16 @@ class Loader{
 		$path=str_replace('\\', DS, $path);
 		if(strpos($path, DS)){
 			try{
-				include (strpos($path, 'App'.DS)===0 ? 
-							APP_PATH.substr($path,4).'.php' :  
-							(strpos($path, 'Vendor'.DS)===0 ? VENDOR_PATH.substr($path,7).'.php' : KERNEL_PATH.$path.'.class.php')
-						);
+				if(strpos($path, 'App'.DS)===0){
+					$pos=strpos($path, '/',4);
+					include APP_PATH.strtolower(substr($path,4,$pos-4)).substr($path,$pos).'.php';
+				}else if(strpos($path, 'Vendor'.DS)===0){
+					include VENDOR_PATH.substr($path,7).'.php';
+				}else{
+					include KERNEL_PATH.$path.'.class.php';
+				}
 			}catch (\Library\Exception $e){
-				E($e->getMessage(),$e->getCode());
+				E(L('class for {0} is not exists',$path),$e->getCode());
 			}
 		}
 	}
@@ -121,7 +125,7 @@ class Loader{
 	 */
 	public static function helper($name,$module=null){
 		static $helpers=[];
-		$baseDir=(empty($module) ? KERNEL_PATH : APP_PATH . (is_string($module) ? ucfirst($module) : env('ROUTE_M')) . DS);
+		$baseDir=(empty($module) ? KERNEL_PATH : APP_PATH . (is_string($module) ? strtolower($module) : env('ROUTE_M')) . DS);
 		$path=$baseDir .'Helper' . DS . $name . '.php';
 		$key=md5($path);
 		if(isset($helpers[$key])){

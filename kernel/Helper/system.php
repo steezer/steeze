@@ -401,7 +401,7 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
 		$phpfile=substr($template, 0, strrpos($template, '.')) . '.php';
 	}
 	
-	$module=ucfirst(strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M'))));
+	$module=strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M')));
 	$dir=str_replace('/', DS, $dir);
 	$style === '' && ($style=C('default_tpl'));
 	

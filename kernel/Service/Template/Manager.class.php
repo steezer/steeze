@@ -413,7 +413,7 @@ class Manager {
 			//先尝试从应用查找标签类
 			if(env('ROUTE_M',false)!==false){
 				try{
-					$tagCaches[$tag]=$container->make('\\App\\'.env('ROUTE_M').'\\Taglib\\'.$tag);
+					$tagCaches[$tag]=$container->make('\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
 				}catch (\Exception $e){}
 			}
 			

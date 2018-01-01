@@ -64,7 +64,7 @@ class Route{
 				$cas=explode('/', array_shift($res));
 				$route_a=array_pop($cas);
 				!empty($cas) && ($route_c=ucfirst(array_pop($cas)));
-				!empty($res) && ($route_m=ucfirst(strtolower(array_pop($res))));
+				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
 			if($url==env('ROOT_URL') || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
@@ -283,7 +283,7 @@ class Route{
 			
 		}
 		
-		Loader::env('BIND_MODULE', ucfirst(strtolower(!empty($cacheHosts[$host]) ? $cacheHosts[$host] : I('m','Home'))));
+		Loader::env('BIND_MODULE', strtolower(!empty($cacheHosts[$host]) ? $cacheHosts[$host] : I('m','home')));
 		
 		$sHost='*'.strstr($host,'.');
 		return isset($cacheRoutes[$host]) ? $cacheRoutes[$host] : (isset($cacheRoutes[$sHost]) ? $cacheRoutes[$sHost] : null);
