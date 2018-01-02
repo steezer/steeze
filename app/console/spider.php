@@ -2,15 +2,16 @@
 <?php
 include dirname(__FILE__).'/../../kernel/base.php';
 /**
- * 网页爬虫工具
+ * 网页采集工具
  */
 
 use Library\CommandColor;
 
 class WebSpider{
 	
-	private $rootPath;//存放目录地址
-	private $staticPath;//静态文件路径
+	private $rootPath=null;//存放目录地址
+	private $staticPath=null;//静态文件路径
+	private $url=null;//采集的页面地址
 	
 	public function __construct($rootPath=null,$staticPath='assets/'){
 		$this->rootPath=$rootPath && $rootPath!=='' ? rtrim($rootPath,'/').'/' : '';
@@ -26,11 +27,12 @@ class WebSpider{
 		if($options = getopt($shortopts,$longopts)){
 			$url=isset($options['u']) ? $options['u'] : (isset($options['url'])?$options['url']:'');
 			if(strpos($url, '://')){
+				$this->url=$url;
 				$path=isset($options['s']) ? $options['s'] : (isset($options['save'])?$options['save']:'');
 				$deep=max(intval(isset($options['d']) ? $options['d'] : (isset($options['deep'])?$options['deep']:2)),2);
 				$this->getHtmlFile($url,$path,$deep);
 			}else{
-				echo CommandColor::get('Please give a url address with http:// prefix','red')."\n";
+				echo CommandColor::get('Please give a url address with "http://" prefix','red')."\n";
 			}
 		}else{
 			echo $this->help();
@@ -214,7 +216,8 @@ class WebSpider{
 				}
 				
 				if(isset($urls['query']) && !$is_original){
-					$rel_path=pathinfo($rel_path,PATHINFO_DIRNAME).'/'.substr(md5($url),8,16).'.'.pathinfo($rel_path,PATHINFO_EXTENSION);
+					$tmpUrl=($upos=strpos($url, '?')) ? substr($url,0,$upos) : $url;
+					$rel_path=pathinfo($rel_path,PATHINFO_DIRNAME).'/'.pathinfo(substr($tmpUrl,strrpos($tmpUrl,'/')),PATHINFO_FILENAME).'.'.pathinfo($rel_path,PATHINFO_EXTENSION);
 				}
 				
 				$newpath=$this->staticPath.($domain?$domain.'/':'').ltrim($rel_path,'/');
@@ -320,6 +323,11 @@ class WebSpider{
 	}
 	
 	private function log($msg='',$type=''){
+		static $count=0;
+		$startPos=strpos($this->url, '://')+3;
+		$filename=str_replace('/','_',substr($this->url, $startPos,strrpos($this->url, '/')-$startPos)).'.log';
+		!$count && is_file($filename) && unlink($filename);
+		$count+=file_put_contents($filename, $msg,FILE_APPEND);
 		if(defined('APP_DEBUG') && APP_DEBUG){echo $msg;}
 	}
 }
