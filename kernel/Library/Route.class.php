@@ -116,88 +116,7 @@ class Route{
 	}
 	
 	/*
-	 * 获取路由处理器
-	 * @param string $url URL参数
-	 * @param string $route 路由
-	 * @param string|function $handle 处理器 
-	 * @return string|null
-	 */
-	private function getHandle($url,$route,$handle){
-		//请求方法匹配
-		$routes=explode(':', $route, 2);
-		$route=trim(array_pop($routes));
-		$method=count($routes) ? strtoupper(array_pop($routes)) : 'ANY';
-		$route='/'.trim($route,'/');
-		
-		$middlewares=[];
-		if(is_string($handle)){
-			$handles=explode('>', $handle,2);
-			$handle=trim(array_pop($handles));
-			if(!empty($handles)){
-				$middlewares=array_merge($middlewares,explode('&', array_pop($handles)));
-			}
-		}
-		$routeLen=substr_count($route, '/');
-		$urlLen=substr_count($url, '/');
-		$optCount=substr_count($route, '?');
-		
-		//无参数或有参数的路径匹配
-		if(
-			($method=='ANY' || $method==env('REQUEST_METHOD')) && 
-			($routeLen==$urlLen || $urlLen + $optCount == $routeLen)
-		){
-			if(!strcasecmp($route, $url)){
-				$this->setMiddleware($middlewares);
-				//如果url完全匹配（不区分大小写），直接返回
-				return $handle;
-			}else{
-				//否则进行变量类型查找
-				$kArrs=explode('/',$route);
-				$urlArrs=explode('/',$url);
-				
-				$isVar=is_string($handle) && strpos($handle, '}')!==false;
-				$mCount=count($kArrs);
-				foreach($kArrs as $ki=> $kv){
-					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
-						/**
-						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
-						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
-						 * */
-						if(strpos($kv, '{')!==false){ // 变量匹配检查
-							$kval=trim($kv,'{} ');
-							$isOptional=substr($kval,-1)=='?';
-							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
-							$kvName=$kvnts[0];
-							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
-							if($kvType=='d'){  // 变量类型检查
-								if(is_numeric($urlArrs[$ki])){
-									$this->params[$kvName]=$urlArrs[$ki];
-								}else{
-									break;
-								}
-							}else{
-								$this->params[$kvName]=$urlArrs[$ki];
-							}
-							if($isVar){ // 路由控制器变量处理
-								$handle=str_replace('{'.$kvName.'}',$urlArrs[$ki],$handle);
-							}
-						}else{
-							break;
-						}
-					}
-					$mCount--;
-				}
-				if(!$mCount){
-					$this->setMiddleware($middlewares);
-					return $handle;
-				}
-			}
-		}
-		return null;
-	}
-	
-	/*
-	 * 获取路由
+	 * 根据主机名称获取路由配置信息
 	 * @param string $host 域名
 	 * @param array &$configs 所有路由配置
 	 * @return 匹配的路由配置
@@ -205,6 +124,11 @@ class Route{
 	private static function getRoutesByHost($host,&$configs){
 		static $cacheHosts=[]; //主机模块缓存
 		static $cacheRoutes=[]; //主机路由缓存
+		
+		//自动为不带子域名的主机名称带上"www."前缀
+		if(substr_count($host, '.')==1){
+			$host='www.'.$host;
+		}
 		
 		if(!isset($cacheHosts[$host])){
 			$routes=[];
@@ -287,6 +211,87 @@ class Route{
 		
 		$sHost='*'.strstr($host,'.');
 		return isset($cacheRoutes[$host]) ? $cacheRoutes[$host] : (isset($cacheRoutes[$sHost]) ? $cacheRoutes[$sHost] : null);
+	}
+	
+	/*
+	 * 获取路由处理器
+	 * @param string $url URL参数
+	 * @param string $route 路由
+	 * @param string|function $handle 处理器 
+	 * @return string|null
+	 */
+	private function getHandle($url,$route,$handle){
+		//请求方法匹配
+		$routes=explode(':', $route, 2);
+		$route=trim(array_pop($routes));
+		$method=count($routes) ? strtoupper(array_pop($routes)) : 'ANY';
+		$route='/'.trim($route,'/');
+		
+		$middlewares=[];
+		if(is_string($handle)){
+			$handles=explode('>', $handle,2);
+			$handle=trim(array_pop($handles));
+			if(!empty($handles)){
+				$middlewares=array_merge($middlewares,explode('&', array_pop($handles)));
+			}
+		}
+		$routeLen=substr_count($route, '/');
+		$urlLen=substr_count($url, '/');
+		$optCount=substr_count($route, '?');
+		
+		//无参数或有参数的路径匹配
+		if(
+			($method=='ANY' || $method==env('REQUEST_METHOD')) && 
+			($routeLen==$urlLen || $urlLen + $optCount == $routeLen)
+		){
+			if(!strcasecmp($route, $url)){
+				$this->setMiddleware($middlewares);
+				//如果url完全匹配（不区分大小写），直接返回
+				return $handle;
+			}else{
+				//否则进行变量类型查找
+				$kArrs=explode('/',$route);
+				$urlArrs=explode('/',$url);
+				
+				$isVar=is_string($handle) && strpos($handle, '}')!==false;
+				$mCount=count($kArrs);
+				foreach($kArrs as $ki=> $kv){
+					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
+						/**
+						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
+						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
+						 * */
+						if(strpos($kv, '{')!==false){ // 变量匹配检查
+							$kval=trim($kv,'{} ');
+							$isOptional=substr($kval,-1)=='?';
+							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
+							$kvName=$kvnts[0];
+							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
+							if($kvType=='d'){  // 变量类型检查
+								if(is_numeric($urlArrs[$ki])){
+									$this->params[$kvName]=$urlArrs[$ki];
+								}else{
+									break;
+								}
+							}else{
+								$this->params[$kvName]=$urlArrs[$ki];
+							}
+							if($isVar){ // 路由控制器变量处理
+								$handle=str_replace('{'.$kvName.'}',$urlArrs[$ki],$handle);
+							}
+						}else{
+							break;
+						}
+					}
+					$mCount--;
+				}
+				if(!$mCount){
+					$this->setMiddleware($middlewares);
+					return $handle;
+				}
+			}
+		}
+		return null;
 	}
 	
 	/*
