@@ -247,6 +247,7 @@ class WebSpider{
 	 * @return mixed|string
 	 */
 	private function formatPath($url,$serilize=false){
+		$rootPath=parse_url($this->url,PHP_URL_PATH);
 		$path=parse_url($url,PHP_URL_PATH);
 		$query=parse_url($url,PHP_URL_QUERY);
 		
@@ -264,6 +265,9 @@ class WebSpider{
 		
 		if($query){
 			$path=substr($path,0,strrpos($path,'.')).'-'.str_replace(array('=','&'), '-', $query).'.html';
+		}
+		if(strpos($path, $rootPath)===0){
+			$path=ltrim(substr($path,strlen($rootPath)),'/');
 		}
 		return $serilize ? str_replace('/','_',ltrim($path,'/')) : $path;
 	}
