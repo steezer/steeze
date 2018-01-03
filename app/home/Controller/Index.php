@@ -11,8 +11,8 @@ class Index extends Controller{
 		
 	}
 	
-	public function index(){
-		
+	public function hello(){
+		return 'Hello world!';
 	}
 	
 	public function test(Model $user){
