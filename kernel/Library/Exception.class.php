@@ -41,7 +41,7 @@ class Exception extends \Exception {
 				return $data;
 			}
 			make(Response::class)->write($data);
-		}else if((defined('IS_AJAX') && IS_AJAX)){ //ajax模式运行
+		}else if(env('IS_AJAX',false)){ //ajax模式运行
 			$data=json_encode($error,JSON_UNESCAPED_UNICODE);
 			if($isReturn){
 				return $data;

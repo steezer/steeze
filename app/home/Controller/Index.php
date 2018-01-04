@@ -12,7 +12,7 @@ class Index extends Controller{
 	}
 	
 	public function hello(){
-		return 'Hello world!';
+		return 'Hello world!!';
 	}
 	
 	public function test(Model $user){

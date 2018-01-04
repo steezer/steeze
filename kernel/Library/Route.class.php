@@ -102,10 +102,15 @@ class Route{
 		//对URL访问路径进行路由匹配
 		foreach($routes as $key=> $value){
 			if(is_array($value)){
-				foreach($value as $k=> $v){
-					if(!is_null($result=$this->getHandle($url,$k,$v))){
-						self::setMiddleware(explode('&', $key));
-						return $result;
+				$arrs=explode(':',$key);
+				count($arrs)==1 && array_unshift($arrs,'ANY');
+				$method=strtoupper($arrs[0]);
+				if($method=='ANY' || $method==env('REQUEST_METHOD')){
+					foreach($value as $k=> $v){
+						if(!is_null($result=$this->getHandle($url,$k,$v))){
+							!empty($arrs[1]) && self::setMiddleware(explode('&', $arrs[1]));
+							return $result;
+						}
 					}
 				}
 			}elseif(!is_null($result=$this->getHandle($url,$key,$value))){
@@ -273,7 +278,7 @@ class Route{
 								}else{
 									break;
 								}
-							}else{
+							}else if($urlArrs[$ki]!==''){ //此处兼容首页参数
 								$this->params[$kvName]=$urlArrs[$ki];
 							}
 							if($isVar){ // 路由控制器变量处理
