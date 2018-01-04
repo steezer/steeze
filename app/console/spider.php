@@ -90,7 +90,7 @@ class WebSpider{
 		$dirname=dirname($path);
 		!is_dir($dirname) && mkdir($dirname,0777,true);
 		
-		$contents=get_remote_file($url);
+		$contents=$this->sendRequest($url);
 		
 		if(!is_null($contents)){
 			$this->log($deep.':'.$url."\r\n",'html');
@@ -223,7 +223,7 @@ class WebSpider{
 				$newpath=$this->staticPath.($domain?$domain.'/':'').ltrim($rel_path,'/');
 				$filename=$this->rootPath.$newpath;
 				$this->log('start:get "'.$url."\"\r\n",$type);
-				if(is_file($filename) || get_remote_file($url,$filename)){
+				if(is_file($filename) || $this->sendRequest($url,$filename)){
 					$replaces[]=$newpath;
 					$this->log('success:save "'.$url.'" to "'.$newpath."\"\r\n",$type);
 					if($type=='css'){
@@ -238,6 +238,20 @@ class WebSpider{
 			}
 		}
 		return str_replace($searches, $replaces, $contents);
+	}
+	
+	/**
+	 * 发送请求
+	 * @param string $url
+	 * @param string $savepath
+	 * @param array $header
+	 */
+	private function sendRequest($url,$data=null){
+		//设置请求header
+		$header=[
+			'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1',
+		];
+		return get_remote_file($url,$data,$header);
 	}
 	
 	/**

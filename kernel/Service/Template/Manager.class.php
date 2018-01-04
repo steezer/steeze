@@ -214,33 +214,36 @@ class Manager {
 		$arrs=$this->parseAttrs($matches[1]);
 		$files=explode(',', isset($arrs['file']) ? $arrs['file'] : $matches[1]);
 		$types=explode(',', isset($arrs['type']) ? $arrs['type'] : '');
+		$bases=explode(',', isset($arrs['base']) ? $arrs['base'] : '');
 		$checks=explode(',', isset($arrs['check']) ? $arrs['check'] : '');
 		$defaults=explode(',', isset($arrs['default']) ? $arrs['default'] : 'default');
+		
+		unset($arrs['file'],$arrs['type'],$arrs['base'],$arrs['check'],$arrs['default']);
+		$tag_attrs=[];
+		foreach($arrs as $k=>$v){
+			$tag_attrs[$k] = $k . '="' . $v . '"';
+		}
+		
 		$res='';
 		foreach($files as $k=>$file){
 			$type=isset($types[$k]) ? $types[$k] : $types[0];
 			$check=isset($checks[$k]) ? $checks[$k] : $checks[0];
 			$default=isset($defaults[$k]) ? $defaults[$k] : $defaults[0];
+			$base=rtrim(trim(isset($bases[$k]) ? $bases[$k] : $bases[0]),'/');
 			
 			$ext=$type !== '' ? $type : fileext(($pos=strpos($file, '@')) == false ? $file : substr($file, 0, $pos));
-			$file=assets($file, $type, ($check != 'false' && $check), $default);
+			$file=assets(($base !=='' ? $base.'/'.$file : $file), $type, ($check != 'false' && $check), $default);
 			if($file !== ''){
 				switch($ext){
 					case 'css':
-						$res.='<link rel="stylesheet" type="text/css" href="' . $file . '" />' . "\r\n";
+						$res.='<link rel="stylesheet" type="text/css" href="' . $file . '" ' . implode(' ',$tag_attrs) . '/>' . "\r\n";
 						break;
 					case 'js':
-						$res.='<script type="text/javascript" src="' . $file . '"></script>' . "\r\n";
+						$res.='<script type="text/javascript" src="' . $file . '" ' . implode(' ',$tag_attrs) . '></script>' . "\r\n";
 						break;
 					default:
 						if($ext == 'jpg' || $ext == 'jpeg' || $ext == 'png' || $ext == 'gif' || $ext == 'bmp'){
-							$image_attr='';
-							foreach($arrs as $k=>$arr){
-								if($k != 'file' && $k != 'type' && $k != 'check' && $k != 'default'){
-									$image_attr.=' ' . $k . '="' . $arr . '"';
-								}
-							}
-							$res.='<img src="' . $file . '"' . $image_attr . '/>' . "\r\n";
+							$res.='<img src="' . $file . '"' . implode(' ',$tag_attrs) . '/>' . "\r\n";
 						}
 						break;
 				}

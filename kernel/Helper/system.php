@@ -980,7 +980,7 @@ function assets($file,$type='',$check=false,$default='default'){
 		$isRemote=strpos($style,'://')!==false;
 		
 		// 单个文件导入，根据文件名（如果为js,css,images文件）自动识别上级目录
-		if($ext=($type !== '' ? $type : fileext($file))){
+		if(!$pos && ($ext=($type !== '' ? $type : fileext($file)))){
 			if($ext == 'js' || $ext == 'css'){
 				$file=$ext . '/' . $file;
 			}elseif($ext == 'jpg' || $ext == 'png' || $ext == 'gif' || $ext == 'jpeg' || $ext == 'bmp'){
