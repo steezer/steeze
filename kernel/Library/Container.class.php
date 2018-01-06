@@ -7,6 +7,7 @@ use ReflectionClass;
 use ReflectionParameter;
 use Library\Exception;
 use Library\Model;
+use ReflectionFunction;
 
 class Container{
 	
@@ -77,6 +78,30 @@ class Container{
 				$instances=$this->resolveDependencies($dependencies);
 				array_pop($this->with);
 				return call_user_func_array(array($concrete,$method), $instances);
+			}
+		}catch(\Exception $e){
+			E($e);
+		}
+	}
+	
+	
+	/**
+	 * Closure匿名函数调用
+	 *
+	 * @param Closure $closure 匿名函数对象
+	 * @param array $parameters 方法参数
+	 * @return mixed
+	 */
+	
+	public function callClosure($closure,array $parameters=[]){
+		try{
+			if($closure instanceof Closure){
+				$reflector=new ReflectionFunction($closure);
+				$this->with[]=$parameters;
+				$dependencies=$reflector->getParameters();
+				$instances=$this->resolveDependencies($dependencies);
+				array_pop($this->with);
+				return $reflector->invokeArgs($instances);
 			}
 		}catch(\Exception $e){
 			E($e);

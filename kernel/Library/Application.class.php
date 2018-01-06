@@ -69,7 +69,7 @@ class Application{
 			$route_a=env('ROUTE_A',false);
 			if($disposer instanceof \Closure){
 				//直接运行回调函数
-				return $disposer(...array_values($params));
+				return Container::getInstance()->callClosure($disposer,$params);
 			}else if(
 				//控制器方法不能以“_”开头，以“_”开头的方法用于模版内部控制器方法调用
 				$route_a && strpos($route_a, '_') !== 0 && is_object($disposer) &&
