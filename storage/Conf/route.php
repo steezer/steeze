@@ -5,7 +5,7 @@ return [
 		'/'=> function(){
 			return 'Hello world!';
 		},
-		'/hello'=> 'Index/hello@Home',
+		'/hello'=> 'Index/hello@home',
 		'auth&convert' => [
 			'/{c}/{a}'=>'{c}/{a}',
 			'/{c}/{a}/{user|d}'=>'{c}/{a}',

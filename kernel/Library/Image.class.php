@@ -165,18 +165,19 @@ class Image{
 		$srcwidth=$info['width'];
 		$srcheight=$info['height'];
 		$type=$info['type'];
+		$otype=!empty($filename) ? strtolower(pathinfo($filename,PATHINFO_EXTENSION)) : $type;
 		if(!function_exists('imagecreatefrom' . $type)){
 			return false;
 		}
 		unset($info);
 		
 		// 缩小模式忽略条件
-		if(!$autocut && ((!$maxwidth && $srcheight <= $maxheight) || (!$maxheight && $srcwidth <= $maxwidth) )){
+		if($type==$otype && !$autocut && ((!$maxwidth && $srcheight <= $maxheight) || (!$maxheight && $srcwidth <= $maxwidth) )){
 			return false;
 		}
 		
 		// 原始宽度和高度都大于或等于设定范围，强制重新设置宽度和高度
-		if($srcwidth <= $maxwidth && $srcheight <= $maxheight && !empty($filename) && !$forece){
+		if($type==$otype && $srcwidth <= $maxwidth && $srcheight <= $maxheight && !empty($filename) && !$forece){
 			return false;
 		}
 		
@@ -195,6 +196,7 @@ class Image{
 		$createheight=$desc_height=$creat_arr['h'];
 		$cut_width=$srcwidth;
 		$cut_height=$srcheight;
+		$otype=!empty($filename) ? strtolower(pathinfo($filename,PATHINFO_EXTENSION)) : $type;
 		unset($creat_arr);
 		// //执行剪裁功能前宽度、高度及限定点的设置////
 		if($autocut && ($maxwidth > 0 || $maxheight > 0)){
@@ -203,9 +205,14 @@ class Image{
 			unset($cutSetting);
 		}
 		
-		// 如果宽度和高度都为0则不处理
+		// 在非转换格式的情况下，如果宽度和高度都为0则不处理
 		if(!$createwidth && !$createheight){
-			return false;
+			if($otype!=$type){
+				$createwidth=$srcwidth;
+				$createheight=$srcheight;
+			}else{
+				return false;
+			}
 		}
 		
 		// 如果为gif图片，且为多帧动画则不处理
@@ -234,25 +241,34 @@ class Image{
 		imagedestroy($src_img);
 		
 		// //后期处理////
+		if(!empty($otype)){
+			$type=$otype;
+		}
+		$type=($type == 'jpg' ? 'jpeg' : $type);
+		
 		if($type == 'gif' || $type == 'png'){
 			$background_color=imagecolorallocate($desc_img, 0, 255, 0); // 指派一个绿色
 			imagecolortransparent($desc_img, $background_color); // 设置为透明色，若注释掉该行则输出绿色的图
-		}
-		if($type == 'jpg' || $type == 'jpeg'){
+		}else if($type == 'jpeg'){
 			imageinterlace($desc_img, 0);
 		}
-		$type=($type == 'jpg' ? 'jpeg' : $type);
+		
+		//输出图片
 		$imagefun='image' . $type;
-		if(empty($filename)){
-			header('Content-type: image/' . $type);
-			$imagefun($desc_img);
-		}else{
-			$dirName=dirname($filename);
-			if(!is_dir($dirName)){
-				@mkdir($dirName, 0777, true);
+		if(function_exists($imagefun)){
+			if(empty($filename)){
+				header('Content-type: image/' . $type);
+				$imagefun($desc_img);
+			}else{
+				$dirName=dirname($filename);
+				if(!is_dir($dirName)){
+					@mkdir($dirName, 0777, true);
+				}
+				$imagefun($desc_img, $filename);
 			}
-			$imagefun($desc_img, $filename);
 		}
+		
+		//销毁图片
 		imagedestroy($desc_img);
 		if($ftp){
 			@unlink($image);
