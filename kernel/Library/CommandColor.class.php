@@ -41,6 +41,9 @@ class CommandColor {
 	 * @return string
 	 */
 	public function getColoredString($string, $foreground_color = null, $background_color = null) {
+		if(stripos(PHP_OS, 'WIN')===0){
+			return $string;
+		}
 		$colored_string = "";
 		if (isset($this->foreground_colors[$foreground_color])) {
 			$colored_string .= "\033[" . $this->foreground_colors[$foreground_color] . "m";
