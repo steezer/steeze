@@ -181,7 +181,7 @@ class Manager {
 					$content=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $content);
 					$sections=[];
 					//获取所有section
-					if(preg_match_all('/' . $ld . 'snippet\s+(.+?)\s*' . $rd . '(.*?)' . $ld . '\/snippet' . $rd . '/is', $str, $matches)){
+					if(preg_match_all('/' . $ld . 'slice\s+(.+?)\s*' . $rd . '(.*?)' . $ld . '\/slice' . $rd . '/is', $str, $matches)){
 						foreach ($matches[1] as $index => $value){
 							$names=$this->parseAttrs($value);
 							if(isset($names['name'])){
@@ -191,7 +191,7 @@ class Manager {
 					}
 					
 					return preg_replace_callback(
-							'/' . $ld . 'snippet\s+(.+?)\s*\/?' . $rd . '/is',
+							'/' . $ld . 'slice\s+(.+?)\s*\/?' . $rd . '/is',
 							function($matches) use($sections){
 								$data=$this->parseAttrs($matches[1]);
 								return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
@@ -284,11 +284,30 @@ class Manager {
 		$str='';
 		$return=isset($datas['return']) && trim($datas['return']) ? str_replace('$', '', trim($datas['return'])) : '';
 		if(isset($datas['name'])){
-			$mcas=explode('.', $datas['name'],3);
-			$action=array_pop($mcas);
-			empty($mcas) && array_push($mcas, env('ROUTE_C'));
+			$m=isset($datas['app']) ? $datas['app'] : (isset($datas['module']) ? $datas['module'] : env('ROUTE_M'));
+			$name=str_replace('.','/',$datas['name']);
+			if(strpos($name, '/')===0){ // 从分组顶层向下获取类，例如：/Member/Index/info
+				$cas=explode('/', trim($name,'/'));
+				$action=array_pop($cas);
+				$class=$m.'.'.(!empty($cas) ? implode('/',$cas) : env('ROUTE_C'));
+			}else{  // 从当前分组层向上获取，例如：Member/Index/info
+				$route_cs=explode('/',env('ROUTE_C'));
+				$cas=explode('/', $name);
+				$action=array_pop($cas);
+				for($total=max(count($route_cs),count($cas)),$i=0; $i<$total; $i++){
+					if(empty($cas)){
+						break;
+					}
+					if(isset($route_cs[$total-$i-1])){
+						$route_cs[$total-$i-1]=array_pop($cas);
+					}else{
+						array_unshift($route_cs, array_pop($cas));
+					}
+				}
+				$class=$m.'.'.implode('/', $route_cs);
+			}
 			unset($datas['name']);
-			$str.=(!empty($return) ? '$' . $return . ' = ' : 'echo \Library\Response::toString') . '(\Library\Controller::run(\Loader::controller(\''.implode('.', $mcas).'\'),\'_'.$action.'\','.array2html($datas).',true));';
+			$str.=(!empty($return) ? '$' . $return . ' = ' : 'echo \Library\Response::toString') . '(\Library\Controller::run(\Loader::controller(\''.$class.'\'),\'_'.$action.'\','.array2html($datas).',true));';
 		}
 		return !empty($str) ? '<?php ' . $str . ' ?>' : '';
 	}

@@ -63,7 +63,7 @@ class Route{
 				$res=explode('@', $handle);
 				$cas=explode('/', array_shift($res));
 				$route_a=array_pop($cas);
-				!empty($cas) && ($route_c=ucfirst(array_pop($cas)));
+				!empty($cas) && ($route_c=ucwords(implode('/', $cas),'/'));
 				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式

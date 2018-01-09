@@ -402,16 +402,15 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
 	}
 	
 	$module=strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M')));
-	$dir=str_replace('/', DS, $dir);
+	$dir=ucwords(str_replace('/', DS, $dir),DS);
 	$style === '' && ($style=C('default_tpl'));
 	
 	$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . $style . DS . $dir . DS . $template);
 	$tplExists=is_file($templatefile);
-	
 	//调用默认模版
 	if(!$tplExists){
-		$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . 'default' . DS . $dir . DS . $template);
-		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . 'default' . DS . $dir . DS . $phpfile);
+		$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . 'Default' . DS . $dir . DS . $template);
+		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . 'Default' . DS . $dir . DS . $phpfile);
 		$tplExists=is_file($templatefile);
 	}else{
 		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . $style . DS . $dir . DS . $phpfile);

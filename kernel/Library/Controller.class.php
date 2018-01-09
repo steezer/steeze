@@ -248,9 +248,9 @@ class Controller{
 		$classes=explode('\\', $classname);
 		array_shift($classes);
 		self::$_m=array_shift($classes);
-		self::$_c=array_pop($classes);
+		array_shift($classes);
+		self::$_c=implode('/',$classes);
 		self::$_a=$method;
-		
 		// 设置内部调用标识
 		View::setInCalled($isInCalled);
 		$container=Container::getInstance();

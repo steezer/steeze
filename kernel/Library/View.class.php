@@ -113,35 +113,44 @@ class View{
 		$m=empty(self::$_m) && env('ROUTE_M',false) ? env('ROUTE_M') : self::$_m;
 		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
-		// 获取当前模块 home@aa/bb/cc
-		$m=($pos=strpos($template, '@')) ? substr($template, 0, $pos) : $m;
-		if($pos){
-			$template=substr($template, $pos + 1);
-		}
 		
-		$style='';
-		if($template !== ''){
-			$dpos=strpos($template, $depr);
-			if($dpos === false){ // "a"
-				$a=$template;
-			}elseif($dpos === 0){
-				$template=substr($template, 1);
-				$dpos=strpos($template, $depr);
-				if($dpos === false){ // "/a"
-					$c='';
-					$a=$template;
-				}elseif(substr_count($template, $depr) > 1){ // eg:"/style/c/a"
-					list($style, $c, $a)=explode($depr, $template);
-				}else{ // eg:"/style/a"
-					list($style, $a)=explode($depr, $template);
-					$c='';
-				}
-			}elseif(substr_count($template, $depr) > 1){ // eg:"style/c/a"
-				list($style, $c, $a)=explode($depr, $template);
-			}else{// eg:"c/a"
-				list($c, $a)=explode($depr, $template);
+		if($pos=strpos($template, '@')){
+			$sm=explode(':', substr($template, $pos+1),2);
+			$template=substr($template, 0, $pos);
+			if(!empty(trim($sm[0]))){
+				$style=trim($sm[0]);  //获取风格名称，例如: Index/list@Default
+			}
+			if(isset($sm[1]) && !empty(trim($sm[1]))){
+				$m=trim($sm[1]);  //获取模块名称，例如: Index/list@Default:home
 			}
 		}
+		
+		if($template !== ''){
+			$dpos=strpos($template, $depr);
+			if($dpos === false){ //只有方法名，使用默认控制器，例如: "a"
+				$a=$template;
+			}elseif($dpos === 0){
+				//绝对路径，重写类名，例如: "/" 或 "/c/a" 或 "/g/c/a"
+				$cas=explode($depr, trim($template,$depr));
+				$a=array_pop($cas);
+				$c=implode('/', $cas);
+			}else{//相对路径，相对于分组，例如: "c/a" 或 "g/c/a"
+				$cas=explode($depr, trim($template,$depr));
+				$a=array_pop($cas);
+				
+				$dcs=explode('/',$c);
+				$cdcs=count($dcs);
+				for($i=0; $i<$cdcs; $i++){
+					if(!empty($cas)){
+						$dcs[$cdcs-$i-1]=array_pop($cas);
+					}else{
+						break;
+					}
+				}
+				$c=implode('/', $dcs);
+			}
+		}
+		
 		return ['a'=>$a,'c'=>$c,'style'=>$style,'m'=>$m];
 	}
 	
