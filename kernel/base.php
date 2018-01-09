@@ -1,7 +1,7 @@
 <?php
 /**** 【定义系统基础常量】 ****/
 function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/GMT-8'); //设置时区
-define('STEEZE_VERSION','1.1.0'); //系统版本
+define('STEEZE_VERSION','1.2.0'); //系统版本
 define('INI_STEEZE', true); //初始化标识
 define('SYS_START_TIME', microtime()); // 设置系统开始时间
 
@@ -107,7 +107,8 @@ class Loader{
 			$m=env('ROUTE_M');
 			$c=$name;
 		}
-		$concrete='App\\'.ucfirst(strtolower($m)).'\\Controller\\'.ucfirst(strtolower($c));
+		$c=str_replace('/','\\',ucwords(strtolower(trim($c,'\\/')),'/'));
+		$concrete='App\\'.ucfirst(strtolower($m)).'\\Controller\\'.$c;
 		$container=Library\Container::getInstance();
 		try{
 			return $container->make($concrete,$parameters);

@@ -1,5 +1,5 @@
 <?php
-namespace App\Home\Controller;
+namespace App\Home\Controller\Member;
 use Library\Controller;
 use Library\Model;
 use Library\Request;
@@ -12,15 +12,12 @@ class Index extends Controller{
 	}
 	
 	public function hello(){
-		$this->display('');
-	}
-	
-	public function test(Model $user){
-		$this->assign('user',$user);
 		$this->display();
 	}
 	
-	public function _show(){
+	public function _info(Model $user){
+		$this->assign('info',$user);
 		$this->display();
 	}
+	
 }

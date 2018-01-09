@@ -6,6 +6,7 @@ return [
 			return 'Hello world!';
 		},
 		'/hello'=> 'Index/hello@home',
+		'/member/index/hello'=> 'Member/Index/hello@home',
 		'auth&convert' => [
 			'/{c}/{a}'=>'{c}/{a}',
 			'/{c}/{a}/{user|d}'=>'{c}/{a}',

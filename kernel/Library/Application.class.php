@@ -80,7 +80,7 @@ class Application{
 			}elseif(
 				C('use_view_route',env('use_view_route',true)) &&
 				$route_m && $route_c && $route_a &&
-				!(is_null($viewer=view($route_m.'@'.$route_c.'/'.$route_a,$params)))
+				!(is_null($viewer=view($route_c.'/'.$route_a.'@:'.$route_m,$params)))
 			){
 				//直接访问模版
 				return $viewer;

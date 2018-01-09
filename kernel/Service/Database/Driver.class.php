@@ -1097,10 +1097,10 @@ abstract class Driver {
         // 数据库读写是否分离
         if($this->config['rw_separate']){
             // 主从式采用读写分离
-            if($master)
+            if($master){
                 // 主服务器写入
                 $r  =   $m;
-            else{
+            }else{
                 if(is_numeric($this->config['slave_no'])) {// 指定服务器读
                     $r = $this->config['slave_no'];
                 }else{
