@@ -8,9 +8,9 @@ define('SYS_START_TIME', microtime()); // 设置系统开始时间
 /**** 【定义服务器端路径】 ****/
 define('DS', DIRECTORY_SEPARATOR); //简化目录分割符
 define('KERNEL_PATH', dirname(__FILE__) . DS); //框架目录
-define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); //应用目录
-define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS); //外部库目录
-define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS); //数据存储目录
+!defined('APP_PATH') && define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); //应用目录
+!defined('VENDOR_PATH') && define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS); //外部库目录
+!defined('STORAGE_PATH') && define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS); //数据存储目录
 define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); //缓存目录
 define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS); //日志目录
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS); //网站根目录路径
@@ -32,6 +32,8 @@ Loader::env();
 define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false)); 
 //默认主机，命令行模式时使用
 define('DEFAULT_HOST',env('default_host','127.0.0.1'));
+//是否使用模版缓存，调试环境下强制刷新模版缓存
+define('TEMPLATE_REPARSE',APP_DEBUG); 
 
 //注册类加载器
 spl_autoload_register('Loader::import');
