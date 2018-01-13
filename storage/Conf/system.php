@@ -20,7 +20,7 @@ return [
 	'tmpl_exception_tpl' => KERNEL_PATH.'View'.DS.'exception.php', //错误显示PHP原生模版路径【不支持模版变量】
 	
 	//风格设置
-	'default_tpl' => 'Default', // 前台模板名称，位于APP_PATH/MODULE_NAME/View/目录下
+	'default_theme' => 'Default', // 前台模板名称，位于APP_PATH/MODULE_NAME/View/目录下
 	'default_assets' => 'default', // 前台访问静态文件路径，如果以/开头相对于ASSETS_URL，如果为相对路径则相对于ASSETS_URL/app/MODULE_NAME/
 
 	//默认路由参数

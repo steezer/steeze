@@ -403,7 +403,7 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
 	
 	$module=strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M')));
 	$dir=ucwords(str_replace('/', DS, $dir),DS);
-	$style === '' && ($style=C('default_tpl'));
+	$style === '' && ($style=C('default_theme'));
 	
 	$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . $style . DS . $dir . DS . $template);
 	$tplExists=is_file($templatefile);
