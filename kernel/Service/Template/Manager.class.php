@@ -53,8 +53,8 @@ class Manager {
 	/**
 	 * 更新模板缓存
 	 *
-	 * @param $tplfile 模板原文件路径
-	 * @param $compiledtplfile 编译完成后，写入文件名
+	 * @param string $tplfile 模板原文件路径
+	 * @param string $compiledtplfile 编译完成后，写入文件名
 	 * @return $strlen 长度
 	 */
 	public function refresh($tplfile,$compiledtplfile){
@@ -146,7 +146,7 @@ class Manager {
 
 	/**
 	 * 解析assign标签
-	 * @param $str 模版文件内容
+	 * @param string $str 模版文件内容
 	 * @param array $matches
 	 * @return string
 	 */
@@ -160,8 +160,8 @@ class Manager {
 	
 	/**
 	 * 解析layout标签
-	 * @param $str 模版文件内容
-	 * @return 处理后的模版
+	 * @param string $str 模版文件内容
+	 * @return string 处理后的模版
 	 */
 	public function parseLayout($str){
 		$ld=$this->leftDelim;
@@ -277,7 +277,7 @@ class Manager {
 	
 	/**
 	 * 解析action标签
-	 * @param $matches 匹配集合
+	 * @param array $matches 匹配集合
 	 */
 	public function parseAction($matches){
 		$datas=$this->parseAttrs($matches[1]); // 获取属性
@@ -315,7 +315,7 @@ class Manager {
 	/**
 	 * 解析if标签
 	 *
-	 * @param unknown $matches
+	 * @param array $matches
 	 * @return string
 	 */
 	public function parseIf($matches){
@@ -328,7 +328,7 @@ class Manager {
 	/**
 	 * 解析elseif标签
 	 *
-	 * @param unknown $matches
+	 * @param array $matches
 	 * @return string
 	 */
 	public function parseElseif($matches){
@@ -384,7 +384,7 @@ class Manager {
 	/**
 	 * 解析函数 支持以“.”分割的数组表示方式
 	 *
-	 * @param unknown $matches
+	 * @param mixed $matches
 	 * @return string
 	 */
 	public function parseFunc($matches){
@@ -394,7 +394,7 @@ class Manager {
 	/**
 	 * 解析数组变量，包括“.”操作符号的数组变量
 	 *
-	 * @param unknown $matches
+	 * @param mixed $matches
 	 * @return string
 	 */
 	public function parseVar($matches){
@@ -412,7 +412,7 @@ class Manager {
 	/**
 	 * 解析表达式 支持以“.”分割的数组表示方式
 	 *
-	 * @param unknown $matches
+	 * @param array $matches
 	 * @return string
 	 */
 	public function parseExpression($matches){
@@ -435,7 +435,8 @@ class Manager {
 			//先尝试从应用查找标签类
 			if(env('ROUTE_M',false)!==false){
 				try{
-					$tagCaches[$tag]=$container->make('\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
+					$tagPath=str_replace('\\\\','\\','\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
+					$tagCaches[$tag]=$container->make($tagPath);
 				}catch (\Exception $e){}
 			}
 			
@@ -488,7 +489,7 @@ class Manager {
 	/**
 	 * 解析使用点号分割的数组表示字符串
 	 *
-	 * @param unknown $para
+	 * @param mixed $para
 	 * @return string 数组表示的字符串
 	 */
 	public function parseDoVar($para){
@@ -504,8 +505,8 @@ class Manager {
 	/**
 	 * 解析多级函数调用的字符串表示形式， 例如：将{$addtime|date='Y-m-d','###'|md5}解析为<?php echo md5(date('Y-m-d',$addtime));?>
 	 *
-	 * @param unknown $var_str 变量的字符串表示
-	 * @param unknown $funstr 函数列表
+	 * @param string $var_str 变量的字符串表示
+	 * @param string $funstr 函数列表
 	 * @return string 函数调用表示的字符串
 	 */
 	private function parseVarFuncs($var_str,$funstr){

@@ -1,6 +1,5 @@
 <?php
 
-
 // ////////////////////////////////////
 // //////////公共函数库////////////////
 // ////////////////////////////////////
@@ -15,41 +14,39 @@
  */
 function fastlog($content,$isAppend=true,$file='system.log'){
 	$datetime=date('Y-m-d H:i:s');
-	$content='['.$datetime.'] '.dump($content,true);
-	return file_put_contents(
-			LOGS_PATH . $file, 
-			$content."\n", 
-			($isAppend ? FILE_APPEND : 0)
-		);
+	$content='[' . $datetime . '] ' . dump($content, true);
+	return file_put_contents(LOGS_PATH . $file, $content . "\n", ($isAppend ? FILE_APPEND : 0));
 }
 
 /**
  * 添加和获取页面Trace记录
+ * 
  * @param string $value 变量
  * @param string $label 标签
  * @param string $level 日志级别
  * @param boolean $record 是否记录日志
  * @return void|array
  */
-function trace($value='[steeze]',$label='',$level='DEBUG',$record=false) {
-	
+function trace($value='[steeze]',$label='',$level='DEBUG',$record=false){
 }
 
 /**
  * 输出变量信息
+ * 
  * @param $var 变量
  * @param $isOutput 是否直接输出
  * @return void|mixed
- * */
+ *
+ */
 function dump($var,$isReturn=false){
 	if(is_array($var)){
 		foreach($var as $k=>$v){
-			$var[$k]=dump($v,$isReturn);
+			$var[$k]=dump($v, $isReturn);
 		}
 	}
-	$return=trim((is_object($var) ? get_class($var) : var_export($var,true)),'\'"');
+	$return=trim((is_object($var) ? get_class($var) : var_export($var, true)), '\'"');
 	if(!$isReturn){
-		echo $return."\n";
+		echo $return . "\n";
 	}else{
 		return $return;
 	}
@@ -134,20 +131,21 @@ function filelist($dir='.',$ftype='*'){
  * @return string 处理后的图片路径（相对于网站根目录）
  */
 function thumb($imgUrl,$maxWidth=0,$maxHeight=0,$cutType=0,$defaultImg='',$isGetRemot=0){
-	return Library\Image::thumb($imgUrl,$maxWidth,$maxHeight,$cutType,$defaultImg,$isGetRemot);
+	return Library\Image::thumb($imgUrl, $maxWidth, $maxHeight, $cutType, $defaultImg, $isGetRemot);
 }
 
 /**
  * 简化路径
+ * 
  * @param string $path 路径名称
- * @return string 
+ * @return string
  */
 function simplify_ds($path){
-	if(DS!='/'){
+	if(DS != '/'){
 		$path=str_replace('/', DS, $path);
 	}
-	while(strpos($path,DS.DS)!==false){
-		$path=str_replace(DS.DS, DS, $path);
+	while(strpos($path, DS . DS) !== false){
+		$path=str_replace(DS . DS, DS, $path);
 	}
 	return $path;
 }
@@ -235,13 +233,13 @@ function strlen_utf8($str){
 		$i++;
 		if($i >= $len)
 			break;
-			if($chr & 0x80){
+		if($chr & 0x80){
+			$chr<<=1;
+			while($chr & 0x80){
+				$i++;
 				$chr<<=1;
-				while($chr & 0x80){
-					$i++;
-					$chr<<=1;
-				}
 			}
+		}
 	}
 	return $count;
 }
@@ -258,7 +256,6 @@ function strlen_utf8($str){
  * @param string $urlrule URL规则（列表页）或所有页面URL数组（详细页分页）
  * @param array $array 参数替换数组 （详细页无此参数）
  * @return string 返回分页的HTML代码（详细页无此参数）
- * 
  */
 function get_pager($info,$setpages=10,$urlrule='',$array=array()){
 	Loader::helper('content');
@@ -401,19 +398,19 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
 		$phpfile=substr($template, 0, strrpos($template, '.')) . '.php';
 	}
 	
-	$module=strtolower($module !== '' ? $module : (defined('STYLE_MODULE') ? STYLE_MODULE : env('ROUTE_M')));
-	$dir=ucwords(str_replace('/', DS, $dir),DS);
+	$module=strtolower($module !== '' ? $module : env('ROUTE_M'));
+	$dir=ucwords(str_replace('/', DS, $dir), DS);
 	$style === '' && ($style=C('default_theme'));
 	
-	$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . $style . DS . $dir . DS . $template);
+	$templatefile=simplify_ds(APP_PATH . $module . DS . 'View' . DS . $style . DS . $dir . DS . $template);
 	$tplExists=is_file($templatefile);
-	//调用默认模版
+	// 调用默认模版
 	if(!$tplExists){
-		$templatefile=simplify_ds(APP_PATH . $module . DS  . 'View' . DS . 'Default' . DS . $dir . DS . $template);
-		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . 'Default' . DS . $dir . DS . $phpfile);
+		$templatefile=simplify_ds(APP_PATH . $module . DS . 'View' . DS . 'Default' . DS . $dir . DS . $template);
+		$compiledtplfile=simplify_ds(CACHE_PATH . 'View' . DS . $module . DS . 'Default' . DS . $dir . DS . $phpfile);
 		$tplExists=is_file($templatefile);
 	}else{
-		$compiledtplfile=simplify_ds(CACHE_PATH .'View' . DS . $module . DS . $style . DS . $dir . DS . $phpfile);
+		$compiledtplfile=simplify_ds(CACHE_PATH . 'View' . DS . $module . DS . $style . DS . $dir . DS . $phpfile);
 	}
 	
 	if(!$isCompile){
@@ -433,15 +430,15 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
  */
 
 /**
- * 字符串命名风格转换
- * type 0 将Java风格转换为C的风格 1 将C风格转换为Java的风格
+ * 字符串命名风格转换 type 0 将Java风格转换为C的风格 1 将C风格转换为Java的风格
+ * 
  * @param string $name 字符串
  * @param integer $type 转换类型
  * @return string
  */
-function parse_name($name, $type=0) {
-	if ($type) {
-		if(strpos($name, '_')!==false){
+function parse_name($name,$type=0){
+	if($type){
+		if(strpos($name, '_') !== false){
 			$names=explode('_', $name);
 			foreach($names as $k=>$v){
 				if($k){
@@ -452,7 +449,7 @@ function parse_name($name, $type=0) {
 		}else{
 			return $name;
 		}
-	} else {
+	}else{
 		return strtolower(trim(preg_replace('/[A-Z]/', '_\\0', $name), '_'));
 	}
 }
@@ -647,9 +644,9 @@ function redirect($url,$time=0,$msg=''){
 	}
 	if(!$response->hasSendHeader()){
 		if(0 === $time){
-			$response->header('Location',$url);
+			$response->header('Location', $url);
 		}else{
-			$response->header("refresh",$time.';url='.$url);
+			$response->header("refresh", $time . ';url=' . $url);
 			$response->end($msg);
 		}
 	}else{
@@ -683,7 +680,7 @@ function get_remote_file($url,$data=null,$headers=null,$savepath=null){
 	$ch=curl_init();
 	$timeout=5;
 	
-	if(stripos($url, 's://')!=='false'){
+	if(stripos($url, 's://') !== 'false'){
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // 从证书中检查SSL加密算法是否存在
 	}
@@ -716,7 +713,7 @@ function get_remote_file($url,$data=null,$headers=null,$savepath=null){
 
 /**
  * session管理函数
- * 
+ *
  * @param string|array $name session名称 如果为数组则表示进行session设置
  * @param mixed $value session值
  * @return mixed
@@ -750,19 +747,12 @@ function session($name='',$value=''){
 		
 		if($name['type']){ // 读取session驱动
 			$class=ucwords(strtolower($name['type']));
-			$path=KERNEL_PATH . 'Service'.DS.'Session'.DS.'Driver'. DS . $class . '.class.php';
+			$path=KERNEL_PATH . 'Service' . DS . 'Session' . DS . 'Driver' . DS . $class . '.class.php';
 			if(is_file($path)){
-				$concrete='Service\\Session\\Driver\\'.$class;
+				$concrete='Service\\Session\\Driver\\' . $class;
 				$hander=\Library\Container::getInstance()->make($concrete);
-				//配置驱动
-				session_set_save_handler(
-						array(&$hander,'open'), 
-						array(&$hander,'close'), 
-						array(&$hander,'read'), 
-						array(&$hander,'write'), 
-						array(&$hander,'destroy'), 
-						array(&$hander,'gc')
-					);
+				// 配置驱动
+				session_set_save_handler(array(&$hander,'open'), array(&$hander,'close'), array(&$hander,'read'), array(&$hander,'write'), array(&$hander,'destroy'), array(&$hander,'gc'));
 			}
 		}
 		// 启动session
@@ -850,7 +840,7 @@ function session($name='',$value=''){
 
 /**
  * Cookie 设置、获取、删除
- * 
+ *
  * @param string $name cookie名称
  * @param mixed $value cookie值
  * @param mixed $option cookie参数
@@ -858,14 +848,13 @@ function session($name='',$value=''){
  */
 function cookie($name='',$value='',$option=null){
 	// 默认设置
-	$config=array(
-				'prefix' => C('cookie_pre'), // cookie 名称前缀
-				'expire' => C('cookie_ttl', 0), // cookie 保存时间
-				'path' => C('cookie_path'), // cookie 保存路径
-				'domain' => C('cookie_domain'), // cookie 有效域名
-				'secure' => C('cookie_secure', false), // cookie 启用安全传输
-				'httponly' => C('cookie_httponly', false) // httponly设置
-			);
+	$config=array('prefix' => C('cookie_pre'), // cookie 名称前缀
+'expire' => C('cookie_ttl', 0), // cookie 保存时间
+'path' => C('cookie_path'), // cookie 保存路径
+'domain' => C('cookie_domain'), // cookie 有效域名
+'secure' => C('cookie_secure', false), // cookie 启用安全传输
+'httponly' => C('cookie_httponly', false) // httponly设置
+);
 	// 参数设置(会覆盖黙认设置)
 	if(!is_null($option)){
 		if(is_numeric($option)){
@@ -937,8 +926,7 @@ function cookie($name='',$value='',$option=null){
 }
 
 /**
- * 导入静态文件路径 
- * 如：'js/show.js@daoke:home'，则返回/assets/app/home/daoke/js/show.js
+ * 导入静态文件路径 如：'js/show.js@daoke:home'，则返回/assets/app/home/daoke/js/show.js
  *
  * @param unknown $file 文件模式路径
  * @param string $type 文件类型
@@ -976,7 +964,7 @@ function assets($file,$type='',$check=false,$default='default'){
 		if($file === ''){
 			return '';
 		}
-		$isRemote=strpos($style,'://')!==false;
+		$isRemote=strpos($style, '://') !== false;
 		
 		// 单个文件导入，根据文件名（如果为js,css,images文件）自动识别上级目录
 		if(!$pos && ($ext=($type !== '' ? $type : fileext($file)))){
@@ -987,23 +975,21 @@ function assets($file,$type='',$check=false,$default='default'){
 			}
 		}
 		$module=strtolower($module);
-		if($style!='/'){
-			$style=rtrim($style,'/');
+		if($style != '/'){
+			$style=rtrim($style, '/');
 		}
 		
 		if($check && !$isRemote){
-			if(strpos($style,'/')===0){
-				$style=ltrim($style,'/');
-				return is_file(ASSETS_PATH.($style!='' ? $style.DS : '').$file) ? env('ASSETS_URL').($style!='' ? $style.'/' : '').$file : '';
+			if(strpos($style, '/') === 0){
+				$style=ltrim($style, '/');
+				return is_file(ASSETS_PATH . ($style != '' ? $style . DS : '') . $file) ? env('ASSETS_URL') . ($style != '' ? $style . '/' : '') . $file : '';
 			}else{
 				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
-					return is_file(ASSETS_PATH .'app'. DS . $module . DS . $default . DS . $file) ? 
-							 env('ASSETS_URL') . 'app/' . $module . '/'.trim($default,'/').'/' . $file : '';
+					return is_file(ASSETS_PATH . 'app' . DS . $module . DS . $default . DS . $file) ? env('ASSETS_URL') . 'app/' . $module . '/' . trim($default, '/') . '/' . $file : '';
 				}
 			}
 		}
-		return $isRemote ? $style.'/'.$file :
-		env('ASSETS_URL') . (strpos($style,'/')===0 ? ($style!='/' ? ltrim($style,'/') .'/' : '') : 'app/'. $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
+		return $isRemote ? $style . '/' . $file : env('ASSETS_URL') . (strpos($style, '/') === 0 ? ($style != '/' ? ltrim($style, '/') . '/' : '') : 'app/' . $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
 	}else{
 		return env('ASSETS_URL') . ltrim($file, '/');
 	}
@@ -1018,11 +1004,12 @@ function assets($file,$type='',$check=false,$default='default'){
  */
 function make($concrete,array $parameters=[]){
 	$container=\Library\Container::getInstance();
-	return $container->make($concrete,$parameters);
+	return $container->make($concrete, $parameters);
 }
 
 /**
  * 获取渲染后的视图内容
+ * 
  * @param string $name 视图名称，可以是直接的文件路径，或者视图路径
  * @param array $datas 视图变量
  * @return string 渲染后的视图内容
@@ -1030,8 +1017,8 @@ function make($concrete,array $parameters=[]){
 function view($name,$datas=[]){
 	$viewer=make(\Library\View::class);
 	if(is_array($datas)){
-		foreach($datas as $key=> &$value){
-			$viewer->assign($key,$value);
+		foreach($datas as $key=>&$value){
+			$viewer->assign($key, $value);
 		}
 	}
 	return $viewer->fetch($name);
@@ -1039,54 +1026,49 @@ function view($name,$datas=[]){
 
 /**
  * 获取环境变量（键名不区分大小写）
+ * 
  * @param string $key 键名称
  * @param array $default 默认值
  * @return string 环境变量值
  */
 function env($key,$default=null){
-	return Loader::env($key,null,$default);
+	return Loader::env($key, null, $default);
 }
 
 /**
- * 记录和统计时间（微秒）和内存使用情况
- * 使用方法:
- * <code>
- * G('begin'); // 记录开始标记位
- * // ... 区间运行代码
- * G('end'); // 记录结束标签位
- * echo G('begin','end',6); // 统计区间运行时间 精确到小数后6位
- * echo G('begin','end','m'); // 统计区间内存使用情况
- * 如果end标记位没有定义，则会自动以当前作为标记位
- * 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效
- * </code>
+ * 记录和统计时间（微秒）和内存使用情况 使用方法: <code> G('begin'); // 记录开始标记位 // ... 区间运行代码 G('end'); // 记录结束标签位 echo G('begin','end',6); // 统计区间运行时间 精确到小数后6位 echo G('begin','end','m'); // 统计区间内存使用情况 如果end标记位没有定义，则会自动以当前作为标记位 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 </code>
+ * 
  * @param string $start 开始标签
  * @param string $end 结束标签
  * @param integer|string $dec 小数位或者m
  * @return mixed
  */
-function G($start,$end='',$dec=4) {
-	static $_info       =   array();
-	static $_mem        =   array();
-	if(is_float($end)) { // 记录时间
-		$_info[$start]  =   $end;
+function G($start,$end='',$dec=4){
+	static $_info=array();
+	static $_mem=array();
+	if(is_float($end)){ // 记录时间
+		$_info[$start]=$end;
 	}elseif(!empty($end)){ // 统计时间和内存使用
-		if(!isset($_info[$end])) $_info[$end]       =  microtime(TRUE);
-		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON && $dec=='m'){
-			if(!isset($_mem[$end])) $_mem[$end]     =  memory_get_usage();
-			return number_format(($_mem[$end]-$_mem[$start])/1024);
+		if(!isset($_info[$end]))
+			$_info[$end]=microtime(TRUE);
+		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON && $dec == 'm'){
+			if(!isset($_mem[$end]))
+				$_mem[$end]=memory_get_usage();
+			return number_format(($_mem[$end] - $_mem[$start]) / 1024);
 		}else{
-			return number_format(($_info[$end]-$_info[$start]),$dec);
+			return number_format(($_info[$end] - $_info[$start]), $dec);
 		}
-		
 	}else{ // 记录时间和内存使用
-		$_info[$start]  =  microtime(TRUE);
-		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON) $_mem[$start] =  memory_get_usage();
+		$_info[$start]=microtime(TRUE);
+		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON)
+			$_mem[$start]=memory_get_usage();
 	}
 	return null;
 }
 
 /**
  * 缓存管理
+ * 
  * @param mixed $name 缓存名称，如果为数组表示进行缓存设置
  * @param mixed $value 缓存值
  * @param mixed $options 缓存参数
@@ -1121,6 +1103,7 @@ function S($name,$value='',$options=null){
 
 /**
  * 快速文件数据读取和保存 针对简单类型数据 字符串、数组
+ * 
  * @param string $name 缓存名称
  * @param mixed $value 缓存值
  * @param string $path 缓存路径
@@ -1133,7 +1116,7 @@ function F($name,$value='',$path=null){
 	}
 	$filename=$path . $name . '.php';
 	
-	//初始化存储服务
+	// 初始化存储服务
 	Service\Storage\Manager::connect(STORAGE_TYPE);
 	
 	if('' !== $value){
@@ -1165,31 +1148,26 @@ function F($name,$value='',$path=null){
 	return $value;
 }
 
-
 /**
  * 模型快速操作
  *
  * @param string $name 需要操作的表
  * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
- * @return object 数据库模型对象
- * $conn参数为字符串类型时举例说明：
- * 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置；
- * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
- * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
+ * @return object 数据库模型对象 $conn参数为字符串类型时举例说明： 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置； 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
  */
-function M($name='', $conn='') {
-	static $_model  = array();
-	$tablePrefix=''; //使用连接配置
-	if(is_string($conn) && strpos($conn,'^')===0){
-		$conns=explode('@', trim($conn,'^'),2);
-		//如果为"^@xxx"或"^"则不使用前缀
-		$tablePrefix=$conns[0]!=='' ? $conns[0] : null; 
-		//"^@xxx"或"^aaa@xxx"则使用xxx为连接名;"^"或"^aaa"则连接名使用系统配置
-		$conn=count($conns)>1 ? $conns[1] : '';
+function M($name='',$conn=''){
+	static $_model=array();
+	$tablePrefix=''; // 使用连接配置
+	if(is_string($conn) && strpos($conn, '^') === 0){
+		$conns=explode('@', trim($conn, '^'), 2);
+		// 如果为"^@xxx"或"^"则不使用前缀
+		$tablePrefix=$conns[0] !== '' ? $conns[0] : null;
+		// "^@xxx"或"^aaa@xxx"则使用xxx为连接名;"^"或"^aaa"则连接名使用系统配置
+		$conn=count($conns) > 1 ? $conns[1] : '';
 	}
-	$guid  = (is_array($conn) ? implode('',$conn) : $conn).$tablePrefix.$name;
-	if (!isset($_model[$guid])){
-		$_model[$guid] = new Library\Model($name,$tablePrefix,$conn);
+	$guid=(is_array($conn) ? implode('', $conn) : $conn) . $tablePrefix . $name;
+	if(!isset($_model[$guid])){
+		$_model[$guid]=new Library\Model($name, $tablePrefix, $conn);
 	}
 	return $_model[$guid];
 }
@@ -1201,16 +1179,7 @@ function M($name='', $conn='') {
  * @param string|array $vars 传入的参数，支持数组和字符串
  * @param boolean $domain 是否显示域名
  * @param integer $type 使用的URL类型，为-1系统自动判断，为0前端，为1后台
- * @return string
- * 使用方式说明：
- * 1、外部地址解析（地址以“http://”或“https://”开头）：U('http://www.baidu.com','name=spring&id=2')
- * 	 返回：http://www.baidu.com?name=spring&id=2
- * 2、本地绝对地址解析（地址以“/”开头）：U('/api/','name=spring&id=2',true)
- * 	 返回：http://www.h928.com/api/?name=spring&id=2
- * 3、本地插件地址解析（地址以“:”开头）: U(':houserent/add','name=spring&id=2')
- * 	 返回：/index.php?plugin_c=houserent&plugin_a=add&name=spring&id=2
- * 4、本地控制器地址解析：U('houserent/add','name=spring&id=2')
- * 	 返回：/index.php?c=houserent&a=add&name=spring&id=2
+ * @return string 使用方式说明： 1、外部地址解析（地址以“http://”或“https://”开头）：U('http://www.baidu.com','name=spring&id=2') 返回：http://www.baidu.com?name=spring&id=2 2、本地绝对地址解析（地址以“/”开头）：U('/api/','name=spring&id=2',true) 返回：http://www.h928.com/api/?name=spring&id=2 3、本地插件地址解析（地址以“:”开头）: U(':houserent/add','name=spring&id=2') 返回：/index.php?plugin_c=houserent&plugin_a=add&name=spring&id=2 4、本地控制器地址解析：U('houserent/add','name=spring&id=2') 返回：/index.php?c=houserent&a=add&name=spring&id=2
  */
 function U($url='',$vars='',$domain=false,$type=-1){
 	$info=parse_url($url);
@@ -1227,19 +1196,16 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		parse_str($info['query'], $params);
 		$vars=array_merge($params, $vars);
 	}
-	$anchor=isset($info['fragment'])?$info['fragment']:null;
+	$anchor=isset($info['fragment']) ? $info['fragment'] : null;
 	if($domain){
 		$hostname=isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'];
 	}
 	
-	//////////地址解析//////////
-	if(stripos($url, 'http://')===0||stripos($url, 'https://')===0)
-	{//外部地址解析（地址以“http://”或“https://”开头）
-		$domain=$info['host'].(isset($info['port'])?':'.$info['port']:'');
+	// ////////地址解析//////////
+	if(stripos($url, 'http://') === 0 || stripos($url, 'https://') === 0){ // 外部地址解析（地址以“http://”或“https://”开头）
+		$domain=$info['host'] . (isset($info['port']) ? ':' . $info['port'] : '');
 		$url=$info['path'];
-	}
-	elseif(strpos($url, '/')===0)
-	{//本地绝对地址解析（地址以“/”开头）
+	}elseif(strpos($url, '/') === 0){ // 本地绝对地址解析（地址以“/”开头）
 		if($domain === true){
 			$domain=$hostname;
 		}
@@ -1255,7 +1221,7 @@ function U($url='',$vars='',$domain=false,$type=-1){
 				list($anchor, $host)=explode('@', $anchor, 2);
 			}
 		}
-		if(false !== strpos($url, '@')){// 解析域名
+		if(false !== strpos($url, '@')){ // 解析域名
 			list($url, $host)=explode('@', $info['path'], 2);
 		}
 		// 解析子域名
@@ -1272,12 +1238,12 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		$url=ltrim($url, $depr);
 		$paths=explode($depr, $url);
 		
-		$var_c=C('VAR_CONTROLLER','c');
-		$var_a=C('VAR_ACTION','a');
-		$var[$var_a]=!empty($paths) ? array_pop($paths) : env('ROUTE_A','');
-		$var[$var_c]=!empty($paths) ? array_pop($paths) : env('ROUTE_C','');
+		$var_c=C('VAR_CONTROLLER', 'c');
+		$var_a=C('VAR_ACTION', 'a');
+		$var[$var_a]=!empty($paths) ? array_pop($paths) : env('ROUTE_A', '');
+		$var[$var_c]=!empty($paths) ? array_pop($paths) : env('ROUTE_C', '');
 		if(!empty($paths)){
-			$var_m=C('VAR_MODULE','m');
+			$var_m=C('VAR_MODULE', 'm');
 			$var[$var_m]=implode($depr, $paths);
 			if((defined('BIND_MODULE') && BIND_MODULE == $var[$var_m]) || $var[$var_m] === ''){
 				unset($var[$var_m]);
@@ -1296,17 +1262,17 @@ function U($url='',$vars='',$domain=false,$type=-1){
 		}
 	}
 	
-	//URL生成
+	// URL生成
 	if(!empty($vars)){
 		$vars=http_build_query($vars);
 		$last_char=substr($url, -1);
-		$url.=(strpos($url, '?')!==false?($last_char=='?'||$last_char=='&'?'':'&'):'?').$vars;
+		$url.=(strpos($url, '?') !== false ? ($last_char == '?' || $last_char == '&' ? '' : '&') : '?') . $vars;
 	}
 	if(isset($anchor)){
 		$url.='#' . $anchor;
 	}
 	if($domain){
-		$url=(!empty($info['scheme'])?$info['scheme'].'://':env('SITE_PROTOCOL')) .$domain.$url;
+		$url=(!empty($info['scheme']) ? $info['scheme'] . '://' : env('SITE_PROTOCOL')) . $domain . $url;
 	}
 	return $url;
 }
@@ -1324,7 +1290,7 @@ function C($key='',$default=''){
 		count($keys) < 2 && array_unshift($keys, 'system');
 		$len=count($keys);
 		$file=trim($keys[0]);
-		$key=trim($keys[1],' *');
+		$key=trim($keys[1], ' *');
 		
 		if($len < 3){
 			return Loader::config($file, $key, $default);
@@ -1342,33 +1308,24 @@ function C($key='',$default=''){
 			return $res;
 		}
 	}elseif(is_array($key)){
-		return Loader::config((empty($default)?'system':$default), $key);
+		return Loader::config((empty($default) ? 'system' : $default), $key);
 	}
 	return null;
 }
 
 /*
- *  获取输入参数，非空值，依次为GET、POST
- *  @param string $name 参数名称
- *  @param mixed $default 默认值
- *  @handle string|\Closure 处理器，可以是函数名称或者回调函数
- *  @return mixed
+ * 获取输入参数，非空值，依次为GET、POST @param string $name 参数名称 @param mixed $default 默认值 @handle string|\Closure 处理器，可以是函数名称或者回调函数 @return mixed
  */
 function I($name,$default='',$handle=null){
 	$request=make(Library\Request::class);
-	$value=$request->get($name,$request->post($name,$default));
-	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ?
-				$handle($value) : $value;
+	$value=$request->get($name, $request->post($name, $default));
+	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ? $handle($value) : $value;
 }
 
 /*
- *  生成错误异常
- *  @param mixed $name 参数名称
- *  @param int|array $code 错误码，也可以传入一个包括code键的数组
- *  @param null|bool $isRender 是否进行渲染，为默认值null抛出错误，为true返回渲染后的错误，false直接输出
- *  @return mixed
+ * 生成错误异常 @param mixed $name 参数名称 @param int|array $code 错误码，也可以传入一个包括code键的数组 @param null|bool $isRender 是否进行渲染，为默认值null抛出错误，为true返回渲染后的错误，false直接输出 @return mixed
  */
-function E($obj, $code=404, $isRender=null){
+function E($obj,$code=404,$isRender=null){
 	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
 	if(!is_object($obj)){
 		$e=new \Library\Exception($obj, $errorCode);
@@ -1380,31 +1337,29 @@ function E($obj, $code=404, $isRender=null){
 	if(is_null($isRender)){
 		throw $e;
 	}else{
-		return \Library\Exception::render($e,(array)$code,$isRender);
+		return \Library\Exception::render($e, (array)$code, $isRender);
 	}
 }
 
 /*
- * 语言转化
- * @param string $message 语言键名
- * @return 转换后的语言
- * */
+ * 语言转化 @param string $message 语言键名 @return 转换后的语言
+ */
 function L($message,$datas=[]){
 	static $langs=null;
 	if(is_null($langs)){
 		$langs=[];
-		$lang=DS.'Lang'.DS.C('lang','zh-cn').'.php';
-		if(is_file(KERNEL_PATH.$lang)){
-			$langs=array_merge($langs,include_once(KERNEL_PATH.$lang));
+		$lang=DS . 'Lang' . DS . C('lang', 'zh-cn') . '.php';
+		if(is_file(KERNEL_PATH . $lang)){
+			$langs=array_merge($langs, include_once (KERNEL_PATH . $lang));
 		}
-		$route_m=env('ROUTE_M',false);
-		if($route_m && is_file(APP_PATH.$route_m.$lang)){
-			$langs=array_merge($langs,include_once(APP_PATH.$route_m.$lang));
+		$app_path=simplify_ds(APP_PATH . env('ROUTE_M', '') . $lang);
+		if(is_file($app_path)){
+			$langs=array_merge($langs, include_once ($app_path));
 		}
 	}
 	$message=isset($langs[$message]) ? $langs[$message] : $message;
-	foreach((array) $datas as $k=>$v){
-		$message=str_replace('{'.$k.'}', $v, $message);
+	foreach((array)$datas as $k=>$v){
+		$message=str_replace('{' . $k . '}', $v, $message);
 	}
 	return $message;
 }

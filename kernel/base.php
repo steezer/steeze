@@ -29,11 +29,13 @@ Loader::env();
 // 系统默认在开发模式下运行
 !defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug',true)); 
 //当找不到处理器时，是否使用默认处理器
-define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false)); 
+!defined('USE_DEFUALT_HANDLE') && define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false));
 //默认主机，命令行模式时使用
 define('DEFAULT_HOST',env('default_host','127.0.0.1'));
 //是否使用模版缓存，调试环境下强制刷新模版缓存
 define('TEMPLATE_REPARSE',APP_DEBUG); 
+//默认应用名称
+!defined('DEFAULT_APP_NAME') && define('DEFAULT_APP_NAME','home');
 
 //注册类加载器
 spl_autoload_register('Loader::import');
@@ -109,8 +111,8 @@ class Loader{
 			$m=env('ROUTE_M');
 			$c=$name;
 		}
-		$c=str_replace('/','\\',ucwords(strtolower(trim($c,'\\/')),'/'));
-		$concrete='App\\'.ucfirst(strtolower($m)).'\\Controller\\'.$c;
+		$c=str_replace('/','\\',ucwords(strtolower(trim($c,'\\/.')),'/'));
+		$concrete=str_replace('\\\\','\\','App\\'.ucfirst(strtolower($m)).'\\Controller\\'.$c);
 		$container=Library\Container::getInstance();
 		try{
 			return $container->make($concrete,$parameters);
@@ -128,8 +130,8 @@ class Loader{
 	 */
 	public static function helper($name,$module=null){
 		static $helpers=[];
-		$baseDir=(empty($module) ? KERNEL_PATH : APP_PATH . (is_string($module) ? strtolower($module) : env('ROUTE_M')) . DS);
-		$path=$baseDir .'Helper' . DS . $name . '.php';
+		$baseDir=(empty($module) ? KERNEL_PATH : APP_PATH . (is_string($module) ? strtolower($module) : env('ROUTE_M','')) . DS);
+		$path=str_replace(DS.DS,DS,$baseDir .'Helper' . DS . $name . '.php');
 		$key=md5($path);
 		if(isset($helpers[$key])){
 			return true;
@@ -173,22 +175,21 @@ class Loader{
 			$globalConfigs[$name]=include($globalPath);
 		}
 		
-		$appName=env('ROUTE_M',false);
+		$appName=env('ROUTE_M','/');
 		if(
-			$appName &&
 			!isset($appConfigs[$appName][$name]) &&
-			is_file($appPath=APP_PATH . $appName . DS . 'Conf' . DS . $name . '.php')
+			is_file($appPath=simplify_ds(APP_PATH . $appName . DS . 'Conf' . DS . $name . '.php'))
 		){
 			$moduleConfig=include($appPath);
 			$appConfigs[$appName][$name]= is_array($moduleConfig) ? $moduleConfig : null;
 		}
 		
 		return $key!=='' ? (
-					$appName && isset($appConfigs[$appName][$name][$key]) ?
+					isset($appConfigs[$appName][$name][$key]) ?
 						$appConfigs[$appName][$name][$key] :
 						(isset($globalConfigs[$name][$key]) ? $globalConfigs[$name][$key] : $default)
 				) : (
-					$appName && isset($appConfigs[$appName][$name]) ?
+					isset($appConfigs[$appName][$name]) ?
 						$appConfigs[$appName][$name] :
 						(isset($globalConfigs[$name]) ? $globalConfigs[$name] : $default)
 			);

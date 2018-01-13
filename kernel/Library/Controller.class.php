@@ -245,8 +245,13 @@ class Controller{
 		// 记录控制器的调用信息
 		$classes=explode('\\', $classname);
 		array_shift($classes);
-		self::$_m=array_shift($classes);
-		array_shift($classes);
+		$cm=array_shift($classes);
+		if($cm!='Controller'){
+			self::$_m=strtolower($cm);
+			array_shift($classes);
+		}else{
+			self::$_m='';
+		}
 		self::$_c=implode('/',$classes);
 		self::$_a=$method;
 		// 设置内部调用标识

@@ -12,7 +12,7 @@ class Index extends Controller{
 	}
 	
 	public function hello(){
-		$this->display('');
+		$this->display();
 	}
 	
 	public function test(Model $user){

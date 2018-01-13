@@ -67,7 +67,7 @@ class Route{
 				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
-			if($url==env('ROOT_URL') || defined('USE_DEFUALT_HANDLE') && USE_DEFUALT_HANDLE){
+			if($url==env('ROOT_URL') || USE_DEFUALT_HANDLE){
 				!isset($route_c) && ($route_c=defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
 				!isset($route_a) && ($route_a=defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
 			}
@@ -212,7 +212,7 @@ class Route{
 			
 		}
 		
-		Loader::env('BIND_MODULE', strtolower(!empty($cacheHosts[$host]) ? $cacheHosts[$host] : I('m','home')));
+		Loader::env('BIND_MODULE', strtolower(!empty($cacheHosts[$host]) ? $cacheHosts[$host] : (USE_DEFUALT_HANDLE ? I('m',DEFAULT_APP_NAME) : DEFAULT_APP_NAME)));
 		
 		$sHost='*'.strstr($host,'.');
 		return isset($cacheRoutes[$host]) ? $cacheRoutes[$host] : (isset($cacheRoutes[$sHost]) ? $cacheRoutes[$sHost] : null);

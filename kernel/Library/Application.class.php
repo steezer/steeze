@@ -64,7 +64,7 @@ class Application{
 			//获取路由参数
 			$params=$request->getRoute()->getParam();
 			$disposer=$request->getRoute()->getDisposer();
-			$route_m=env('ROUTE_M',false);
+			$route_m=env('ROUTE_M','');
 			$route_c=env('ROUTE_C',false);
 			$route_a=env('ROUTE_A',false);
 			if($disposer instanceof \Closure){
@@ -79,7 +79,7 @@ class Application{
 				return Controller::run($disposer, $route_a,$params);
 			}elseif(
 				C('use_view_route',env('use_view_route',true)) &&
-				$route_m && $route_c && $route_a &&
+				$route_c && $route_a &&
 				!(is_null($viewer=view($route_c.'/'.$route_a.'@:'.$route_m,$params)))
 			){
 				//直接访问模版
