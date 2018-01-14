@@ -17,7 +17,7 @@ return [
 	'errorlog' => 0, // 是否保存错误日志到LOGS_PATH/exception.log
 	'errorlog_size' => 20, // 错误日志预警大小，单位：M
 	'gzip' => 0,
-	'tmpl_exception_tpl' => KERNEL_PATH.'View'.DS.'exception.php', //错误显示PHP原生模版路径【不支持模版变量】
+	'tmpl_exception_tpl' => KERNEL_PATH.'View'.DS.'exception.php', //错误显示PHP原生模板路径【不支持模板变量】
 	
 	//风格设置
 	'default_theme' => 'Default', // 前台模板名称，位于APP_PATH/MODULE_NAME/View/目录下

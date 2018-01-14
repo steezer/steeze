@@ -3,9 +3,9 @@ namespace Service\Template;
 use Library\Container;
 use Library\View;
 
-// 模版服务
+// 模板服务
 class Manager {
-	private $leftDelim; // 模版标签左边界字符
+	private $leftDelim; // 模板标签左边界字符
 	private $rightDelim;
 	private static $_instance=null;
 	
@@ -17,7 +17,7 @@ class Manager {
 		return self::$_instance;
 	}
 	
-	// 模版标签右边界字符
+	// 模板标签右边界字符
 	public function __construct(){
 		$this->leftDelim=defined('TAGLIB_BEGIN') ? TAGLIB_BEGIN : C('TAGLIB_BEGIN', '<');
 		$this->rightDelim=defined('TAGLIB_END') ? TAGLIB_END : C('TAGLIB_END', '>');
@@ -29,7 +29,7 @@ class Manager {
 	}
 	
 	/**
-	 * 模版编译
+	 * 模板编译
 	 *
 	 * @param string $tplfile 模板文件路径
 	 * @param string $compiledtplfile 编译后文件路径
@@ -74,7 +74,7 @@ class Manager {
 	public function parse($str){
 		$ld=$this->leftDelim;
 		$rd=$this->rightDelim;
-		//处理模版注释
+		//处理模板注释
 		$str=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $str);
 		
 		//布局标签解析
@@ -82,7 +82,7 @@ class Manager {
 			$str=$this->parseLayout($str);
 		}
 		
-		//模版变量标签解析
+		//模板变量标签解析
 		stripos($str, $ld . 'assign ') !== false && ($str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str));
 		
 		// 全局标签的解析
@@ -146,7 +146,7 @@ class Manager {
 
 	/**
 	 * 解析assign标签
-	 * @param string $str 模版文件内容
+	 * @param string $str 模板文件内容
 	 * @param array $matches
 	 * @return string
 	 */
@@ -160,8 +160,8 @@ class Manager {
 	
 	/**
 	 * 解析layout标签
-	 * @param string $str 模版文件内容
-	 * @return string 处理后的模版
+	 * @param string $str 模板文件内容
+	 * @return string 处理后的模板
 	 */
 	public function parseLayout($str){
 		$ld=$this->leftDelim;
@@ -173,7 +173,7 @@ class Manager {
 				$r=View::resolvePath($datas['name']);
 				$layout=template($r['a'],$r['c'],$r['style'],$r['m'],false);
 				if(is_file($layout)){
-					//获取模版中的模版变量
+					//获取模板中的模板变量
 					if(stripos($str, $ld . 'assign ') !== false){
 						$str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str);
 					}

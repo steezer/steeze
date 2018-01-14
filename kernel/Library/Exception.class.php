@@ -20,7 +20,7 @@ class Exception extends \Exception {
 	 * 错误渲染
 	 * @param \Exception|\Error $e 错误对象
 	 * @param array $params 传递的参数
-	 * @param bool $isReturn 是否返回渲染后的异常模版，否则直接输出
+	 * @param bool $isReturn 是否返回渲染后的异常模板，否则直接输出
 	 * @return string|void
 	 */
 	static public function render($e,array $params=[],$isReturn=false){
@@ -48,7 +48,7 @@ class Exception extends \Exception {
 			}
 			make(Response::class)->write($data);
 		}else if(is_file($tpl=C('tmpl_exception_tpl'))){  //web模式运行
-			//直接访问模版
+			//直接访问模板
 			$viewer=make(View::class);
 			$viewer->assign($params);
 			$viewer->assign('e',$e);

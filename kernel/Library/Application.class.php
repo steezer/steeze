@@ -71,7 +71,7 @@ class Application{
 				//直接运行回调函数
 				return Container::getInstance()->callClosure($disposer,$params);
 			}else if(
-				//控制器方法不能以“_”开头，以“_”开头的方法用于模版内部控制器方法调用
+				//控制器方法不能以“_”开头，以“_”开头的方法用于模板内部控制器方法调用
 				$route_a && strpos($route_a, '_') !== 0 && is_object($disposer) &&
 					is_callable(array($disposer, $route_a))
 			){
@@ -82,7 +82,7 @@ class Application{
 				$route_c && $route_a &&
 				!(is_null($viewer=view($route_c.'/'.$route_a.'@:'.$route_m,$params)))
 			){
-				//直接访问模版
+				//直接访问模板
 				return $viewer;
 			}else{
 				return E(L('Page not found'),404,true);

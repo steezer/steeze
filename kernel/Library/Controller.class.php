@@ -231,7 +231,7 @@ class Controller{
 	 * @param string|object $concrete 控制器对象或类型
 	 * @param string $method 方法名称
 	 * @param array $parameters 参数
-	 * @param array $isInCalled 是否在模版内部调用 return mixed 说明：增加对调用控制器类和方法的感知
+	 * @param array $isInCalled 是否在模板内部调用 return mixed 说明：增加对调用控制器类和方法的感知
 	 */
 	public static function run($concrete,$method,array $parameters=[],$isInCalled=false){
 		static $classStacks=[];

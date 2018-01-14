@@ -4,7 +4,7 @@
  * 获取列表分页
  * @param array $info 分页信息数组
  * @param number $setPages 显示页数
- * @param string $urlRule 包含变量的URL规则模版参数
+ * @param string $urlRule 包含变量的URL规则模板参数
  * @param $array $array 字符变量数组
  * @return string 分页字符串
  * 分页信息范例：
@@ -194,7 +194,7 @@ function content_page_tag($tagName,$arr,$text='',$openFunc=''){
  * 生成分页URL
  *
  * @param unknown $page 页数
- * @param unknown $urlRule 包含变量的URL规则模版参数
+ * @param unknown $urlRule 包含变量的URL规则模板参数
  * @param unknown $array 字符变量数组
  * @return string 生成的URL
  */

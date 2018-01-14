@@ -5,7 +5,7 @@ include dirname(__FILE__).'/../../kernel/base.php';
  * swoole服务器客户端工具
  */
 
-define('TEMPLATE_REPARSE',APP_DEBUG); //不使用模版缓存
+define('TEMPLATE_REPARSE',APP_DEBUG); //不使用模板缓存
 !class_exists('swoole_http_server',false) && 
 	exit("Swoole server extension is not install,see: https://www.swoole.com/\n");
 $http = new swoole_http_server("0.0.0.0", 9501);

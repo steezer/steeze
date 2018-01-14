@@ -32,7 +32,7 @@ Loader::env();
 !defined('USE_DEFUALT_HANDLE') && define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false));
 //默认主机，命令行模式时使用
 define('DEFAULT_HOST',env('default_host','127.0.0.1'));
-//是否使用模版缓存，调试环境下强制刷新模版缓存
+//是否使用模板缓存，调试环境下强制刷新模板缓存
 define('TEMPLATE_REPARSE',APP_DEBUG); 
 //默认应用名称
 !defined('DEFAULT_APP_NAME') && define('DEFAULT_APP_NAME','home');
