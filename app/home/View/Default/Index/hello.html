@@ -5,6 +5,13 @@
 <title>Member/Index/hello</title>
 </head>
 <body>
+ <import file="index.css?version=1.0" type="css"/>
+ <import file="http://demo.steeze.cn/assets/a.jpg" style="border:none" />
+ <import file="index.css,user.css,index.js" base="common/lib"/>
+{++$year}
+<p>{$name|md5}:{($year+23)}</p>
+<p>{substr(strtoupper(md5($name)),0,3)}</p>
+<p>{($company.name.s + 12)}</p>
 index.hello: <action name="Index/show" user="4"/>
 </body>
 </html>

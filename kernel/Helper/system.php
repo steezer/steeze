@@ -848,13 +848,14 @@ function session($name='',$value=''){
  */
 function cookie($name='',$value='',$option=null){
 	// 默认设置
-	$config=array('prefix' => C('cookie_pre'), // cookie 名称前缀
-'expire' => C('cookie_ttl', 0), // cookie 保存时间
-'path' => C('cookie_path'), // cookie 保存路径
-'domain' => C('cookie_domain'), // cookie 有效域名
-'secure' => C('cookie_secure', false), // cookie 启用安全传输
-'httponly' => C('cookie_httponly', false) // httponly设置
-);
+	$config=array(
+			'prefix' => C('cookie_pre'), // cookie 名称前缀
+			'expire' => C('cookie_ttl', 0), // cookie 保存时间
+			'path' => C('cookie_path'), // cookie 保存路径
+			'domain' => C('cookie_domain'), // cookie 有效域名
+			'secure' => C('cookie_secure', false), // cookie 启用安全传输
+			'httponly' => C('cookie_httponly', false) // httponly设置
+		);
 	// 参数设置(会覆盖黙认设置)
 	if(!is_null($option)){
 		if(is_numeric($option)){
@@ -940,6 +941,10 @@ function assets($file,$type='',$check=false,$default='default'){
 		}
 		$check=boolval($type);
 		$type='';
+	}
+	
+	if(strpos($file, '://') !== false){
+		return $file;
 	}
 	
 	if(($pos=strpos($file, '/')) !== 0){

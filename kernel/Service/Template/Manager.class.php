@@ -243,7 +243,7 @@ class Manager {
 						break;
 					default:
 						if($ext == 'jpg' || $ext == 'jpeg' || $ext == 'png' || $ext == 'gif' || $ext == 'bmp'){
-							$res.='<img src="' . $file . '"' . implode(' ',$tag_attrs) . '/>' . "\r\n";
+							$res.='<img src="' . $file . '" ' . implode(' ',$tag_attrs) . '/>' . "\r\n";
 						}
 						break;
 				}

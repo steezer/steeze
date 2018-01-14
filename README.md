@@ -43,4 +43,4 @@ location / {
 ```
 
 ## 开发手册
-[点击查看开发文档](http://steeze.cn/docs/home/)
+[点击查看开发文档](http://steeze.cn/docs/startup/index/)
