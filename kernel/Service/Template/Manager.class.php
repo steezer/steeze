@@ -112,7 +112,7 @@ class Manager {
 		// ////////////循环的解析/////////////
 		// for 循环
 		if(stripos($str, $ld . 'for ') !== false){
-			$str=preg_replace('/' . $ld . 'for\s+(.+?)' . $rd . '/is', '<?php for(\\1) { ?>', $str);
+			$str=preg_replace_callback('/' . $ld . 'for\s+(.+?)' . $rd . '/is', array($this,'parseFor'), $str);
 			$str=str_ireplace($ld . '/for' . $rd, '<?php } ?>', $str);
 		}
 		// loop 或 foreach循环（待输出的变量支持“.”语法表示数组）
@@ -284,7 +284,7 @@ class Manager {
 		$str='';
 		$return=isset($datas['return']) && trim($datas['return']) ? str_replace('$', '', trim($datas['return'])) : '';
 		if(isset($datas['name'])){
-			$m=isset($datas['app']) ? $datas['app'] : (isset($datas['module']) ? $datas['module'] : env('ROUTE_M'));
+			$m=isset($datas['app']) ? $datas['app'] : env('ROUTE_M');
 			$name=str_replace('.','/',$datas['name']);
 			if(strpos($name, '/')===0){ // 从分组顶层向下获取类，例如：/Member/Index/info
 				$cas=explode('/', trim($name,'/'));
@@ -336,6 +336,25 @@ class Manager {
 		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
 		$condition=$this->changeDotArray($condition);
 		return '<?php }elseif(' . $condition . ') { ?>';
+	}
+	
+	/**
+	 * 解析for标签
+	 *
+	 * @param array $matches
+	 */
+	public function parseFor($matches){
+		$arrs=$this->parseAttrs($matches[1]);
+		if(!isset($arrs['start']) || !isset($arrs['end'])){
+			return '';
+		}
+		$start=doubleval($arrs['start']);
+		$end=doubleval($arrs['end']);
+		$comparison=  self::operator(' ' .(!isset($arrs['comparison']) ? 'lt' : $arrs['comparison']).' ');
+		$step = !isset($arrs['step']) ? 1 : doubleval($arrs['step']);
+		$name = '$'.(!isset($arrs['name']) ? 'i' : trim($arrs['name'],' $'));
+		$str=$name.'='.$start.';'.$name.$comparison.$end.';'.$name.'+='.$step;
+		return '<?php for(' . $str . ') { ?>';
 	}
 	
 	/**

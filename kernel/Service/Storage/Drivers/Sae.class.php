@@ -30,7 +30,7 @@ class Sae extends Storage{
     private function getKv(){
         static $kv;
         if(!$kv){
-           $kv  =   new \SaeKV();
+           $kv  =   make('\SaeKV');
            if(!$kv->init())
                E('您没有初始化KVDB，请在SAE管理平台初始化KVDB服务');
         }
