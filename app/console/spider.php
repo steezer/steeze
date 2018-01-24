@@ -256,7 +256,7 @@ class WebSpider{
 	
 	/**
 	 * 格式化路径
-	 * @param unknown $url
+	 * @param string $url
 	 * @param string $serilize
 	 * @return mixed|string
 	 */
@@ -288,8 +288,8 @@ class WebSpider{
 	
 	/**
 	 * 获取路径相关信息
-	 * @param unknown $url
-	 * @param unknown $type
+	 * @param string $url
+	 * @param string $type
 	 * @return string
 	 */
 	private function getPathInfo($url,$type=null){

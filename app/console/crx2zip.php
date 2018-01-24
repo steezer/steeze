@@ -52,7 +52,7 @@ class CrxParser {
 	
 	/**
 	 * 从crx文件中获取manifest.json文件的配置信息
-	 * @param unknown $zip_file
+	 * @param string $key
 	 * @return mixed[]
 	 */
 	function getConfig($key=null){
@@ -80,7 +80,7 @@ class CrxParser {
 	
 	/**
 	 * 将文件转换为zip文件
-	 * @param unknown $target_path
+	 * @param string $target_path
 	 */
 	public function convertToZip($target_path=null){
 		$offset=16+$this->_header['key_size']+$this->_header['sig_size'];
@@ -161,9 +161,9 @@ class CrxParser {
 	
 	/**
 	 * 从文件中获取指定位置及大小的内容
-	 * @param unknown $filename
+	 * @param string $filename
 	 * @param number $offset
-	 * @param unknown $length
+	 * @param int $length
 	 * @return string
 	 */
 	private function getContent($filename,$offset=0,$length=-1){

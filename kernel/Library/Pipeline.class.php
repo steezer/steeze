@@ -156,12 +156,12 @@ class Pipeline{
 	/**
 	 * 处理给定的异常
 	 *
-	 * @param Library\Exception $e
+	 * @param \Library\Exception $e
 	 * @param array $passables
 	 * 
 	 * @return mixed
 	 *
-	 * @throws Library\Exception
+	 * @throws \Library\Exception
 	 */
 	protected function handleException(\Exception $e,...$passables){
 		$handler=new Exception();

@@ -5,8 +5,6 @@ namespace Library;
 use Closure;
 use ReflectionClass;
 use ReflectionParameter;
-use Library\Exception;
-use Library\Model;
 use ReflectionFunction;
 
 class Container{
@@ -34,7 +32,7 @@ class Container{
 	 * @param string $concrete
 	 * @return mixed
 	 *
-	 * @throws Library\Exception
+	 * @throws \Library\Exception
 	 */
 	public function build($concrete){
 		try{
@@ -231,7 +229,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws Library\Exception
+	 * @throws \Library\Exception
 	 */
 	protected function resolvePrimitive(ReflectionParameter $parameter){
 		return $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
@@ -243,7 +241,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws Library\Exception
+	 * @throws \Library\Exception
 	 */
 	protected function resolveClass(ReflectionParameter $parameter){
 		try{
@@ -336,7 +334,7 @@ class Container{
 	/**
 	 * 设置容器实例
 	 *
-	 * @param Library\Container|null $container
+	 * @param \Library\Container|null $container
 	 * @return static
 	 */
 	public static function setInstance(Container $container=null){

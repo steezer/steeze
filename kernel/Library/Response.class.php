@@ -7,7 +7,7 @@ class Response{
 	
 	/**
 	 * 设置外部响应对象
-	 * @param $response 外部响应对象
+	 * @param Response $response 外部响应对象
 	 */
 	public function setResponse($response){
 		//对Swoole的支持

@@ -7,7 +7,7 @@
 /**
  * 快速日志记录
  *
- * @param unknown $content
+ * @param mixed $content
  * @param string $file
  * @param number $is_append
  * @return number 写入日志字节数
@@ -33,8 +33,8 @@ function trace($value='[steeze]',$label='',$level='DEBUG',$record=false){
 /**
  * 输出变量信息
  * 
- * @param $var 变量
- * @param $isOutput 是否直接输出
+ * @param mixed $var 变量
+ * @param bool $isOutput 是否直接输出
  * @return void|mixed
  *
  */
@@ -65,7 +65,7 @@ function getip($isOnline=0){
 /**
  * 转换字节数为其他单位
  *
- * @param unknown $size
+ * @param int $size
  * @param number $bits
  * @return string
  */
@@ -77,7 +77,7 @@ function sizeformat($size,$bits=2){
 /**
  * 转换字节数为其他单位
  *
- * @param unknown $tm
+ * @param int $tm
  * @return string
  */
 function timeformat($tm){
@@ -290,7 +290,7 @@ function array_map_deep($array,$func,$applyKey=false){
  * @param string $type 处理类型：ENCODE为加密，DECODE为解密，默认为ENCODE
  * @param array|string $filter 第一个参数为数组时，过滤的键名，默认为NULL
  * @param string $strip 是否对部分字符进行处理，处理后符合URL编码规范，默认为0（不处理）
- * @return unknown 处理后的数据
+ * @return string 处理后的数据
  */
 function base64($data,$type='ENCODE',$filter=NULL,$strip=0){
 	$type=strtoupper($type);
@@ -563,9 +563,9 @@ function array2html($data){
 /**
  * 返回经addslashes处理过的字符串或数组
  *
- * @param unknown $string
+ * @param string|mixed $string
  * @param number $isadd
- * @return string|unknown
+ * @return string
  */
 function slashes($string,$isadd=1){
 	if(!is_array($string)){
@@ -929,7 +929,7 @@ function cookie($name='',$value='',$option=null){
 /**
  * 导入静态文件路径 如：'js/show.js@daoke:home'，则返回/assets/app/home/daoke/js/show.js
  *
- * @param unknown $file 文件模式路径
+ * @param string $file 文件模式路径
  * @param string $type 文件类型
  * @param bool $check 是否检查存在，如果不存在返回空
  * @param string $default='default' 如果不存在，默认检查的风格名称
@@ -1158,7 +1158,11 @@ function F($name,$value='',$path=null){
  *
  * @param string $name 需要操作的表
  * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
- * @return object 数据库模型对象 $conn参数为字符串类型时举例说明： 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置； 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
+ * @return object 数据库模型对象 
+ * $conn参数为字符串类型时举例说明： 
+ * 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置； 
+ * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
+ * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
  */
 function M($name='',$conn=''){
 	static $_model=array();

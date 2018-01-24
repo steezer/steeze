@@ -126,7 +126,7 @@ class Firebird extends Driver{
     /**
      * limit
      * @access public
-     * @param $limit limit表达式
+     * @param string $limit 表达式
      * @return string
      */
     public function parseLimit($limit) {

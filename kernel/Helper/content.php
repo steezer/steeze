@@ -97,9 +97,9 @@ function content_list_pages($info,$setPages=10,$urlRule='',$array=array()){
 /**
  * 内容页分页
  *
- * @param $total 总页数
- * @param $currPage 当前页
- * @param $pageUrls 所有页面的url集合
+ * @param int $total 总页数
+ * @param int $currPage 当前页
+ * @param string $pageUrls 所有页面的url集合
  * @return string 分页字符串
  */
 function content_detail_pages($total,$currPage,$pageUrls){
@@ -164,7 +164,7 @@ function content_detail_pages($total,$currPage,$pageUrls){
 /**
  * 生成分页html标签
  *
- * @param unknown $tagName 标签名称
+ * @param string $tagName 标签名称
  * @param array $arr 标签属性数组
  * @param string $text 标签文本
  * @param string $openFunc 标签点击事件函数
@@ -193,9 +193,9 @@ function content_page_tag($tagName,$arr,$text='',$openFunc=''){
 /**
  * 生成分页URL
  *
- * @param unknown $page 页数
- * @param unknown $urlRule 包含变量的URL规则模板参数
- * @param unknown $array 字符变量数组
+ * @param int $page 页数
+ * @param string $urlRule 包含变量的URL规则模板参数
+ * @param array $array 字符变量数组
  * @return string 生成的URL
  */
 function content_page_url($page,$urlRule,$array){

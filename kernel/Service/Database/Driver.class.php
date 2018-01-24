@@ -23,6 +23,8 @@ abstract class Driver {
     protected $linkID     = array();
     // 当前连接ID
     protected $_linkID    = null;
+    // 前端连接NUM
+    protected $_linkNum    = 0;
     // 数据库连接参数配置
     protected $config     = array(
         'type'              =>  '',     // 数据库类型
@@ -78,7 +80,8 @@ abstract class Driver {
      * @access public
      */
     public function connect($config='',$linkNum=0,$autoConnection=false) {
-        if ( !isset($this->linkID[$linkNum]) ) {
+    		$this->_linkNum=$linkNum;
+    		if ( !isset($this->linkID[$linkNum]) ) {
             if(empty($config))  $config =   $this->config;
             try{
                 if(empty($config['dsn'])) {
@@ -172,7 +175,19 @@ abstract class Driver {
             }
         }
         $this->bind =   array();
-        $result =   $this->PDOStatement->execute();
+        
+        // 长时间连接断开后自动重连
+        try{
+        		$result =   $this->PDOStatement->execute();
+        }catch (\PDOException $e){
+        		if($e->getCode()=='HY000' && stripos($e->getMessage(), 'MySQL server has gone away')){
+        			$this->free();
+        			$this->close();
+        			unset($this->linkID[$this->_linkNum]);
+        			return $this->query($str,$fetchSql);
+        		}
+        }
+        
         // 调试结束
         $this->debug(false);
         if ( false === $result ) {
@@ -219,7 +234,19 @@ abstract class Driver {
             }
         }
         $this->bind =   array();
-        $result =   $this->PDOStatement->execute();
+        
+        // 长时间连接断开后自动重连
+		try{
+			$result=$this->PDOStatement->execute();
+		}catch(\PDOException $e){
+			if($e->getCode() == 'HY000' && stripos($e->getMessage(), 'MySQL server has gone away')){
+				$this->free();
+				$this->close();
+				unset($this->linkID[$this->_linkNum]);
+				return $this->execute($str, $fetchSql);
+			}
+		}
+        
         $this->debug(false);
         if ( false === $result) {
             $this->error();
@@ -1069,12 +1096,13 @@ abstract class Driver {
      * @return void
      */
     protected function initConnect($master=true) {
-        if(!empty($this->config['deploy']))
-            // 采用分布式数据库
-            $this->_linkID = $this->multiConnect($master);
-        else
-            // 默认单数据库
-            if ( !$this->_linkID ) $this->_linkID = $this->connect();
+	    	if(!empty($this->config['deploy'])){
+	            // 采用分布式数据库
+	            $this->_linkID = $this->multiConnect($master);
+	    	}else{
+	            // 默认单数据库
+	            if ( !$this->_linkID ) $this->_linkID = $this->connect();
+	    	}
     }
 
     /**

@@ -78,7 +78,7 @@ class Mongo extends Driver {
 				$this->debug(false);
 				$this->_collectionName  = $collection; // 记录当前Collection名称
 			}
-		}catch (MongoException $e){
+		}catch (\MongoException $e){
 			E($e->getMessage());
 		}
 	}
@@ -341,7 +341,7 @@ class Mongo extends Driver {
 	 * 查找记录
 	 * @access public
 	 * @param array $options 表达式
-	 * @return iterator
+	 * @return mixed
 	 */
 	public function select($options=array()) {
 		if(isset($options['table'])) {
@@ -417,7 +417,7 @@ class Mongo extends Driver {
 	 * 统计记录数
 	 * @access public
 	 * @param array $options 表达式
-	 * @return iterator
+	 * @return 
 	 */
 	public function count($options=array()){
 		if(isset($options['table'])) {

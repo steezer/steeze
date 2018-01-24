@@ -23,7 +23,7 @@ class Request{
 	
 	/**
 	 * 设置外部请求对象
-	 * @param $request 外部响应对象
+	 * @param Request $request 外部响应对象
 	 */
 	public function setRequest($request){
 		if(!empty($request) && is_a($request,'Swoole\\Http\\Request')){
@@ -124,7 +124,7 @@ class Request{
 	
 	/**
 	 * 获取原始的POST包体
-	 * @return 返回原始POST数据
+	 * @return mixed 返回原始POST数据
 	 * 说明：用于非application/x-www-form-urlencoded格式的Http POST请求
 	 * */
 	public function rawContent(){
