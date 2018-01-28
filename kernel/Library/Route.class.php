@@ -44,8 +44,13 @@ class Route{
 	 * 检查路由参数是否匹配
 	 */
 	private function bind(){
-		$urls=explode('?',($this->request->getSapiName() != 'cli' ? $this->request->server('REQUEST_URI') : (isset($GLOBALS['argv'][1])&&!empty($GLOBALS['argv'][1]) ? $GLOBALS['argv'][1]:'/')),2);
+		$is_cli=$this->request->getSapiName() == 'cli';
+		//获取URL
+		$urls=explode('?',(!$is_cli ? $this->request->server('REQUEST_URI') : (isset($GLOBALS['argv'][1])&&!empty($GLOBALS['argv'][1]) ? $GLOBALS['argv'][1]:'/')),2);
 		$url=array_shift($urls);
+		//获取主机
+		$host=$is_cli && isset($GLOBALS['argv'][2]) && !empty($GLOBALS['argv'][2]) ? $GLOBALS['argv'][2] : env('SITE_HOST');
+		
 		$entry=env('SYSTEM_ENTRY');
 		if(stripos($url, $entry)===0){
 			//将"/index.php/user/list"格式地址处理为"/user/list"
@@ -55,7 +60,7 @@ class Route{
 		$url='/'.trim($url,'/');
 		
 		//使用路径参数匹配
-		$handle=$this->matchHandle($url);
+		$handle=$this->matchHandle($url,$host);
 		$route_m=$route_c=$route_a=null;
 		if(is_null($handle) || is_string($handle)){
 			//获取路由处理器，如：index/show@home
@@ -86,14 +91,15 @@ class Route{
 	/*
 	 * 查找路由处理器
 	 * @param string $url URL地址
+	 * @param string $host 主机名称
 	 * @return string|null
 	 */
-	private function matchHandle($url){
+	private function matchHandle($url,$host){
 		$configs=C('route.*',[]);
 		$default=isset($configs['default']) ? $configs['default'] : [];
 		unset($configs['default']);
 		//通过主机名获取路由配置
-		$routes = self::getRoutesByHost(env('SITE_HOST'), $configs);
+		$routes = self::getRoutesByHost($host, $configs);
 		if(is_null($routes)){
 			$routes=$default;
 		}
