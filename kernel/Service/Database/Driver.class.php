@@ -190,7 +190,7 @@ abstract class Driver {
         
         // 调试结束
         $this->debug(false);
-        if ( false === $result ) {
+        if (!isset($result) || false === $result ) {
             $this->error();
             return false;
         } else {
