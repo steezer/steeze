@@ -78,9 +78,11 @@ class View{
 	public function fetch($templateFile='',$content=''){
 		if(empty($content)){
 			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
+			fastlog($res);
 			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
+			
 			if(!is_file($templateFile)){
 				return null;
 			}
@@ -113,7 +115,7 @@ class View{
 		$m=empty(self::$_m) && env('ROUTE_M',false) ? env('ROUTE_M') : self::$_m;
 		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
 		$template=rtrim(str_replace(':', $depr, $template), $depr . '@');
-		
+		$style='';
 		if($pos=strpos($template, '@')){
 			$sm=explode(':', substr($template, $pos+1),2);
 			$template=substr($template, 0, $pos);
