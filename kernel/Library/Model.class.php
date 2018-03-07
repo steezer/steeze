@@ -75,7 +75,7 @@ class Model implements ArrayAccess{
 		}elseif(empty($this->name)){
 			$this->name=$this->getModelName();
 		}
-		
+
 		$connection=empty($this->connection) ? $connection : $this->connection;
 		
 		// 支持读取配置参数
@@ -1595,7 +1595,8 @@ class Model implements ArrayAccess{
 	 */
 	public function getModelName(){
 		if(empty($this->name)){
-			$name=substr(get_class($this), 0, -strlen(C('DEFAULT_M_LAYER')));
+			$len=strlen(C('DEFAULT_M_LAYER'));
+			$name=$len ? substr(get_class($this), 0, -$len) : get_class($this);
 			if($pos=strrpos($name, '\\')){ // 有命名空间
 				$this->name=substr($name, $pos + 1);
 			}else{
