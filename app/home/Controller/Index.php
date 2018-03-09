@@ -11,6 +11,7 @@ class Index extends Controller{
 		
 	}
 	
+	//测试
 	public function hello(){
 		$this->assign('name','liming');
 		$this->assign('year',23);

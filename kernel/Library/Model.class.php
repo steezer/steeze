@@ -105,7 +105,7 @@ class Model implements ArrayAccess{
 		if(is_array($connection)){
 			$connection['prefix']=$this->tablePrefix;
 		}
-		
+
 		// 数据库初始化操作
 		// 获取数据库操作对象
 		// 当前模型有独立的数据库连接信息
