@@ -34,7 +34,7 @@ class Response{
 	 * 		每个单词首字母大写，不得包含中文，下划线或者其他特殊字符
 	 * 		header设置必须在end方法之前
 	 */
-	public function header(string $key, string $value){
+	public function header($key, $value){
 		$this->isHeaderSend=true;
 		return !is_null($this->response) ? 
 					$this->response->header($key,$value) : 
@@ -47,7 +47,7 @@ class Response{
 	 * 
 	 * 说明： cookie设置必须在end方法之前
 	 */
-	public function cookie(string $key, string $value = '', int $expire = 0 , string $path = '/', string $domain  = '', bool $secure = false , bool $httponly = false){
+	public function cookie($key, $value = '', $expire = 0 , $path = '/', $domain  = '', $secure = 0 , $httponly = 0){
 		return !is_null($this->response) ?
 					$this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly) :
 					setcookie($key,$value,$expire,$path,$domain,$secure,$httponly);
@@ -60,7 +60,7 @@ class Response{
 	 * 说明：$http_status_code必须为合法的HttpCode，如200， 502， 301, 404等，否则会报错
 	 * 		必须在$response->end之前执行status
 	 */
-	public function status(int $code){
+	public function status($code){
 		return !is_null($this->response) ?
 			$this->response->status($code) :
 			http_response_code($code);
@@ -73,7 +73,7 @@ class Response{
 	 * 说明：启用Http GZIP压缩。压缩可以减小HTML内容的尺寸，有效节省网络带宽，提高响应时间。
 	 * 		必须在write/end发送内容之前执行gzip，否则会抛出错误
 	 */
-	public function gzip(int $level = 0){
+	public function gzip($level = 0){
 		!is_null($this->response) && $this->response->gzip($level);
 	}
 	
@@ -83,7 +83,7 @@ class Response{
 	 * @param bool $isConsole 是否直接写入到控制台
 	 * 
 	 */
-	public function write($data,$isConsole=false){
+	public function write($data,$isConsole=0){
 		if(!$isConsole && !is_null($this->response)){
 			$this->response->write(self::toString($data));
 		}else{
@@ -99,7 +99,7 @@ class Response{
 	 * 
 	 * 说明：调用sendfile前不得使用write方法发送Http-Chunk
 	 */
-	public function sendfile(string $filename, int $offset = 0, int $length = 0){
+	public function sendfile($filename, $offset = 0, $length = 0){
 		$ext=fileext($filename);
 		$mimetype=C('mimetype.'.$ext,'application/octet-stream');
 		$this->header('Content-Type', $mimetype);
@@ -117,7 +117,7 @@ class Response{
 	 * 
 	 * 说明：只能调用一次，如果需要分多次向客户端发送数据，请使用write方法
 	 */
-	public function end($data=null,$isAsyn=false){
+	public function end($data=null,$isAsyn=0){
 		!is_null($data) && $this->write($data);
 		if(!is_null($this->response)){
 			$this->response->end();
