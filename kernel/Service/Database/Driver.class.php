@@ -248,7 +248,7 @@ abstract class Driver {
 		}
         
         $this->debug(false);
-        if ( false === $result) {
+        if ( isset($result) && false === $result) {
             $this->error();
             return false;
         } else {

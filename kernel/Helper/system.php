@@ -687,6 +687,11 @@ function get_remote_file($url,$data=null,$headers=null,$savepath=null){
 	
 	curl_setopt($ch, CURLOPT_URL, $url);
 	if(is_array($headers)){
+		foreach($headers as $k=> $v){
+			if(is_string($k)){
+				$headers[$k]=$k.':'.$v;
+			}
+		}
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 	}
 	if(is_array($data)){
