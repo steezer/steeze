@@ -1594,7 +1594,7 @@ class Model implements ArrayAccess{
 	 * @return string
 	 */
 	public function getModelName(){
-		if(empty($this->name)){
+		if(empty($this->name) && is_subclass_of($this, Model::class)){
 			$len=strlen(C('DEFAULT_M_LAYER'));
 			$name=$len ? substr(get_class($this), 0, -$len) : get_class($this);
 			if($pos=strrpos($name, '\\')){ // 有命名空间
