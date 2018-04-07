@@ -374,7 +374,7 @@ class Manager {
 				$arrs['item']=strpos($match[2], '$') !== 0 ? '$' . $match[2] : $match[2];
 			}
 		}else{
-			isset($arrs['name']) && strpos($arrs['name'], '$') !== 0 && preg_match('/^\w+$/i', $arrs['name']) && ($arrs['name']='$' . $arrs['name']);
+			isset($arrs['name']) && strpos($arrs['name'], '$') !== 0 && preg_match('/^[\w\.]+$/i', $arrs['name']) && ($arrs['name']='$' . $arrs['name']);
 			isset($arrs['item']) && strpos($arrs['item'], '$') !== 0 && ($arrs['item']='$' . $arrs['item']);
 			isset($arrs['key']) && strpos($arrs['key'], '$') !== 0 && ($arrs['key']='$' . $arrs['key']);
 			isset($arrs['order']) && strpos($arrs['order'], '$') !== 0 && ($arrs['order']='$' . $arrs['order']);

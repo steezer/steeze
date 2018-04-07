@@ -143,7 +143,7 @@ class Application{
 		function_exists('date_default_timezone_set') && date_default_timezone_set(C('timezone'));
 
 		// 定义是否为ajax请求
-		Loader::env('IS_AJAX', ((strtolower($this->request->header('x_requested_with','')) == 'xmlhttprequest') || I(C('VAR_AJAX_SUBMIT', 'ajax'))) ? true : false);
+		Loader::env('IS_AJAX', ((strtolower($this->request->header('x-requested-with','')) == 'xmlhttprequest') || I(C('VAR_AJAX_SUBMIT', 'ajax'))) ? true : false);
 	}
 	
 }

@@ -249,20 +249,6 @@ function strlen_utf8($str){
  */
 
 /**
- * 产生分页HTML代码
- *
- * @param array|int $info 类型为array时为列表分页，类型为int时为详细页分页的页面总数
- * @param int $setpages 设置显示的页数数量（列表页）或当前页数（详细页分页）
- * @param string $urlrule URL规则（列表页）或所有页面URL数组（详细页分页）
- * @param array $array 参数替换数组 （详细页无此参数）
- * @return string 返回分页的HTML代码（详细页无此参数）
- */
-function get_pager($info,$setpages=10,$urlrule='',$array=array()){
-	Loader::helper('content');
-	return is_int($info) ? content_detail_pages($info, $setpages, $urlrule) : content_list_pages($info, $setpages, $urlrule, $array);
-}
-
-/**
  * 使用特定function对数组中所有元素做处理
  *
  * @param array $array 需要处理的数组

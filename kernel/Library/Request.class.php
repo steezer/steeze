@@ -22,6 +22,24 @@ class Request{
 	}
 	
 	/**
+	 * 动态方法调用
+	 * @param string $name 方法名称
+	 * @param mixed $args 参数
+	 * 目前支持客户端请求方法判断：
+	 * isGet()、isPost()、isDelete()、isPut() 分别用于判断GET、POST、DELETE、PUT请求方法
+	 */
+	public function __call($name,$args){
+		if(stripos($name, 'is')===0){
+			$method=strtoupper(substr($name, 2));
+			$suppors=['GET','POST','DELETE','PUT'];
+			if(in_array($method, $suppors)){
+				return env('REQUEST_METHOD')==$method;
+			}
+		}
+		return false;
+	}
+	
+	/**
 	 * 设置外部请求对象
 	 * @param Request $request 外部响应对象
 	 */
