@@ -263,7 +263,7 @@ class Model implements ArrayAccess{
 		}elseif(isset($this->_scope[$method])){ // 命名范围的单独调用支持
 			return $this->scope($method, $args[0]);
 		}else{
-			E(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'));
+			E(__CLASS__ . ':' . $method . L('method not exist'));
 			return;
 		}
 	}
@@ -295,7 +295,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields, true)){
 					if(!empty($this->options['strict'])){
-						E(L('_DATA_TYPE_INVALID_') . ':[' . $key . '=>' . $val . ']');
+						E(L('data type invalid') . ':[' . $key . '=>' . $val . ']');
 					}
 					unset($data[$key]);
 				}elseif(is_scalar($val)){
@@ -335,7 +335,7 @@ class Model implements ArrayAccess{
 				// 重置数据
 				$this->data=array();
 			}else{
-				$this->error=L('_DATA_TYPE_INVALID_');
+				$this->error=L('data type invalid');
 				return false;
 			}
 		}
@@ -379,7 +379,7 @@ class Model implements ArrayAccess{
 
 	public function addAll($dataList,$options=array(),$replace=false){
 		if(empty($dataList)){
-			$this->error=L('_DATA_TYPE_INVALID_');
+			$this->error=L('data type invalid');
 			return false;
 		}
 		// 数据处理
@@ -414,7 +414,7 @@ class Model implements ArrayAccess{
 		// 写入数据到数据库
 		if(false === $result=$this->db->selectInsert($fields ?: $options['field'], $table ?: $this->getTableName(), $options)){
 			// 数据库插入操作失败
-			$this->error=L('_OPERATION_WRONG_');
+			$this->error=L('operation wrong');
 			return false;
 		}else{
 			// 插入成功
@@ -438,7 +438,7 @@ class Model implements ArrayAccess{
 				// 重置数据
 				$this->data=array();
 			}else{
-				$this->error=L('_DATA_TYPE_INVALID_');
+				$this->error=L('data type invalid');
 				return false;
 			}
 		}
@@ -446,7 +446,7 @@ class Model implements ArrayAccess{
 		$data=$this->_facade($data);
 		if(empty($data)){
 			// 没有数据则不执行
-			$this->error=L('_DATA_TYPE_INVALID_');
+			$this->error=L('data type invalid');
 			return false;
 		}
 		// 分析表达式
@@ -464,7 +464,7 @@ class Model implements ArrayAccess{
 						$where[$field]=$data[$field];
 					}else{
 						// 如果缺少复合主键数据则不执行
-						$this->error=L('_OPERATION_WRONG_');
+						$this->error=L('operation wrong');
 						return false;
 					}
 					unset($data[$field]);
@@ -472,7 +472,7 @@ class Model implements ArrayAccess{
 			}
 			if(!isset($where)){
 				// 如果没有任何更新条件则不执行
-				$this->error=L('_OPERATION_WRONG_');
+				$this->error=L('operation wrong');
 				return false;
 			}else{
 				$options['where']=$where;
@@ -720,7 +720,7 @@ class Model implements ArrayAccess{
 					}
 				}elseif(!is_numeric($key) && '_' != substr($key, 0, 1) && false === strpos($key, '.') && false === strpos($key, '(') && false === strpos($key, '|') && false === strpos($key, '&')){
 					if(!empty($this->options['strict'])){
-						E(L('_ERROR_QUERY_EXPRESS_') . ':[' . $key . '=>' . $val . ']');
+						E(L('error query express') . ':[' . $key . '=>' . $val . ']');
 					}
 					unset($options['where'][$key]);
 				}
@@ -1092,7 +1092,7 @@ class Model implements ArrayAccess{
 		}
 		// 验证数据
 		if(empty($data) || !is_array($data)){
-			$this->error=L('_DATA_TYPE_INVALID_');
+			$this->error=L('data type invalid');
 			return false;
 		}
 		
@@ -1138,7 +1138,7 @@ class Model implements ArrayAccess{
 		
 		// 表单令牌验证
 		if(!$this->autoCheckToken($data)){
-			$this->error=L('_TOKEN_ERROR_');
+			$this->error=L('token error');
 			return false;
 		}
 		
@@ -1756,7 +1756,7 @@ class Model implements ArrayAccess{
 		}elseif(is_string($data)){
 			parse_str($data, $data);
 		}elseif(!is_array($data)){
-			E(L('_DATA_TYPE_INVALID_'));
+			E(L('data type invalid'));
 		}
 		$this->data=$data;
 		return $this;
@@ -1869,7 +1869,7 @@ class Model implements ArrayAccess{
 				$options=$union;
 			}
 		}else{
-			E(L('_DATA_TYPE_INVALID_'));
+			E(L('data type invalid'));
 		}
 		$this->options['union'][]=$options;
 		return $this;

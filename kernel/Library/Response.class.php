@@ -122,8 +122,12 @@ class Response{
 		if(!is_null($this->response)){
 			$this->response->end();
 		}else{
-			$isAsyn && function_exists('fastcgi_finish_request') && 
-				fastcgi_finish_request();
+			if($isAsyn){
+				function_exists('fastcgi_finish_request') &&
+					fastcgi_finish_request();
+			}else{
+				exit(0);
+			}
 		}
 	}
 	
