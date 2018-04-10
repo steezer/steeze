@@ -180,12 +180,12 @@ class View{
 				$charset=C('charset', 'utf-8');
 			}
 			if(empty($contentType) || !is_string($contentType)){
-				$type=is_array($content) && is_object($content) ? 'json' : 'html';
+				$type=is_array($content) || is_object($content) ? 'json' : 'html';
 				$contentType=C('mimetype.'.$type,'text/html');
 			}
 			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
 			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			$response->header('X-Powered-By','STWMS');
+			$response->header('X-Powered-By','steeze');
 		}
 		
 		//输出内容
