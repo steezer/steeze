@@ -121,6 +121,7 @@ class Response{
 		!is_null($data) && $this->write($data);
 		if(!is_null($this->response)){
 			$this->response->end();
+			$this->isHeaderSend=false;
 		}else{
 			if($isAsyn){
 				function_exists('fastcgi_finish_request') &&
