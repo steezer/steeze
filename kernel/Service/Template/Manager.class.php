@@ -173,23 +173,34 @@ class Manager {
 				$r=View::resolvePath($datas['name']);
 				$layout=template($r['a'],$r['c'],$r['style'],$r['m'],false);
 				if(is_file($layout)){
-					//获取模板中的模板变量
-					if(stripos($str, $ld . 'assign ') !== false){
-						$str=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $str);
-					}
 					$content=file_get_contents($layout);
 					$content=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $content);
 					$sections=[];
-					//获取所有section
+					//获取所有节内容
 					if(preg_match_all('/' . $ld . 'slice\s+(.+?)\s*' . $rd . '(.*?)' . $ld . '\/slice' . $rd . '/is', $str, $matches)){
 						foreach ($matches[1] as $index => $value){
 							$names=$this->parseAttrs($value);
 							if(isset($names['name'])){
+								if(stripos($matches[2][$index], $ld . 'assign ') !== false)
+								{  //解析节点内的assign标签
+									$matches[2][$index]=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $matches[2][$index]);
+								}
 								$sections[$names['name']]=$matches[2][$index];
 							}
 						}
 					}
+					unset($matches);
 					
+					//获取模版的模板变量并加到布局文件头部
+					$str=preg_replace('/' . $ld . 'slice\s+.+?\s*' . $rd . '.*?' . $ld . '\/slice' . $rd . '/is', '', $str);
+					if(stripos($str, $ld . 'assign ') !== false){
+						if(preg_match_all('/' . $ld . 'assign\s+.+?\s*\/?' . $rd . '/is', $str, $matches)){
+							$content=implode('', $matches[0]).$content;
+						}
+					}
+					unset($matches);
+					
+					//替换所有节
 					return preg_replace_callback(
 							'/' . $ld . 'slice\s+(.+?)\s*\/?' . $rd . '/is',
 							function($matches) use($sections){
