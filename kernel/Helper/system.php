@@ -934,6 +934,11 @@ function assets($file,$type='',$check=false,$default='default'){
 		$type='';
 	}
 	
+	$isBase=strpos($file, '#')===0;
+	if($isBase){
+		$file=substr($file, 1);
+	}
+	
 	if(strpos($file, '://') !== false){
 		return $file;
 	}
@@ -963,13 +968,21 @@ function assets($file,$type='',$check=false,$default='default'){
 		$isRemote=strpos($style, '://') !== false;
 		
 		// 单个文件导入，根据文件名（如果为js,css,images文件）自动识别上级目录
-		if(!$pos && ($ext=($type !== '' ? $type : fileext($file)))){
+		$typeDir='';
+		if(!$isBase && ($ext=($type !== '' ? $type : fileext(strpos($file, '?')!==false ? strstr($file,'?',true) : $file)))){
 			if($ext == 'js' || $ext == 'css'){
-				$file=$ext . '/' . $file;
+				$typeDir=$ext.'/';
 			}elseif($ext == 'jpg' || $ext == 'png' || $ext == 'gif' || $ext == 'jpeg' || $ext == 'bmp'){
-				$file='images/' . $file;
+				$typeDir='images/';
 			}
 		}
+		
+		//如果上级目录识别成功，并且文件不包含上级目录则自动附加上级目录
+		if(!empty($typeDir) && strpos($file, $typeDir)!==0){
+			$file=$typeDir.$file;
+		}
+		
+		
 		$module=strtolower($module);
 		if($style != '/'){
 			$style=rtrim($style, '/');

@@ -241,10 +241,9 @@ class Manager {
 			$check=isset($checks[$k]) ? $checks[$k] : $checks[0];
 			$default=isset($defaults[$k]) ? $defaults[$k] : $defaults[0];
 			$base=rtrim(trim(isset($bases[$k]) ? $bases[$k] : $bases[0]),'/');
-			
-			$ext=$type !== '' ? $type : fileext(($pos=strpos($file, '@')) == false ? $file : substr($file, 0, $pos));
-			$file=assets(($base !=='' ? $base.'/'.$file : $file), $type, ($check != 'false' && $check), $default);
+			$file=assets(($base !=='' ? '#'.$base.'/'.$file : $file), $type, ($check != 'false' && $check), $default);
 			if($file !== ''){
+				$ext=$type !== '' ? $type : fileext(strpos($file, '?')!==false ? strstr($file,'?',true) : $file);
 				switch($ext){
 					case 'css':
 						$res.='<link rel="stylesheet" type="text/css" href="' . $file . '" ' . implode(' ',$tag_attrs) . '/>' . "\r\n";

@@ -3,7 +3,7 @@
 return [
 	'default' => [
 		'/'=> function(){
-			return 'Hello world!';
+			return 'Under construction...';
 		},
 		'/hello'=> 'Index/hello',
 		'/member/index/hello'=> 'Member/Index/hello',
