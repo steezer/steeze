@@ -1739,6 +1739,30 @@ class Model implements ArrayAccess{
 		}
 		return false;
 	}
+	
+	/**
+	 * 获取数据表字段详细信息
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function getDbFieldInfos(){
+		$tableName=!empty($this->options['table']) ? $this->options['table'] : $this->trueTableName;
+		if(isset($tableName)){ // 动态指定表名
+			if(is_array($tableName)){
+				$table=key($tableName);
+			}else{
+				$table=$tableName;
+				if(strpos($table, ')')){
+					// 子查询
+					return false;
+				}
+			}
+			return $this->db->getFields($table);
+		}
+		return false;
+	}
+	
 
 	/**
 	 * 设置数据对象值

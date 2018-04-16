@@ -39,9 +39,9 @@ class Mysql extends Driver{
         list($tableName) = explode(' ', $tableName);
         if(strpos($tableName,'.')){
         	list($dbName,$tableName) = explode('.',$tableName);
-			$sql   = 'SHOW COLUMNS FROM `'.$dbName.'`.`'.$tableName.'`';
+			$sql   = 'SHOW FULL COLUMNS FROM `'.$dbName.'`.`'.$tableName.'`';
         }else{
-        	$sql   = 'SHOW COLUMNS FROM `'.$tableName.'`';
+        	$sql   = 'SHOW FULL COLUMNS FROM `'.$tableName.'`';
         }
         
         $result = $this->query($sql);
@@ -58,6 +58,7 @@ class Mysql extends Driver{
                     'default' => $val['default'],
                     'primary' => (strtolower($val['key']) == 'pri'),
                     'autoinc' => (strtolower($val['extra']) == 'auto_increment'),
+                	'comment' => $val['comment'],
                 );
             }
         }
