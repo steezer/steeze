@@ -52,7 +52,7 @@ class Pager{
 	 * 		)
 	 */
 	function getListPager($config,$setPages=10,$urlRule='',$array=array()){
-		$defaults=array('type' => 'page','size' => 15,'url' => $this->getUrl(1));
+		$defaults=['type' => 'page','size' => 15,'count'=>1,'url' => $this->getUrl(1)];
 		$addUrl='';
 		$configs=array_merge($defaults, $config);
 		$callback=isset($config['callback']) ? $config['callback'] : '';
@@ -75,7 +75,7 @@ class Pager{
 			
 			$page=$setPages + 1;
 			$offset=ceil($setPages / 2 - 1);
-			$pages=ceil($configs['total'] / $configs['size']);
+			$configs['count']=$pages=ceil($configs['total'] / $configs['size']);
 			$from=$configs['page'] - $offset;
 			$to=$configs['page'] + $offset;
 			$more=0;
@@ -142,7 +142,7 @@ class Pager{
 				$html.=str_replace(['[url]','[no]'], [$this->pageUrl($pages, $urlRule, $array),$pages], $page_last);
 			}
 		}
-		return ['html'=>$html,'info'=>$info];
+		return array_merge($configs,['html'=>$html,'info'=>$info]);
 	}
 	
 	/**
