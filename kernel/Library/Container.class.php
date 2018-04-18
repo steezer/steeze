@@ -18,12 +18,13 @@ class Container{
 	/**
 	 * 从容器中解析给定的类型
 	 *
-	 * @param string $concrete
-	 * @param array $parameters
+	 * @param string $concrete 需要构造的类名
+	 * @param array $parameters 参数
+	 * @param bool $isCache 是否需要存储，默认为true
 	 * @return mixed
 	 */
-	public function make($concrete,array $parameters=[]){
-		return $this->resolve($concrete, $parameters);
+	public function make($concrete,$parameters=[],$isCache=true){
+		return $this->resolve($concrete, $parameters,$isCache);
 	}
 	
 	/**
@@ -111,15 +112,16 @@ class Container{
 	 *
 	 * @param string $concrete
 	 * @param array $parameters
+	 * @param bool $isCache
 	 * @return mixed
 	 */
-	protected function resolve($concrete,$parameters=[]){
+	protected function resolve($concrete,$parameters=[],$isCache=true){
 		$concrete=$this->getAlias($concrete);
 		/**
 		 * 如果类型的一个实例是目前管理作为一个单例,我们就返回一个现有的实例,
 		 * 而不是实例化新的实例, 所以开发人员可以保持每次都使用相同的对象实例。
 		 */
-		if(isset($this->instances[$concrete])){
+		if($isCache && isset($this->instances[$concrete])){
 			return $this->instances[$concrete];
 		}
 		
@@ -136,7 +138,13 @@ class Container{
 			$object=$extender($object, $this);
 		}
 		
-		$this->instances[$concrete]=$object;
+		/**
+		 * 如果需要，则保存对象到容器中 
+		 */
+		if($isCache){
+			$this->instances[$concrete]=$object;
+		}
+		
 		array_pop($this->with);
 		return $object;
 	}
@@ -306,7 +314,10 @@ class Container{
 	 * @return void
 	 */
 	public function forgetInstance($concrete){
-		unset($this->instances[$concrete]);
+		if(!is_null($concrete)){
+			$classname=is_object($concrete) ? get_class($concrete) : $concrete;
+			unset($this->instances[$classname]);
+		}
 	}
 
 	/**

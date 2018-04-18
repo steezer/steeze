@@ -50,6 +50,8 @@ class Application{
 		
 		//释放视图对象
 		Container::getInstance()->forgetInstance(View::class);
+		//释放路由控制器对象
+		Container::getInstance()->forgetInstance($route->getDisposer());
 		
 		//输出到前端
 		$this->response->end();
@@ -77,14 +79,15 @@ class Application{
 			){
 				//运行控制器方法
 				return Controller::run($disposer, $route_a,$params);
-			}elseif(
-				C('use_view_route',env('use_view_route',true)) &&
-				$route_c && $route_a &&
-				!(is_null($viewer=view($route_c.'/'.$route_a.'@:'.$route_m,$params)))
+			}else if(
+				C('use_view_route',env('use_view_route',true)) && 
+					$route_c && $route_a &&
+				   !(is_null($viewer=view($route_c.'/'.$route_a.'@:'.$route_m,$params)))
 			){
-				//直接访问模板
+				//直接返回渲染后的模版视图
 				return $viewer;
 			}else{
+				//返回错误页面
 				return E(L('Page not found'),404,true);
 			}
 		};

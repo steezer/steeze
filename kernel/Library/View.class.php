@@ -78,7 +78,6 @@ class View{
 	public function fetch($templateFile='',$content=''){
 		if(empty($content)){
 			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
-			fastlog($res);
 			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
