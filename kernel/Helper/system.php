@@ -629,14 +629,10 @@ function redirect($url,$time=0,$msg=''){
 		$msg="系统将在{$time}秒之后自动跳转到{$url}！";
 	}
 	if(!$response->hasSendHeader()){
-		if(0 === $time){
-			$response->header('Location', $url);
-		}else{
-			$response->header("refresh", $time . ';url=' . $url);
-			$response->end($msg);
-		}
+		$response->header('refresh', $time . ';url=' . $url);
+		$response->end($msg);
 	}else{
-		$str="<meta http-equiv='Refresh' content='{$time};URL={$url}'>";
+		$str='<meta http-equiv="Refresh" content="'.$time.';URL='.$url.'"/>';
 		if($time != 0){
 			$str.=$msg;
 		}
@@ -715,15 +711,16 @@ function session($name='',$value=''){
 	
 	if(is_array($name)){ // session初始化 在session_start 之前调用
 		isset($name['prefix']) && ($prefix=$name['prefix']);
-		
-		if(C('var_session_id') && isset($_REQUEST[C('var_session_id')])){
-			session_id($_REQUEST[C('var_session_id')]);
-		}elseif(isset($name['id'])){
-			session_id($name['id']);
+		$sid=null;
+		if(isset($name['id'])){
+			$sid=$name['id'];
+		}elseif($key=C('var_session_id')){
+			$request=make(Library\Request::class);
+			$sid=$request->cookie($key,$request->post($key,$request->get($key)));
 		}
+		!is_null($sid) && session_id($sid);
 		
 		ini_set('session.auto_start', 0);
-		
 		isset($name['name']) && session_name($name['name']);
 		isset($name['path']) && session_save_path($name['path']);
 		isset($name['domain']) && ini_set('session.cookie_domain', $name['domain']);
@@ -860,35 +857,36 @@ function cookie($name='',$value='',$option=null){
 		ini_set('session.cookie_httponly', 1);
 	}
 	
-	$respose=make(Library\Response);
+	$response=make(Library\Response::class);
+	$cookies=make(Library\Request::class)->cookie();
 	
 	// 清除指定前缀的所有cookie
 	if(is_null($name)){
-		if(empty($_COOKIE)){
+		if(empty($cookies)){
 			return null;
 		}
 		// 要删除的cookie前缀，不指定则删除config设置的指定前缀
 		$prefix=empty($value) ? $config['prefix'] : $value;
 		if(!empty($prefix)){ // 如果前缀为空字符串将不作处理直接返回
-			foreach($_COOKIE as $key=>$val){
+			foreach($cookies as $key=>$val){
 				if(0 === stripos($key, $prefix)){
-					setcookie($key, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-					unset($_COOKIE[$key]);
+					$response->cookie($key, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
+					unset($cookies[$key]);
 				}
 			}
 		}
 		return null;
 	}elseif('' === $name){
 		// 获取全部的cookie
-		return $_COOKIE;
+		return $cookies;
 	}
 	
 	$name=$config['prefix'] . str_replace('.', '_', $name);
 	if('' === $value){
-		if(isset($_COOKIE[$name])){
-			$value=sys_crypt($_COOKIE[$name], 0);
-			if(0 === strpos($value, 'stwms:')){
-				$ret=substr($value, 6);
+		if(isset($cookies[$name])){
+			$value=sys_crypt($cookies[$name], 0);
+			if(0 === strpos($value, 'st:')){
+				$ret=substr($value, 3);
 				$ret=json_decode(MAGIC_QUOTES_GPC ? stripslashes($ret) : $ret, true);
 				return is_array($ret) ? array_map_deep($ret, 'urldecode', true) : $value;
 			}else{
@@ -898,20 +896,18 @@ function cookie($name='',$value='',$option=null){
 			return null;
 		}
 	}else{
-		
 		if(is_null($value)){
-			setcookie($name, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-			unset($_COOKIE[$name]); // 删除指定cookie
+			$response->cookie($name, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
+			unset($cookies[$name]); // 删除指定cookie
 		}else{
 			// 设置cookie
 			if(is_array($value)){
-				$value='steeze:' . json_encode(array_map_deep($value, 'urlencode', true));
+				$value='st:' . json_encode(array_map_deep($value, 'urlencode', true));
 			}
 			$value=sys_crypt($value, 1);
-			
 			$expire=!empty($config['expire']) ? time() + intval($config['expire']) : 0;
-			setcookie($name, $value, $expire, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-			$_COOKIE[$name]=$value;
+			$response->cookie($name, $value, $expire, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
+			$cookies[$name]=$value;
 		}
 	}
 	return null;
