@@ -26,14 +26,23 @@ class Request{
 	 * @param string $name 方法名称
 	 * @param mixed $args 参数
 	 * 目前支持客户端请求方法判断：
-	 * isGet()、isPost()、isDelete()、isPut() 分别用于判断GET、POST、DELETE、PUT请求方法
+	 * isGet()、isPost()、isDelete()、isPut()、分别用于判断GET、POST、DELETE、PUT请求方法
+	 * 同时支持特定客户端请求判断：isAjax()、isWechat()
 	 */
 	public function __call($name,$args){
 		if(stripos($name, 'is')===0){
 			$method=strtoupper(substr($name, 2));
-			$suppors=['GET','POST','DELETE','PUT'];
+			$suppors=['GET','POST','DELETE','PUT','AJAX','WECHAT'];
 			if(in_array($method, $suppors)){
-				return env('REQUEST_METHOD')==$method;
+				switch ($method){
+					case 'AJAX': //判断ajax请求
+						return env('IS_AJAX');
+					case 'WECHAT': //判断微信客户端登录
+						$user_agent=$this->server('user_agent');
+						return isset($user_agent) && strpos($user_agent,'MicroMessenger')!==false;
+					default: //请求方法判断
+						return env('REQUEST_METHOD')==$method;
+				}
 			}
 		}
 		return false;
