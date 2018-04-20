@@ -150,7 +150,7 @@ class Controller{
 		if(is_null($json_option)){
 			$json_option=defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0;
 		}
-		$response=make(Response::class);
+		$response=make('\Library\Response');
 		switch(strtoupper($type)){
 			case 'JSON':
 				// 返回JSON数据格式到客户端 包含状态信息
@@ -207,7 +207,7 @@ class Controller{
 			$data['message']=$message;
 			$data['code']=$code;
 			$data['url']=$jumpUrl;
-			make(Response::class)->end($data);
+			make('\Library\Response')->end($data);
 		}else{
 			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
 			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
@@ -235,7 +235,7 @@ class Controller{
 	 */
 	private function view(){
 		if(is_null($this->view)){
-			$this->view=make(View::class);
+			$this->view=make('\Library\View');
 		}
 		return $this->view;
 	}

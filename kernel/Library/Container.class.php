@@ -170,12 +170,11 @@ class Container{
 						//@!模型不缓存
 						$this->forgetInstance($depClass->name);
 						$pk=$depObject->getPk();
-						if(is_subclass_of($depObject,Model::class)){
+						if(is_subclass_of($depObject,'\Library\Model')){
 							//自定义模型需要表名和路由变量名称相同
 							$depObject->getTableName(false)==$name && 
 								$depObject->where($pk.'='.$depDefault)->find();
 						}else{
-							
 							//则根据路由变量名称为表名，查找ID主键为路由参数值的记录，
 							$depObject->table($name)->where($pk.'='.$depDefault)->find();
 						}

@@ -25,7 +25,7 @@ class Exception extends \Exception {
 	 */
 	static public function render($e,array $params=[],$isReturn=false){
 		$error=[
-			'url'=>make(Request::class)->server('REQUEST_URI'),
+			'url'=>make('\Library\Request')->server('REQUEST_URI'),
 			'code'=>$e->getCode(),
 			'message'=>$e->getMessage(),
 			'line'=> $e->getLine(),
@@ -40,16 +40,16 @@ class Exception extends \Exception {
 			if($isReturn){
 				return $data;
 			}
-			make(Response::class)->write($data);
+			make('\Library\Response')->write($data);
 		}else if(env('IS_AJAX',false)){ //ajax模式运行
 			$data=json_encode($error,JSON_UNESCAPED_UNICODE);
 			if($isReturn){
 				return $data;
 			}
-			make(Response::class)->write($data);
+			make('\Library\Response')->write($data);
 		}else if(is_file($tpl=C('tmpl_exception_tpl'))){  //web模式运行
 			//直接访问模板
-			$viewer=make(View::class);
+			$viewer=make('\Library\View');
 			$viewer->assign($params);
 			$viewer->assign('e',$e);
 			if($isReturn){

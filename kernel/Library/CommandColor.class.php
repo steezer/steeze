@@ -75,7 +75,7 @@ class CommandColor {
 	 * @see CommandColor#getColoredString
 	 * */
 	public static function get($string, $foreground_color = null, $background_color = null){
-		$command=make(static::class);
+		$command=make('\Library\CommandColor');
 		return $command->getColoredString($string, $foreground_color, $background_color);
 	}
 }

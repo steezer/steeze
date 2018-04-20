@@ -24,8 +24,8 @@ class Pipeline{
 	 * @param mixed $passables
 	 * @return $this
 	 */
-	public function send(...$passables){
-		$this->passables=$passables;
+	public function send(){
+		$this->passables=func_get_args();
 		return $this;
 	}
 
@@ -63,7 +63,7 @@ class Pipeline{
 					$this->carry(),
 					$this->prepareDestination($destination)
 				);
-		return $pipeline(...$this->passables);
+		return call_user_func_array($pipeline, $this->passables);
 	}
 
 	/**
@@ -100,11 +100,13 @@ class Pipeline{
 	 * @return \Closure
 	 */
 	protected function prepareDestination(Closure $destination){
-		return function (...$passables) use ($destination){
+		return function () use ($destination){
+			$passables=func_get_args();
 			try{
-				return $destination(...$passables);
+				return call_user_func_array($destination, $passables);
 			}catch(\Exception $e){
-				return $this->handleException($e, ...$passables);
+				array_unshift($passables, $e);
+				return call_user_func_array(array($this,'handleException'), $passables);
 			}
 		};
 	}
@@ -116,13 +118,15 @@ class Pipeline{
 	 */
 	protected function carry(){
 		return function ($stack,$pipe){
-			return function (...$passables) use ($stack,$pipe){
+			return function () use ($stack,$pipe){
+				$passables=func_get_args();
 				try{
 					$slice=$this->getSlice();
 					$callable=$slice($stack, $pipe);
-					return $callable(...$passables);
+					return call_user_func_array($callable, $passables);
 				}catch(\Exception $e){
-					return $this->handleException($e,...$passables);
+					array_unshift($passables, $e);
+					return call_user_func_array(array($this,'handleException'), $passables);
 				}
 			};
 		};
@@ -135,10 +139,11 @@ class Pipeline{
 	 */
 	private function getSlice(){
 		return function ($stack,$pipe){
-			return function (...$passables) use ($stack,$pipe){
+			return function () use ($stack,$pipe){
+				$passables=func_get_args();
 				if(is_callable($pipe)){
 					// 直接调用管道回调函数
-					return $pipe($stack,...$passables);
+					return call_user_func_array($pipe,array_merge([$stack],$passables));
 				}elseif(!is_object($pipe)){
 					// 解析命名的字符串通道，并构建
 					list($name, $parameters)=$this->parsePipeString($pipe);
@@ -147,8 +152,10 @@ class Pipeline{
 				}else{
 					$parameters=array_merge([$stack], $passables);
 				}
-				return method_exists($pipe, $this->method) ? 
-						 $pipe->{$this->method}(...$parameters) : $pipe(...$parameters);
+				return call_user_func_array(
+						(method_exists($pipe, $this->method) ? array($pipe,$this->method) : $pipe),
+						$parameters
+					);
 			};
 		};
 	}
@@ -163,7 +170,9 @@ class Pipeline{
 	 *
 	 * @throws \Library\Exception
 	 */
-	protected function handleException(\Exception $e,...$passables){
+	protected function handleException(){
+		$passables=func_get_args();
+		$e=array_shift($passables);
 		$handler=new Exception();
 		$handler->report($e);
 		return $handler->render($e,$passables);

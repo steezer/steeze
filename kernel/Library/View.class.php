@@ -118,10 +118,12 @@ class View{
 		if($pos=strpos($template, '@')){
 			$sm=explode(':', substr($template, $pos+1),2);
 			$template=substr($template, 0, $pos);
-			if(!empty(trim($sm[0]))){
-				$style=trim($sm[0]);  //获取风格名称，例如: Index/list@Default
+			$sm[0]=trim($sm[0]);
+			if(!empty($sm[0])){
+				$style=$sm[0];  //获取风格名称，例如: Index/list@Default
 			}
-			if(isset($sm[1]) && !empty(trim($sm[1]))){
+			$sm[1]=trim($sm[1]);
+			if(isset($sm[1]) && !empty($sm[1])){
 				$m=trim($sm[1]);  //获取模块名称，例如: Index/list@Default:home
 			}
 		}
@@ -173,7 +175,7 @@ class View{
 	 * @return mixed
 	 */
 	public static function render($content,$charset='',$contentType=''){
-		$response=make(Response::class);
+		$response=make('\Library\Response');
 		if(!$response->hasSendHeader()){
 			if(empty($charset) || !is_string($charset)){
 				$charset=C('charset', 'utf-8');

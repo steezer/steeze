@@ -622,7 +622,7 @@ function safe_replace($string){
  * @return void
  */
 function redirect($url,$time=0,$msg=''){
-	$response=make(Library\Response::class);
+	$response=make('\Library\Response');
 	// 多行URL地址支持
 	$url=str_replace(array("\n","\r"), '', $url);
 	if(empty($msg)){
@@ -715,7 +715,7 @@ function session($name='',$value=''){
 		if(isset($name['id'])){
 			$sid=$name['id'];
 		}elseif($key=C('var_session_id')){
-			$request=make(Library\Request::class);
+			$request=make('\Library\Request');
 			$sid=$request->cookie($key,$request->post($key,$request->get($key)));
 		}
 		!is_null($sid) && session_id($sid);
@@ -857,8 +857,8 @@ function cookie($name='',$value='',$option=null){
 		ini_set('session.cookie_httponly', 1);
 	}
 	
-	$response=make(Library\Response::class);
-	$cookies=make(Library\Request::class)->cookie();
+	$response=make('\Library\Response');
+	$cookies=make('\Library\Request')->cookie();
 	
 	// 清除指定前缀的所有cookie
 	if(is_null($name)){
@@ -1020,7 +1020,7 @@ function make($concrete,array $parameters=[]){
  * @return string 渲染后的视图内容
  */
 function view($name,$datas=[]){
-	$viewer=make(\Library\View::class);
+	$viewer=make('\Library\View');
 	if(is_array($datas)){
 		foreach($datas as $key=>&$value){
 			$viewer->assign($key, $value);
@@ -1326,7 +1326,7 @@ function C($key='',$default=''){
  * 获取输入参数，非空值，依次为GET、POST @param string $name 参数名称 @param mixed $default 默认值 @handle string|\Closure 处理器，可以是函数名称或者回调函数 @return mixed
  */
 function I($name,$default='',$handle=null){
-	$request=make(Library\Request::class);
+	$request=make('\Library\Request');
 	$value=$request->get($name, $request->post($name, $default));
 	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ? $handle($value) : $value;
 }

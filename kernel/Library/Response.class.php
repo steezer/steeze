@@ -138,7 +138,7 @@ class Response{
 	 * @return string
 	 */
 	public static function toString($data){
-		if(is_object($data) && is_a($data,Model::class)){
+		if(is_object($data) && is_a($data,'\Library\Model')){
 			return json_encode($data->data(),JSON_UNESCAPED_UNICODE);
 		}
 		return is_array($data) || is_object($data) ? json_encode($data,JSON_UNESCAPED_UNICODE) : $data;

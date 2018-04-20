@@ -564,7 +564,7 @@ class Image{
 			return $IMG_URL . $newimgurl;
 		}
 		
-		$res=make(static::class)->thumbImg($oldimg_path, $IMG_PATH . $newimgurl, $maxWidth, $maxHeight, $cutType, $forceExec);
+		$res=make('\Library\Image')->thumbImg($oldimg_path, $IMG_PATH . $newimgurl, $maxWidth, $maxHeight, $cutType, $forceExec);
 		return $res ? $IMG_URL . $newimgurl : ($res === false ? $oldimg_url : $defaultImg);
 	}
 }

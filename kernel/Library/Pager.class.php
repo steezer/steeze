@@ -312,7 +312,7 @@ class Pager{
 	 * @return string 获取的URL，类型由$type决定
 	 */
 	private function getUrl($type=0){
-		$server=make(Request::class)->server();
+		$server=make('\Library\Request')->server();
 		$sys_protocal=env('SITE_PROTOCOL');
 		$php_self=$server['php_self'] ? $server['php_self'] : $server['script_name'];
 		$path_info=isset($server['path_info']) ? $server['path_info'] : '';

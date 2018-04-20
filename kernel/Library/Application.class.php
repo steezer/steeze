@@ -8,8 +8,8 @@ class Application{
 	
 	public function __construct($request=null, $response=null){
 		//初始化请求和响应对象
-		$this->request=make(Request::class);
-		$this->response=make(Response::class);
+		$this->request=make('\Library\Request');
+		$this->response=make('\Library\Response');
 		$this->request->setRequest($request);
 		$this->response->setResponse($response);
 		
@@ -49,7 +49,7 @@ class Application{
 			);
 		
 		//释放视图对象
-		Container::getInstance()->forgetInstance(View::class);
+		Container::getInstance()->forgetInstance('\Library\View');
 		//释放路由控制器对象
 		Container::getInstance()->forgetInstance($route->getDisposer());
 		

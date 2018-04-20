@@ -79,16 +79,20 @@ class Model implements ArrayAccess{
 		$connection=empty($this->connection) ? $connection : $this->connection;
 		
 		// 支持读取配置参数
-		if(is_string($connection) && !empty($databases=C('database.*'))){
-			if(false === strpos($connection, '/')){
-				$connName=empty($connection) ? C('db_conn','default') : $connection;
-				$connection=$databases[(isset($databases[$connName]) ? $connName:'default')];
-			}else{
-				$connName=C('db_conn','default');
-				$connection=array_merge(
-						$databases[(isset($databases[$connName]) ? $connName:'default')],
-						DB::parseDsn($connection)
+		
+		if(is_string($connection)){
+			$databases=C('database.*');
+			if(!empty($databases)){
+				if(false === strpos($connection, '/')){
+					$connName=empty($connection) ? C('db_conn','default') : $connection;
+					$connection=$databases[(isset($databases[$connName]) ? $connName:'default')];
+				}else{
+					$connName=C('db_conn','default');
+					$connection=array_merge(
+							$databases[(isset($databases[$connName]) ? $connName:'default')],
+							DB::parseDsn($connection)
 						);
+				}
 			}
 		}
 
@@ -1594,7 +1598,7 @@ class Model implements ArrayAccess{
 	 * @return string
 	 */
 	public function getModelName(){
-		if(empty($this->name) && is_subclass_of($this, Model::class)){
+		if(empty($this->name) && is_subclass_of($this, '\Library\Model')){
 			$len=strlen(C('DEFAULT_M_LAYER'));
 			$name=$len ? substr(get_class($this), 0, -$len) : get_class($this);
 			if($pos=strrpos($name, '\\')){ // 有命名空间

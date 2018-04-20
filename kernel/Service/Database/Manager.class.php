@@ -99,8 +99,11 @@ class Manager {
         if(!empty($config)){
            $config =   is_string($config) ? self::parseDsn($config) : array_change_key_case($config);
            //将字符串参数转换为数组
-           if(isset($config['params']) && is_string($config['params']) && !empty(trim($config['params']))){
-          		parse_str(trim($config['params']),$config['params']);
+           if(isset($config['params']) && is_string($config['params'])){
+	           	$config['params']=trim($config['params']);
+	           	if(!empty($config['params'])){
+	           		parse_str(trim($config['params']),$config['params']);
+	           	}
            }
            return [
             		'type'          =>  (isset($config['type']) ? $config['type'] : $default['type']),
