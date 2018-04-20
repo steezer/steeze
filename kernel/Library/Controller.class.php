@@ -98,12 +98,27 @@ class Controller{
 	 *
 	 * @access protected
 	 * @param string $message 错误信息
-	 * @param string $jumpUrl 页面跳转地址
-	 * @param mixed $ajax 是否为Ajax方式 当数字时指定跳转时间
+	 * @param int|string|bool $code 错误码
+	 * @param string|bool|int $jumpUrl 页面跳转地址
+	 * @param bool|int $ajax 是否为Ajax方式 当数字时指定跳转时间
 	 * @return void
+	 * 调用方式：
+	 * 1. error($message,$code,$jumpUrl,ajax)
+	 * 2. error($message,$jumpUrl,ajax)
+	 * 3. error($message,ajax)
+	 * 4. error($message)
 	 */
-	protected function error($message='',$jumpUrl='',$ajax=false){
-		$this->dispatchJump($message, 1, $jumpUrl, $ajax);
+	protected function error($message='',$code=1,$jumpUrl='',$ajax=false){
+		if(is_string($code)){
+			if(is_bool($jumpUrl) || is_int($jumpUrl)){
+				$ajax=$jumpUrl;
+			}
+			$jumpUrl=$code;
+			$code=1;
+		}elseif(is_bool($code)){
+			$ajax=$code;
+		}
+		$this->dispatchJump($message, $code, $jumpUrl, $ajax);
 	}
 
 	/**
