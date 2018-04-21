@@ -215,14 +215,15 @@ class Controller{
 			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
 			$this->assign('code', $code); // 状态
 			$this->assign('message', $message); // 提示信息
-			if($code){
-				!isset($this->waitSecond) && $this->assign('waitSecond', 1000);
-				!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
+			$waitSecond=$this->get('waitSecond');
+			$jumpUrl=$this->get('jumpUrl');
+			!isset($jumpUrl) && $this->assign('jumpUrl', 'auto');
+			if(!$code){
+				!isset($waitSecond) && $this->assign('waitSecond', 1000);
 				$this->display(C('TMPL_ACTION_SUCCESS', '/message'));
 			}else{
+				!isset($waitSecond) && $this->assign('waitSecond', 3000);
 				$this->assign('error', $message);
-				!isset($this->waitSecond) && $this->assign('waitSecond', 3000);
-				!isset($this->jumpUrl) && $this->assign('jumpUrl', 'auto');
 				$this->display(C('TMPL_ACTION_ERROR', '/message'));
 			}
 		}
