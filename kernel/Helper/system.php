@@ -631,6 +631,7 @@ function redirect($url,$time=0,$msg=''){
 	if(!$response->hasSendHeader()){
 		if(0 === $time){
 			$response->header('Location', $url);
+			$response->status(302);
 			$response->end();
 		}else{
 			$contentType=C('mimetype.html','text/html');
