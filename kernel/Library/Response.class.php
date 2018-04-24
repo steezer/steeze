@@ -37,7 +37,7 @@ class Response{
 	public function header($key, $value){
 		$this->isHeaderSend=true;
 		return !is_null($this->response) ? 
-					$this->response->header($key,$value) : 
+					$this->response->header($key,$value,true) : 
 					header($key.':'.$value);
 	}
 	

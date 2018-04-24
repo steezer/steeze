@@ -9,6 +9,8 @@ class Route{
 	private $request=null; //请求对象
 	
 	public function __construct(Request $request){
+		//初始化中间件栈
+		self::$middlewares=[];
 		//设置路由请求对象
 		$this->request=$request;
 		//路由绑定

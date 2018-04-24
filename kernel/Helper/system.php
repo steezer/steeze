@@ -629,8 +629,18 @@ function redirect($url,$time=0,$msg=''){
 		$msg="系统将在{$time}秒之后自动跳转到{$url}！";
 	}
 	if(!$response->hasSendHeader()){
-		$response->header('refresh', $time . ';url=' . $url);
-		$response->end($msg);
+		if(0 === $time){
+			$response->header('Location', $url);
+			$response->end();
+		}else{
+			$contentType=C('mimetype.html','text/html');
+			$charset=C('charset', 'utf-8');
+			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
+			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
+			$response->header('X-Powered-By','steeze');
+			$response->header('refresh', $time . ';url=' . $url);
+			$response->end($msg);
+		}
 	}else{
 		$str='<meta http-equiv="Refresh" content="'.$time.';URL='.$url.'"/>';
 		if($time != 0){
