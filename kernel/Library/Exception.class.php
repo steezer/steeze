@@ -47,10 +47,11 @@ class Exception extends \Exception {
 				return $data;
 			}
 			make('\Library\Response')->write($data);
-		}else if(is_file($tpl=C('tmpl_exception_tpl'))){  //web模式运行
+		}else if($tpl=C('tmpl_exception_tpl')){  //web模式运行
 			//直接访问模板
 			$viewer=make('\Library\View');
 			$viewer->assign($params);
+			$viewer->assign($error);
 			$viewer->assign('e',$e);
 			if($isReturn){
 				return $viewer->fetch($tpl);
