@@ -291,7 +291,7 @@ class Container{
 	 */
 	public function getAlias($concrete){
 		if(!isset($this->aliases[$concrete])){
-			return $concrete;
+			return ltrim($concrete,'\\'); //删除命名空间前缀导致的错误
 		}
 		return $this->getAlias($this->aliases[$concrete]);
 	}
@@ -314,7 +314,7 @@ class Container{
 	 */
 	public function forgetInstance($concrete){
 		if(!is_null($concrete)){
-			$classname=is_object($concrete) ? get_class($concrete) : $concrete;
+			$classname=is_object($concrete) ? get_class($concrete) : $this->getAlias($concrete);
 			unset($this->instances[$classname]);
 		}
 	}
