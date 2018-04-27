@@ -160,10 +160,13 @@ class Loader{
 		static $appConfigs=[]; //应用缓存
 		static $globalConfigs=[]; //全局缓存
 		
+		//应用名称
+		$appName=env('ROUTE_M','/');
+		
 		// 如果为第二个参数为数组则直接写入配置
 		if(is_array($key)){
-			$appConfigs[$name]=(isset($appConfigs[$name]) ? array_merge($appConfigs[$name], $key) : $key);
-			return $appConfigs[$name];
+			$appConfigs[$appName][$name]=(isset($appConfigs[$appName][$name]) ? array_merge($appConfigs[$appName][$name], $key) : $key);
+			return $appConfigs[$appName][$name];
 		}
 		
 		if(
@@ -173,7 +176,6 @@ class Loader{
 			$globalConfigs[$name]=include($globalPath);
 		}
 		
-		$appName=env('ROUTE_M','/');
 		if(
 			!isset($appConfigs[$appName][$name]) &&
 			is_file($appPath=simplify_ds(APP_PATH . $appName . DS . 'Conf' . DS . $name . '.php'))
