@@ -109,7 +109,15 @@ class Loader{
 			$m=env('ROUTE_M');
 			$c=$name;
 		}
-		$c=str_replace('/','\\',ucwords(strtolower(trim($c,'\\/.')),'/'));
+		$c=str_replace('/','\\',trim($c,'\\/.'));
+
+		//将以下划线分割的控制器（或分组名）转化为首字母大写的驼峰式
+		$ces=explode('\\',$c);
+		foreach ($ces as &$v) {
+		    $v=ucfirst(parse_name($v,1));
+		}
+		$c=implode('\\',$ces);
+
 		$concrete=str_replace('\\\\','\\','App\\'.ucfirst(strtolower($m)).'\\Controller\\'.$c);
 		$container=Library\Container::getInstance();
 		try{

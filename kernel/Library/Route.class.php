@@ -70,7 +70,7 @@ class Route{
 				$res=explode('@', $handle);
 				$cas=explode('/', array_shift($res));
 				$route_a=array_pop($cas);
-				!empty($cas) && ($route_c=ucwords(implode('/', $cas),'/'));
+				!empty($cas) && ($route_c=implode('/', $cas));
 				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
@@ -85,7 +85,15 @@ class Route{
 		//绑定方法
 		Loader::env('ROUTE_A',(isset($route_a) ? $route_a : false));
 		//绑定控制器
-		Loader::env('ROUTE_C',(isset($route_c) ? $route_c : false));
+		if(isset($route_c)){
+			$ces=explode('/',str_replace('\\','/',$route_c));
+			foreach ($ces as &$v) {
+				$v=ucfirst(parse_name($v,1));
+			}
+			Loader::env('ROUTE_C',implode('/',$ces));
+		}else{
+			Loader::env('ROUTE_C',false);
+		}
 		//绑定模块
 		Loader::env('ROUTE_M',(isset($route_m) ? $route_m : env('BIND_MODULE')));
 	}
