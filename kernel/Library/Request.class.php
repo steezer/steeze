@@ -27,12 +27,12 @@ class Request{
 	 * @param mixed $args 参数
 	 * 目前支持客户端请求方法判断：
 	 * isGet()、isPost()、isDelete()、isPut()、分别用于判断GET、POST、DELETE、PUT请求方法
-	 * 同时支持特定客户端请求判断：isAjax()、isWechat()
+	 * 同时支持特定客户端请求判断：isAjax()、isWechat()、isMobile()
 	 */
 	public function __call($name,$args){
 		if(stripos($name, 'is')===0){
 			$method=strtoupper(substr($name, 2));
-			$suppors=['GET','POST','DELETE','PUT','AJAX','WECHAT'];
+			$suppors=['GET','POST','DELETE','PUT','AJAX','WECHAT','MOBILE'];
 			if(in_array($method, $suppors)){
 				switch ($method){
 					case 'AJAX': //判断ajax请求
@@ -40,6 +40,48 @@ class Request{
 					case 'WECHAT': //判断微信客户端登录
 						$user_agent=$this->server('user_agent');
 						return isset($user_agent) && strpos($user_agent,'MicroMessenger')!==false;
+					case 'MOBILE':
+						$headers=$this->header();
+				        $all_http=isset($headers['all-http']) ? $headers['all-http'] : '';
+				        $mobile_browser=0;
+				        $agent=isset($headers['user-agent']) ? strtolower($headers['user-agent']):'';
+				        
+				        if($agent && preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|iphone|ipad|ipod|android|xoom)/i',$agent)){
+				            $mobile_browser++;
+				        }elseif( (isset($headers['accept'])) && (strpos(strtolower($headers['accept']),'application/vnd.wap.xhtml+xml')!==false)){
+				            $mobile_browser++;
+				        }elseif(isset($headers['x-wap-profile'])){
+				            $mobile_browser++;
+				        }elseif(isset($headers['profile'])){
+				            $mobile_browser++;
+				        }elseif($agent){
+				            $mobile_ua=substr($agent,0,4);
+				            $mobile_agents=array(
+				                    'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
+				                    'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
+				                    'ipaq','java','jigs','kddi','keji','leno','lg-c','lg-d','lg-g','lge-',
+				                    'maui','maxo','midp','mits','mmef','mobi','mot-','moto','mwbp','nec-',
+				                    'newt','noki','oper','palm','pana','pant','phil','play','port','prox',
+				                    'qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar',
+				                    'sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-',
+				                    'tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp',
+				                    'wapr','webc','winw','winw','xda','xda-'
+				            );
+				            if(in_array($mobile_ua,$mobile_agents)){
+				                $mobile_browser++;
+				            }elseif(strpos(strtolower($all_http),'operamini')!==false){
+				                $mobile_browser++;
+				            }
+				        }
+				        
+				        if(strpos($agent,'windows')!==false){
+				            $mobile_browser=0;
+				        }
+				        if(strpos($agent,'windows phone')!==false){
+				            $mobile_browser++;
+				        }
+				        return $mobile_browser>0;
+
 					default: //请求方法判断
 						return env('REQUEST_METHOD')==$method;
 				}
