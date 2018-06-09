@@ -1210,7 +1210,9 @@ class Model implements ArrayAccess{
 				'zip' => '/^\d{6}$/',
 				'integer' => '/^[-\+]?\d+$/',
 				'double' => '/^[-\+]?\d+(\.\d+)?$/',
-				'english' => '/^[A-Za-z]+$/'
+				'english' => '/^[A-Za-z]+$/',
+				'tel'=> '/^\+?\d[\d\-]+$/',
+				'mobile'=> '/^\+?\d\d+$/',
 		);
 		// 检查是否有内置的正则表达式
 		if(isset($validate[strtolower($rule)]))
