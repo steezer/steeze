@@ -1318,6 +1318,9 @@ function C($key='',$default=''){
 			$res=Loader::config($file, $key, $default);
 			if(is_array($res)){
 				for($i=2; $i < $len; $i++){
+					if($keys[$i]=='*'){
+						break;
+					}
 					if(!is_array($res) || !isset($res[$keys[$i]])){
 						$res=$default;
 						break;
