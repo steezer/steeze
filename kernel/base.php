@@ -80,8 +80,12 @@ class Loader{
 		if(strpos($path, DS)){
 			try{
 				if(strpos($path, 'App'.DS)===0){
-					$pos=strpos($path, '/',4);
-					include APP_PATH.strtolower(substr($path,4,$pos-4)).substr($path,$pos).'.php';
+					if(defined('DEFAULT_APP_NAME') && DEFAULT_APP_NAME===''){
+						include APP_PATH.substr($path,4).'.php';
+					}else{
+						$pos=strpos($path, '/',4);
+						include APP_PATH.strtolower(substr($path,4,$pos-4)).substr($path,$pos).'.php';
+					}
 				}else if(strpos($path, 'Vendor'.DS)===0){
 					include VENDOR_PATH.substr($path,7).'.php';
 				}else{
