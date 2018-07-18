@@ -1523,6 +1523,30 @@ class Model implements ArrayAccess{
 		$sql=$this->parseSql($sql, $parse);
 		return $this->db->execute($sql);
 	}
+	
+	/**
+	 * 过滤SQL语句中的表字段名称
+	 * 
+	 * @param string $sql
+	 * @return string
+	 */
+	protected function escapeTable($sql,$isTable=true){
+		if(strpos($sql, '__')!==false){
+			$filters['__PREFIX__']=$this->tablePrefix;
+			if($isTable){
+				$filters['__TABLE__']=$this->getTableName();
+			}
+			$sql=strtr($sql, $filters);
+			
+			if(strpos($sql, '__')!==false){
+				$prefix=$this->tablePrefix;
+				$sql=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
+					return $prefix . strtolower($match[1]);
+				}, $sql);
+			}
+		}
+		return $sql;
+	}
 
 	/**
 	 * 解析SQL语句
@@ -1544,14 +1568,7 @@ class Model implements ArrayAccess{
 			), $parse);
 			$sql=vsprintf($sql, $parse);
 		}else{
-			$sql=strtr($sql, array(
-					'__TABLE__' => $this->getTableName(),
-					'__PREFIX__' => $this->tablePrefix
-			));
-			$prefix=$this->tablePrefix;
-			$sql=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-				return $prefix . strtolower($match[1]);
-			}, $sql);
+			$sql=$this->escapeTable($sql);
 		}
 		$this->db->setModel($this->name);
 		return $sql;
@@ -1620,11 +1637,12 @@ class Model implements ArrayAccess{
 	 */
 	public function getTableName($isTrue=true){
 		if(empty($this->trueTableName)){
-			$tableName=$isTrue && !empty($this->tablePrefix) ? $this->tablePrefix : '';
+			$prefix=$isTrue && !empty($this->tablePrefix) ? $this->tablePrefix : '';
 			if(!empty($this->tableName)){
-				$tableName.=$this->tableName;
+				$tableName=$prefix.$this->tableName;
 			}else{
-				$tableName.=parse_name($this->name);
+				$table=parse_name($this->escapeTable($this->name,false));
+				$tableName=strpos($table,$prefix)===0 ? $table : $prefix.$table;
 			}
 			$this->trueTableName=strtolower($tableName);
 		}
@@ -1807,12 +1825,7 @@ class Model implements ArrayAccess{
 			if(strpos($table, $prefix)!==0 && preg_match('/^[a-z]\w+$/i', $table)){
 				$this->options['table']=$prefix.$table;
 			}else{
-				$table=str_replace('__PREFIX__', $prefix, $table);
-				// 将__TABLE_NAME__替换成带前缀的表名
-				$table=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-					return $prefix . strtolower($match[1]);
-				}, $table);
-				$this->options['table']=$table;
+				$this->options['table']=$this->escapeTable($table);
 			}
 		}
 		return $this;
@@ -1826,15 +1839,10 @@ class Model implements ArrayAccess{
 	 * @return Model
 	 */
 	public function using($using){
-		$prefix=$this->tablePrefix;
 		if(is_array($using)){
 			$this->options['using']=$using;
 		}elseif(!empty($using)){
-			// 将__TABLE_NAME__替换成带前缀的表名
-			$using=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-				return $prefix . strtolower($match[1]);
-			}, $using);
-			$this->options['using']=$using;
+			$this->options['using']=$this->escapeTable($using);
 		}
 		return $this;
 	}
@@ -1848,20 +1856,15 @@ class Model implements ArrayAccess{
 	 * @return Model
 	 */
 	public function join($join,$type='INNER'){
-		$prefix=$this->tablePrefix;
 		if(is_array($join)){
 			foreach($join as $key=>&$_join){
-				$_join=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-					return $prefix . strtolower($match[1]);
-				}, $_join);
+				$_join=$this->escapeTable($_join);
 				$_join=false !== stripos($_join, 'JOIN') ? $_join : $type . ' JOIN ' . $_join;
 			}
 			$this->options['join']=$join;
 		}elseif(!empty($join)){
 			// 将__TABLE_NAME__字符串替换成带前缀的表名
-			$join=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-				return $prefix . strtolower($match[1]);
-			}, $join);
+			$join=$this->escapeTable($join);
 			$this->options['join'][]=false !== stripos($join, 'JOIN') ? $join : $type . ' JOIN ' . $join;
 		}
 		return $this;
@@ -1886,11 +1889,7 @@ class Model implements ArrayAccess{
 		}
 		// 转换union表达式
 		if(is_string($union)){
-			$prefix=$this->tablePrefix;
-			// 将__TABLE_NAME__字符串替换成带前缀的表名
-			$options=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-				return $prefix . strtolower($match[1]);
-			}, $union);
+			$options=$this->escapeTable($union);
 		}elseif(is_array($union)){
 			if(isset($union[0])){
 				$this->options['union']=array_merge($this->options['union'], $union);
