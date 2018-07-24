@@ -78,6 +78,7 @@ class View{
 	public function fetch($templateFile='',$content=''){
 		if(empty($content)){
 			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
+			exit(var_export($res));
 			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
@@ -138,18 +139,17 @@ class View{
 				$a=array_pop($cas);
 				$c=implode('/', $cas);
 			}else{//相对路径，相对于分组，例如: "c/a" 或 "g/c/a"
-				$cas=explode($depr, trim($template,$depr));
+				$dcs=explode('/',$c);
+
+				//统计上级目录数量
+				$up_dir='..'.$depr;
+				$up_count=min(substr_count($template,$up_dir),count($dcs))+1;
+
+				$cas=explode($depr, trim(str_replace($up_dir,$depr,$template),$depr));
 				$a=array_pop($cas);
 				
-				$dcs=explode('/',$c);
-				$cdcs=count($dcs);
-				for($i=0; $i<$cdcs; $i++){
-					if(!empty($cas)){
-						$dcs[$cdcs-$i-1]=array_pop($cas);
-					}else{
-						break;
-					}
-				}
+				array_splice($dcs, -$up_count, $up_count, $cas);
+
 				$c=implode('/', $dcs);
 			}
 		}
