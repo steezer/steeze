@@ -15,6 +15,8 @@
 function fastlog($content,$isAppend=true,$file='system.log'){
 	$datetime=date('Y-m-d H:i:s');
 	$content='[' . $datetime . '] ' . dump($content, true);
+	$dirname=dirname(LOGS_PATH . $file);
+	!is_dir($dirname) && mkdir($dirname,0755,true);
 	return file_put_contents(LOGS_PATH . $file, $content . "\n", ($isAppend ? FILE_APPEND : 0));
 }
 
