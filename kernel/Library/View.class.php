@@ -78,7 +78,6 @@ class View{
 	public function fetch($templateFile='',$content=''){
 		if(empty($content)){
 			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
-			exit(var_export($res));
 			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
@@ -147,7 +146,7 @@ class View{
 
 				$cas=explode($depr, trim(str_replace($up_dir,$depr,$template),$depr));
 				$a=array_pop($cas);
-				
+
 				array_splice($dcs, -$up_count, $up_count, $cas);
 
 				$c=implode('/', $dcs);
