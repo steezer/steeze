@@ -117,6 +117,7 @@ class Controller{
 			$code=1;
 		}elseif(is_bool($code)){
 			$ajax=$code;
+			$code=1;
 		}
 		$this->dispatchJump($message, $code, $jumpUrl, $ajax);
 	}
@@ -206,10 +207,18 @@ class Controller{
 			$data=is_array($ajax) ? $ajax : array();
 			$data['message']=$message;
 			$data['code']=$code;
+			if(is_array($jumpUrl)){
+				$data['data']=$jumpUrl;
+				$jumpUrl='';
+			}
 			$data['url']=$jumpUrl;
 			make('\Library\Response')->end($data);
 		}else{
 			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
+			if(is_array($jumpUrl)){
+				$this->assign('data', $jumpUrl);
+				$jumpUrl='';
+			}
 			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
 			$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
 			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
