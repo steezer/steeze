@@ -239,6 +239,7 @@ abstract class Driver {
 		try{
 			$result=$this->PDOStatement->execute();
 		}catch(\PDOException $e){
+            $this->error();
 			if($e->getCode() == 'HY000' && stripos($e->getMessage(), 'MySQL server has gone away')){
 				$this->free();
 				$this->close();
