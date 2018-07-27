@@ -51,7 +51,7 @@ class Model implements ArrayAccess{
 	// 是否自动检测数据表字段信息
 	protected $autoCheckFields=true;
 	// 字段值是否去掉反斜杠
-	protected $stripSlashes=true;
+	protected $stripSlashes=false;
 	// 是否批处理验证
 	protected $patchValidate=false;
 	// 链操作方法列表
