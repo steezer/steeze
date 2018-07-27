@@ -47,8 +47,11 @@ class Model implements ArrayAccess{
 	protected $_auto=array(); // 自动完成定义
 	protected $_map=array(); // 字段映射定义
 	protected $_scope=array(); // 命名范围定义
-	                                         // 是否自动检测数据表字段信息
+	
+	// 是否自动检测数据表字段信息
 	protected $autoCheckFields=true;
+	// 字段值是否去掉反斜杠
+	protected $stripSlashes=true;
 	// 是否批处理验证
 	protected $patchValidate=false;
 	// 链操作方法列表
@@ -1152,7 +1155,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields)){
 					unset($data[$key]);
-				}elseif(MAGIC_QUOTES_GPC && is_string($val)){
+				}elseif($this->stripSlashes && MAGIC_QUOTES_GPC && is_string($val)){
 					$data[$key]=stripslashes($val);
 				}
 			}
