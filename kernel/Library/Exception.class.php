@@ -4,6 +4,10 @@ namespace Library;
  * ThinkPHP系统异常基类
  */
 class Exception extends \Exception {
+	
+	//默认错误代码
+	const DEFAULT_ERROR_CODE = -101;
+
 	/*
 	 * 错误报告
 	 * @param Exception $e
@@ -24,9 +28,10 @@ class Exception extends \Exception {
 	 * @return string|void
 	 */
 	static public function render($e,array $params=[],$isReturn=false){
+		$code=$e->getCode();
 		$error=[
 			'url'=>make('\Library\Request')->server('REQUEST_URI'),
-			'code'=>$e->getCode(),
+			'code'=>($code ? $code : self::DEFAULT_ERROR_CODE),
 			'message'=>$e->getMessage(),
 			'line'=> $e->getLine(),
 			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
