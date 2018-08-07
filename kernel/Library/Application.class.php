@@ -132,7 +132,7 @@ class Application{
 		$host=strtolower($this->request->header('host',(isset($server['server_name']) ? $server['server_name'] : DEFAULT_HOST)));
 		Loader::env('SITE_HOST',strpos($host, ':')!==false ? substr($host,0,strpos($host, ':')) : $host);
 		Loader::env('SITE_URL', $protocol . env('SITE_HOST') . ($protocol=='https://'?'' : $port)); // 网站首页地址
-		Loader::env('ROOT_URL', rtrim(dirname($entry),'/').'/'); //系统根目录路径
+		Loader::env('ROOT_URL', rtrim(str_replace('\\','/',dirname($entry)),'/').'/'); //系统根目录路径
 		!env('ASSETS_URL') && Loader::env('ASSETS_URL', env('ROOT_URL') . 'assets/'); //静态文件路径
 		!env('UPLOAD_URL') && Loader::env('UPLOAD_URL', env('ASSETS_URL') . 'ufs/'); //上传图片访问路径
 		!env('SYS_VENDOR_URL') && Loader::env('SYS_VENDOR_URL', env('ASSETS_URL') . 'assets/vendor/'); //外部资源扩展路径
