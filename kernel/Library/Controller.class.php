@@ -55,11 +55,13 @@ class Controller{
 	/**
 	 * 创建静态页面
 	 *
-	 * @access protected @htmlfile 生成的静态文件名称 @htmlpath 生成的静态文件路径，默认生成到系统根目录
+	 * @access protected 
+	 * @param string htmlfile 生成的静态文件名称 
+	 * @param string htmlpath 生成的静态文件路径，默认生成到系统根目录
 	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
 	 * @return string
 	 */
-	protected function buildHtml($htmlfile='',$htmlpath='',$templateFile=''){
+	protected function buildHtml($htmlfile,$htmlpath='',$templateFile=''){
 		$content=$this->fetch($templateFile);
 		$htmlpath=!empty($htmlpath) ? $htmlpath : ROOT_PATH;
 		$htmlfile=$htmlpath . $htmlfile . C('HTML_FILE_SUFFIX', '.html');
@@ -139,18 +141,23 @@ class Controller{
 	 * Ajax方式返回数据到客户端
 	 *
 	 * @access protected
-	 * @param mixed $data 要返回的数据
-	 * @param String $type AJAX返回数据格式
+	 * @param mixed $data 要返回的数据，默认返回模板变量
+	 * @param String $type AJAX返回数据格式，默认返回JSON格式
 	 * @param int $json_option 传递给json_encode的option参数
 	 * @return void
 	 */
-	protected function ajaxReturn($data,$type='',$json_option=null){
+	protected function ajaxReturn($data=null,$type='',$json_option=null){
 		if(empty($type)){
 			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
 		}
 		if(is_null($json_option)){
 			$json_option=defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0;
 		}
+		if(is_null($data)){
+			//使用模板变量
+			$data=$this->view()->get();
+		}
+
 		$response=make('\Library\Response');
 		switch(strtoupper($type)){
 			case 'JSON':
@@ -193,7 +200,8 @@ class Controller{
 	}
 
 	/**
-	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
+	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 
+	 * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
 	 *
 	 * @param string $message 提示信息
 	 * @param Boolean $code 状态
@@ -256,7 +264,8 @@ class Controller{
 	 * @param string|object $concrete 控制器对象或类型
 	 * @param string $method 方法名称
 	 * @param array $parameters 参数
-	 * @param array $isInCalled 是否在模板内部调用 return mixed 说明：增加对调用控制器类和方法的感知
+	 * @param array $isInCalled 是否在模板内部调用 
+	 * @return mixed 说明：增加对调用控制器类和方法的感知
 	 */
 	public static function run($concrete,$method,array $parameters=[],$isInCalled=false){
 		static $classStacks=[];

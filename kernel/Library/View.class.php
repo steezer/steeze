@@ -39,12 +39,19 @@ class View{
 	 * 取得模板变量的值
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $name 变量名称，默认获取所有模板变量
+	 * @param boolean $isClear 输出所有变量后，是否清理模板变量
 	 * @return mixed
 	 */
-	public function get($name=''){
+	public function get($name='',$isClear=true){
 		if('' === $name){
-			return $this->tVar;
+			if($isClear){
+				$result = $this->tVar;
+				$this->tVar = [];
+				return $result;
+			}else{
+				return $this->tVar;
+			}
 		}
 		return isset($this->tVar[$name]) ? $this->tVar[$name] : false;
 	}
