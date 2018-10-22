@@ -6,17 +6,23 @@
 *{ padding: 0; margin: 0; }
 html{ overflow-y: scroll; }
 body{ background: #fff; font-family: '微软雅黑'; color: #333; font-size: 16px; }
-img{ border: 0; }
 .error{ padding: 24px 48px; }
 .face{ font-size: 100px; font-weight: normal; line-height: 120px; margin-bottom: 12px; }
 h1{ font-size: 32px; line-height: 48px; }
 .error .content{ padding-top: 10px}
+<?php
+if(defined('APP_DEBUG') && APP_DEBUG){
+?>
 .error .info{ margin-bottom: 12px; }
 .error .info .title{ margin-bottom: 3px; }
 .error .info .title h3{ color: #000; font-weight: 700; font-size: 16px; }
 .error .info .text{ line-height: 24px; }
 .copyright{ padding: 12px 48px; color: #999; }
 .copyright a{ color: #000; text-decoration: none; }
+img{ border: 0; }
+<?php 
+}
+?>
 </style>
 </head>
 <body>
