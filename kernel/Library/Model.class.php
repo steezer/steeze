@@ -1645,7 +1645,7 @@ class Model implements ArrayAccess{
 				$tableName=$prefix.$this->tableName;
 			}else{
 				$table=parse_name($this->escapeTable($this->name,false));
-				$tableName=strpos($table,$prefix)===0 ? $table : $prefix.$table;
+				$tableName=$prefix==='' || strpos($table,$prefix)===0 ? $table : $prefix.$table;
 			}
 			$this->trueTableName=strtolower($tableName);
 		}
