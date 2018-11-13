@@ -28,14 +28,15 @@ class Response{
 	 * 设置HTTP响应的Header信息
 	 * @param string $key http头的键名
 	 * @param string $value http头的键值
+	 * @param bool   $hasSend 是否设置为已发送，默认为true
 	 * @return bool | void
 	 * 
 	 * 说明：header设置必须在end方法之前，键名必须完全符合Http的约定，
 	 * 		每个单词首字母大写，不得包含中文，下划线或者其他特殊字符
 	 * 		header设置必须在end方法之前
 	 */
-	public function header($key, $value){
-		$this->isHeaderSend=true;
+	public function header($key, $value, $hasSend=true){
+		$this->isHeaderSend=$hasSend;
 		return !is_null($this->response) ? 
 					$this->response->header($key,$value,true) : 
 					header($key.':'.$value);
