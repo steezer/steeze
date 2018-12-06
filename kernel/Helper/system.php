@@ -1171,8 +1171,8 @@ function F($name,$value='',$path=null){
  *
  * @param string $name 需要操作的表
  * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
- * @return object 数据库模型对象 
- * $conn参数为字符串类型时举例说明： 
+ * @return \Library\Model object 数据库模型对象 
+ * @example $conn参数为字符串类型时举例说明： 
  * 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置； 
  * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
  * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
