@@ -13,8 +13,6 @@ class Route{
 		self::$middlewares=[];
 		//设置路由请求对象
 		$this->request=$request;
-		//路由绑定
-		$this->bind();
 	}
 	
 	/*
@@ -44,25 +42,13 @@ class Route{
 
 	/*
 	 * 检查路由参数是否匹配
+     * 
+     * @param string $path 访问路径
+     * @param string $host 服务器名称
 	 */
-	private function bind(){
-		$is_cli=$this->request->getSapiName() == 'cli';
-		//获取URL
-		$urls=explode('?',(!$is_cli ? $this->request->server('REQUEST_URI') : (isset($GLOBALS['argv'][1])&&!empty($GLOBALS['argv'][1]) ? $GLOBALS['argv'][1]:'/')),2);
-		$url=array_shift($urls);
-		//获取主机
-		$host=$is_cli && isset($GLOBALS['argv'][2]) && !empty($GLOBALS['argv'][2]) ? $GLOBALS['argv'][2] : env('SITE_HOST');
-		
-		$entry=env('SYSTEM_ENTRY');
-		if(stripos($url, $entry)===0){
-			//将"/index.php/user/list"格式地址处理为"/user/list"
-			$url=substr($url, strlen($entry));
-		}
-		//规范url地址必须以"/"开头，以非"/"结尾
-		$url='/'.trim($url,'/');
-		
+	public function bind($path, $host){
 		//使用路径参数匹配
-		$handle=$this->matchHandle($url,$host);
+		$handle=$this->matchHandle($path,$host);
 		$route_m=$route_c=$route_a=null;
 		if(is_null($handle) || is_string($handle)){
 			//获取路由处理器，如：index/show@home
@@ -74,7 +60,7 @@ class Route{
 				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
 			//设置默认路由常量，同时使用传统路由方式匹配模式
-			if($url==env('ROOT_URL') || USE_DEFUALT_HANDLE){
+			if($path==env('ROOT_URL') || USE_DEFUALT_HANDLE){
 				!isset($route_c) && ($route_c=defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
 				!isset($route_a) && ($route_a=defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
 			}
@@ -100,11 +86,11 @@ class Route{
 
 	/*
 	 * 查找路由处理器
-	 * @param string $url URL地址
+	 * @param string $path URL地址
 	 * @param string $host 主机名称
 	 * @return string|null
 	 */
-	private function matchHandle($url,$host){
+	private function matchHandle($path,$host){
 		$configs=C('route.*',[]);
 		$default=isset($configs['default']) ? $configs['default'] : [];
 		unset($configs['default']);
@@ -123,13 +109,13 @@ class Route{
 				$method=strtoupper($arrs[0]);
 				if($method=='ANY' || $method==env('REQUEST_METHOD')){
 					foreach($value as $k=> $v){
-						if(!is_null($result=$this->getHandle($url,$k,$v))){
+						if(!is_null($result=$this->getHandle($path,$k,$v))){
 							!empty($arrs[1]) && self::setMiddleware(explode('&', $arrs[1]));
 							return $result;
 						}
 					}
 				}
-			}elseif(!is_null($result=$this->getHandle($url,$key,$value))){
+			}elseif(!is_null($result=$this->getHandle($path,$key,$value))){
 				return $result;
 			}
 		}
@@ -197,22 +183,22 @@ class Route{
 				
 				//如果在全局中未找到，则从路由配置目录中查找
 				if(empty($routes)){
-					$path=STORAGE_PATH.'Routes'.DS;
-					if(is_dir($path) && ($handle = opendir($path))){
+					$routeDir=STORAGE_PATH.'Routes'.DS;
+					if(is_dir($routeDir) && ($handle = opendir($routeDir))){
 						while (false !== ($file = readdir($handle))) {
-							if($file != '.' && $file != '..' && is_file($path.$file)){
+							if($file != '.' && $file != '..' && is_file($routeDir.$file)){
 								$domain=basename($file,'.php');
 								$cRoutes=explode('@',$domain);
 								$cDomain=array_shift($cRoutes);
 								if(
-										$host == $cDomain ||
-										(strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
-										){
-											$routes=include($path.$file);
-											if(!empty($cRoutes)){
-												$bindModule=array_shift($cRoutes);
-											}
-											break;
+                                    $host == $cDomain ||
+                                    (strpos($cDomain,'*.')===0 && $cDomain=='*'.strstr($host,'.'))
+								){
+                                    $routes=include($routeDir.$file);
+                                    if(!empty($cRoutes)){
+                                        $bindModule=array_shift($cRoutes);
+                                    }
+                                    break;
 								}
 							}
 						}
@@ -236,12 +222,12 @@ class Route{
 	
 	/*
 	 * 获取路由处理器
-	 * @param string $url URL参数
+	 * @param string $path URL路径
 	 * @param string $route 路由
 	 * @param string|function $handle 处理器 
 	 * @return string|null
 	 */
-	private function getHandle($url,$route,$handle){
+	private function getHandle($path,$route,$handle){
 		//请求方法匹配
 		$routes=explode(':', $route, 2);
 		$route=trim(array_pop($routes));
@@ -257,7 +243,7 @@ class Route{
 			}
 		}
 		$routeLen=substr_count($route, '/');
-		$urlLen=substr_count($url, '/');
+		$urlLen=substr_count($path, '/');
 		$optCount=substr_count($route, '?');
 		
 		//无参数或有参数的路径匹配
@@ -265,14 +251,14 @@ class Route{
 			($method=='ANY' || $method==env('REQUEST_METHOD')) && 
 			($routeLen==$urlLen || $urlLen + $optCount == $routeLen)
 		){
-			if(!strcasecmp($route, $url)){
+			if(!strcasecmp($route, $path)){
 				$this->setMiddleware($middlewares);
 				//如果url完全匹配（不区分大小写），直接返回
 				return $handle;
 			}else{
 				//否则进行变量类型查找
 				$kArrs=explode('/',$route);
-				$urlArrs=explode('/',$url);
+				$urlArrs=explode('/',$path);
 				
 				$isVar=is_string($handle) && strpos($handle, '}')!==false;
 				$mCount=count($kArrs);

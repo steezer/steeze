@@ -2,8 +2,10 @@
 namespace Library;
 
 class Request{
-	private $route=null;
-	private $request=null;
+	private $route=null; //路由对象
+	private $request=null; //外部Request对象
+    
+    private $headers=null; //Header信息
 	
 	public function __construct(){
 		
@@ -95,26 +97,40 @@ class Request{
 	 * @param Request $request 外部响应对象
 	 */
 	public function setRequest($request){
+        $this->headers=null;
 		if(!empty($request) && is_a($request,'Swoole\\Http\\Request')){
 			$this->request=$request;
-			$_GET=$request->get;
-			$_POST=$request->post;
-		}
+			$_GET=&$request->get;
+			$_POST=&$request->post;
+            $_FILES=&$request->files;
+            $_SERVER=array_change_key_case($request->server, CASE_LOWER);
+            $_COOKIE=&$request->cookie;
+		}else if(PHP_SAPI=='cli'){
+            $_GET=$_POST=$_FILES=$_COOKIE=[];
+            $_SERVER=array_change_key_case($_SERVER, CASE_LOWER);
+        }else{
+            $_SERVER=array_change_key_case($_SERVER, CASE_LOWER);
+        }
 	}
 	
 	/**
 	 * 获取Http请求的头部信息（键名为小写）
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string|null|array $key 需要获取的键名，如果为null获取所有，如果为数组则重置请求头部
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function header($key=null,$default=null){
-		$headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders());
-		if(!is_null($key)){
+	public function &header($key=null,$default=null){
+        if(is_null($this->headers)){
+            $this->headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders());
+        }
+        if(!is_null($key)){
 			$key=strtolower($key);
-			return isset($headers[$key]) ? $headers[$key] : $default;
+            if(isset($this->headers[$key])){
+                return $this->headers[$key];
+            }
+			$default;
 		}
-		return $headers;
+		return $this->headers;
 	}
 	
 	/**
@@ -123,13 +139,15 @@ class Request{
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function server($key=null,$default=null){
-		$servers=array_change_key_case(!is_null($this->request) ? $this->request->server : $_SERVER,CASE_LOWER);
-		if(!is_null($key)){
+	public function &server($key=null,$default=null){
+        if(!is_null($key)){
 			$key=strtolower($key);
-			return isset($servers[$key]) ? $servers[$key] : $default;
+            if(isset($_SERVER[$key])){
+                return $_SERVER[$key];
+            }
+			return $default;
 		}
-		return $servers;
+		return $_SERVER;
 	}
 	
 	/**
@@ -138,13 +156,14 @@ class Request{
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function get($key=null,$default=null){
-		if(!is_null($this->request)){
-			$gets=&$this->request->get;
-		}else{
-			$gets=&$_GET;
-		}
-		return !is_null($key) ? (isset($gets[$key]) ? $gets[$key] : $default) : $gets;
+	public function &get($key=null,$default=null){
+		if(!is_null($key)){
+            if(isset($_GET[$key])){
+                return $_GET[$key];
+            }
+            return $default;
+        }
+		return $_GET;
 	}
 	
 	/**
@@ -153,13 +172,14 @@ class Request{
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array
 	 */
-	public function post($key=null,$default=null){
-		if(!is_null($this->request)){
-			$posts=&$this->request->post;
-		}else{
-			$posts=&$_POST;
-		}
-		return !is_null($key) ? (isset($posts[$key]) ? $posts[$key] : $default) : $posts;
+	public function &post($key=null,$default=null){
+        if(!is_null($key)){
+            if(isset($_POST[$key])){
+                return $_POST[$key];
+            }
+            return $default;
+        }
+		return $_POST;
 	}
 	
 	/**
@@ -168,13 +188,14 @@ class Request{
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array
 	 */
-	public function cookie($key=null,$default=null){
-		if(!is_null($this->request)){
-			$cookies=&$this->request->cookie;
-		}else{
-			$cookies=&$_COOKIE;
-		}
-		return !is_null($key) ? (isset($cookies[$key]) ? $cookies[$key] : $default) : $cookies;
+	public function &cookie($key=null,$default=null){
+        if(!is_null($key)){
+            if(isset($_COOKIE[$key])){
+                return $_COOKIE[$key];
+            }
+            return $default;
+        }
+		return $_COOKIE;
 	}
 	
 	/**
@@ -182,13 +203,11 @@ class Request{
 	 * @param string $key 需要获取的键名，如果为null获取所有
 	 * @return array
 	 */
-	public function files($key=null){
-		if(!is_null($this->request)){
-			$files=&$this->request->files;
-		}else{
-			$files=&$_FILES;
-		}
-		return !is_null($key) ? $files[$key] : $files;
+	public function &files($key=null){
+        if(!is_null($key)){
+            return $_FILES[$key];
+        }
+		return  $_FILES;
 	}
 	
 	/**
@@ -197,7 +216,9 @@ class Request{
 	 * 说明：用于非application/x-www-form-urlencoded格式的Http POST请求
 	 * */
 	public function rawContent(){
-		return !is_null($this->request)  ? $this->request->rawContent() : file_get_contents('php://input');
+		return !is_null($this->request)  ? 
+                $this->request->rawContent() : 
+                file_get_contents('php://input');
 	}
 	
 	/**
