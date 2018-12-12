@@ -169,7 +169,8 @@ class Controller{
 				// 返回JSON数据格式到客户端 包含状态信息
 				$response->header('Content-Type','text/html; charset=utf-8');
 				$var_hdl=C('VAR_JSONP_HANDLER', 'callback');
-				$handler=isset($_GET[$var_hdl]) ? $_GET[$var_hdl] : C('DEFAULT_JSONP_HANDLER', 'jsonpReturn');
+				$request=make('\Library\Request');
+				$handler=$request->get($var_hdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
 				$response->end($handler . '(' . json_encode($data, $json_option) . ');');
 				break;
 			case 'EVAL':
