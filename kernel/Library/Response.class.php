@@ -127,7 +127,7 @@ class Response{
 			if($isAsyn){
 				function_exists('fastcgi_finish_request') &&
 					fastcgi_finish_request();
-			}else{
+			}else if(env('PHP_SAPI')!='cli'){
 				exit(0);
 			}
 		}
