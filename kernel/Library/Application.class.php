@@ -107,7 +107,6 @@ class Application{
     private function init($config){
         //保存配置
         $this->config=$config;
-        $this->isInit=true;
         
         $server=&$this->request->server();
         $header=&$this->request->header();
@@ -125,6 +124,9 @@ class Application{
 
 		//系统配置
 		$this->appConfig($server, $header);
+        
+        //设置初始化状态
+        $this->isInit=true;
     }
     
     /**
