@@ -128,7 +128,7 @@ class Request{
             if(isset($this->headers[$key])){
                 return $this->headers[$key];
             }
-			$default;
+			return $default;
 		}
 		return $this->headers;
 	}

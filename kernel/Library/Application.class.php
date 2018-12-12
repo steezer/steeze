@@ -143,7 +143,7 @@ class Application{
             is_array($config['header']) && 
             !empty($config['header'])
         ){
-            $header=array_merge($header, $config['header']);
+            $header=array_merge($header, array_change_key_case($config['header'], CASE_LOWER));
         }
         
         $server['php_sapi']=$this->request->getSapiName();
@@ -205,7 +205,7 @@ class Application{
             if(isset($argvs[3])){
                 parse_str($argvs[3], $headers);
                 if(!empty($headers)){
-                    $header=array_merge($header, $headers);
+                    $header=array_merge($header, array_change_key_case($headers, CASE_LOWER));
                 }
             }
             
