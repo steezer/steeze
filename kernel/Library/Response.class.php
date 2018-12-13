@@ -163,10 +163,17 @@ class Response{
 	 * @return string
 	 */
 	public static function toString($data){
-		if(is_object($data) && is_a($data,'\Library\Model')){
-			return json_encode($data->data(),JSON_UNESCAPED_UNICODE);
+        $isModel=is_object($data) && is_a($data,'\Library\Model');
+		if($isModel || is_array($data) || is_object($data)){
+            //命令行模式下输出格式化的JSON
+            $option=env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
+                        (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            return json_encode(
+                    $isModel ? $data->data() : $data,
+                    $option
+                );
 		}
-		return is_array($data) || is_object($data) ? json_encode($data,JSON_UNESCAPED_UNICODE) : $data;
+		return $data;
 	}
 	
 }
