@@ -157,30 +157,24 @@ class Controller{
 			//使用模板变量
 			$data=$this->view()->get();
 		}
-
-		$response=make('\Library\Response');
 		switch(strtoupper($type)){
 			case 'JSON':
 				// 返回JSON数据格式到客户端 包含状态信息
-				$response->header('Content-Type','text/html; charset=utf-8');
-				$response->end(json_encode($data, $json_option));
+				View::render(json_encode($data, $json_option));
 				break;
 			case 'JSONP':
 				// 返回JSON数据格式到客户端 包含状态信息
-				$response->header('Content-Type','text/html; charset=utf-8');
-				$var_hdl=C('VAR_JSONP_HANDLER', 'callback');
+				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
 				$request=make('\Library\Request');
-				$handler=$request->get($var_hdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
-				$response->end($handler . '(' . json_encode($data, $json_option) . ');');
+				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
+				View::render($handler . '(' . json_encode($data, $json_option) . ');');
 				break;
 			case 'EVAL':
 				// 返回可执行的js脚本
-				$response->header('Content-Type','text/javascript; charset=utf-8');
-				$response->end($data);
+				View::render($data,'utf-8','text/javascript');
 				break;
 			default:
-				$response->header('Content-Type','text/html; charset=utf-8');
-				$response->end(var_export($data, true));
+				View::render(var_export($data, true));
 				break;
 		}
 	}
@@ -221,7 +215,7 @@ class Controller{
 				$jumpUrl='';
 			}
 			$data['url']=$jumpUrl;
-			make('\Library\Response')->end($data);
+			View::render($data);
 		}else{
 			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
 			if(is_array($jumpUrl)){

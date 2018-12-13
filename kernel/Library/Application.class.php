@@ -30,6 +30,9 @@ class Application{
      *  ]
 	 */
 	public function start($config=array()){
+        //恢复输出
+        $this->response->setIsEnd(false);
+        
         //初始化系统
         (!$this->isInit || $config!=$this->config) &&
             $this->init($config);

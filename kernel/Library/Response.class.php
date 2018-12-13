@@ -2,9 +2,10 @@
 namespace Library;
 
 class Response{
-	private $response=null;
-	private $isHeaderSend=false;
-	
+	private $response=null; //外部Response对象
+	private $isHeaderSend=false; //是否已经发送头部信息
+	private $isEnd=false; //是否已经结束发送
+    
 	/**
 	 * 设置外部响应对象
 	 * @param Response $response 外部响应对象
@@ -14,7 +15,18 @@ class Response{
 		if(!empty($response) && is_a($response,'Swoole\\Http\\Response')){
 			$this->response=$response;
 		}
+        $this->isHeaderSend=false;
+        $this->setIsEnd(false);
 	}
+    
+    /**
+     * 设置是否请求结束
+     *
+     * @param boolean $status 是否请求结束，默认：true
+     */
+    public function setIsEnd($status=true){
+        $this->isEnd=$status;
+    }
 	
 	/**
 	 * 判断是否成功发送请求头部信息
@@ -36,10 +48,12 @@ class Response{
 	 * 		header设置必须在end方法之前
 	 */
 	public function header($key, $value, $hasSend=true){
-		$this->isHeaderSend=$hasSend;
-		return !is_null($this->response) ? 
-					$this->response->header($key,$value,true) : 
-					header($key.':'.$value);
+        if( !$this->isEnd ){
+            $this->isHeaderSend=$hasSend;
+            return !is_null($this->response) ? 
+                        $this->response->header($key,$value,true) : 
+                        header($key.':'.$value);
+        }
 	}
 	
 	/**
@@ -49,9 +63,11 @@ class Response{
 	 * 说明： cookie设置必须在end方法之前
 	 */
 	public function cookie($key, $value = '', $expire = 0 , $path = '/', $domain  = '', $secure = 0 , $httponly = 0){
-		return !is_null($this->response) ?
-					$this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly) :
-					setcookie($key,$value,$expire,$path,$domain,$secure,$httponly);
+		if( !$this->isEnd ){
+            return !is_null($this->response) ?
+                        $this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly) :
+                        setcookie($key,$value,$expire,$path,$domain,$secure,$httponly);
+        }
 	}
 	
 	/**
@@ -62,9 +78,11 @@ class Response{
 	 * 		必须在$response->end之前执行status
 	 */
 	public function status($code){
-		return !is_null($this->response) ?
-			$this->response->status($code) :
-			http_response_code($code);
+        if( !$this->isEnd ){
+            return !is_null($this->response) ?
+                $this->response->status($code) :
+                http_response_code($code);
+        }
 	}
 	
 	/**
@@ -85,11 +103,13 @@ class Response{
 	 * 
 	 */
 	public function write($data,$isConsole=0){
-		if(!$isConsole && !is_null($this->response)){
-			$this->response->write(self::toString($data));
-		}else{
-			echo self::toString($data);
-		}
+        if( !$this->isEnd ){
+            if(!$isConsole && !is_null($this->response)){
+                $this->response->write(self::toString($data));
+            }else{
+                echo self::toString($data);
+            }
+        }
 	}
 	
 	/**
@@ -101,14 +121,16 @@ class Response{
 	 * 说明：调用sendfile前不得使用write方法发送Http-Chunk
 	 */
 	public function sendfile($filename, $offset = 0, $length = 0){
-		$ext=fileext($filename);
-		$mimetype=C('mimetype.'.$ext,'application/octet-stream');
-		$this->header('Content-Type', $mimetype);
-		if(!is_null($this->response)){
-			$this->response->sendfile($filename, $offset,$length);
-		}else{
-			readfile($filename);
-		}
+        if( !$this->isEnd ){
+            $ext=fileext($filename);
+            $mimetype=C('mimetype.'.$ext,'application/octet-stream');
+            $this->header('Content-Type', $mimetype);
+            if(!is_null($this->response)){
+                $this->response->sendfile($filename, $offset,$length);
+            }else{
+                readfile($filename);
+            }
+        }
 	}
 	
 	/**
@@ -119,18 +141,20 @@ class Response{
 	 * 说明：只能调用一次，如果需要分多次向客户端发送数据，请使用write方法
 	 */
 	public function end($data=null,$isAsyn=0){
-		!is_null($data) && $this->write($data);
-		if(!is_null($this->response)){
-			$this->response->end();
-			$this->isHeaderSend=false;
-		}else{
-			if($isAsyn){
-				function_exists('fastcgi_finish_request') &&
-					fastcgi_finish_request();
-			}else if(env('PHP_SAPI')!='cli'){
-				exit(0);
-			}
-		}
+        if( !$this->isEnd ){
+            $this->setIsEnd(true);
+            !is_null($data) && $this->write($data);
+            if(!is_null($this->response)){
+                $this->response->end();
+            }else{
+                if($isAsyn){
+                    function_exists('fastcgi_finish_request') &&
+                        fastcgi_finish_request();
+                }else if(env('PHP_SAPI')!='cli'){
+                    exit(0);
+                }
+            }
+        }
 	}
 	
 	/**
