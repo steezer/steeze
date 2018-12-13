@@ -121,7 +121,7 @@ class Request{
 	 */
 	public function &header($key=null,$default=null){
         if(is_null($this->headers)){
-            $this->headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders());
+            $this->headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders(), CASE_LOWER);
         }
         if(!is_null($key)){
 			$key=strtolower($key);
@@ -251,21 +251,21 @@ class Request{
 	private function getAllHeaders(){
 		$headers=array();
 		foreach($_SERVER as $key=>$value){
-			if('HTTP_' == substr($key, 0, 5)){
+			if('http_' == substr($key, 0, 5)){
 				$headers[str_replace('_', '-', substr($key, 5))]=$value;
 			}
 		}
-		if(isset($_SERVER['PHP_AUTH_DIGEST'])){
-			$headers['AUTHORIZATION'] = $_SERVER['PHP_AUTH_DIGEST'];
-		}else if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
-			$headers['AUTHORIZATION'] = base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . $_SERVER['PHP_AUTH_PW']);
+		if(isset($_SERVER['php_auth_digest'])){
+			$headers['authorization'] = $_SERVER['php_auth_digest'];
+		}else if(isset($_SERVER['php_auth_user']) && isset($_SERVER['php_auth_pw'])){
+			$headers['authorization'] = base64_encode($_SERVER['php_auth_user'] . ':' . $_SERVER['php_auth_pw']);
 		}
 		
-		if(isset($_SERVER['CONTENT_LENGTH'])){
-			$headers['CONTENT-LENGTH']=$_SERVER['CONTENT_LENGTH'];
+		if(isset($_SERVER['content_length'])){
+			$headers['content-length']=$_SERVER['content_length'];
 		}
-		if(isset($_SERVER['CONTENT_TYPE'])){
-			$headers['CONTENT-TYPE']=$_SERVER['CONTENT_TYPE'];
+		if(isset($_SERVER['content_type'])){
+			$headers['content-type']=$_SERVER['content_type'];
 		}
 		return $headers;
 	}
