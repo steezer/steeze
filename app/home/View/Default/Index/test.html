@@ -1,19 +1,48 @@
 <layout name="Layout/base"/>
 <assign name="title" value="/Index/test" />
+<slice name="header">
+    <style type="text/css">
+        
+        .page{
+            width: 100%;
+        }
+        .page li{
+            list-style: none;
+            display: inline;
+        }
+        .page li a, .page li span{
+            display: inline-block; 
+            margin-left: 5px; 
+            height: 20px;
+            padding: 0 10px;
+	        border: 1px solid #d1cccc; 
+            line-height: 20px; 
+            text-align: center;
+        }
+        .page .disabled span{
+            color: #999; cursor: default;
+        }
+        table td{
+            padding: 5px 10px;
+        }
+    </style>
+</slice>
 <slice name="body">
 	<div style="text-align:left;padding:30px 40px;">
-		<st:get table="news" field="id,title" return="newses" order="id asc" page="$page">
+		<st:get table="user" field="id,name" num="3" return="users" order="id asc" page="$page">
 			<table cellpadding="0" cellspacing="0">
-				<foreach name="newses" item="item">
-					<tr><td>{$item.id}</td><td>{$item.title}</td></tr>
+				<foreach name="users" item="item">
+					<tr><td>{$item.id}</td><td>{$item.name}</td></tr>
 				</foreach>
 			</table>
 		</st:get>
-		<st:json name="show"/>
-		<p>{$pages}</p>
-		<p>{$user.id}:{$user.username}</p>
-		调用标签方法：<action name="Member/Index/info" user="4"/>
-		<p>{ROOT_URL}</p>
-		<p><a href="{U('/index/index',$_GET)}">{$user.id}:{$user.username}</a></p>
+		<ul class="page"> {$pages.html} </ul>
+        <hr/>
+		<p>路由参数注入的数据模型=》 ID：{$user.id}, name：{$user.name}</p>
+		调用分组控制器的标签方法：<action name="Member/Index/info" user="4"/>
+		<p>
+            <a href="{ROOT_URL}">首页</a> / <a href="/member/index/hello">会员中心</a>
+        </p>
 	</div>
 </slice>
+

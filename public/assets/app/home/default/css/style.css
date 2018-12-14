@@ -4,7 +4,6 @@ body {
 
 body, td, div {
 	font-size: 12px; line-height: 1.5em; color: #666;
-	font-family: 微软雅黑, song, arial, verdana;
 }
 
 ul, li, form, h1, h2, h3, h4 {
@@ -15,16 +14,9 @@ img {
 	border: 0
 }
 
-h2 {
-	font: bold 16px 微软雅黑, song, verdana;
-}
 
 h3 {
 	font-size: 14px; margin: 10px 0;
-}
-
-li {
-	list-style: none
 }
 
 a:link, a:visited {
@@ -50,38 +42,4 @@ a.green:hover {
 .over-hide {
 	overflow: hidden; white-space: nowrap; -o-text-overflow: ellipsis;
 	text-overflow: ellipsis;
-}
-
-/*分页系列样式*/
-.page_info, .page_pre, .page_cur, .page_no, .page_next, .page_dot {
-	display: inline-block; margin-left: 3px; height: 20px; padding: 0 2px;
-	border: 1px solid #d1cccc; line-height: 20px; text-align: center;
-}
-
-.page_info {
-	min-width: 80px; border: none;
-}
-
-.page_pre {
-	width: 40px;
-}
-
-.page_cur {
-	min-width: 25px; color: #fff; background: #949392
-}
-
-.page_no {
-	min-width: 25px;
-}
-
-.page_next {
-	width: 40px;
-}
-
-.page_none {
-	color: #999; cursor: default;
-}
-
-.page_dot {
-	border: none;
 }

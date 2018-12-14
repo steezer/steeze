@@ -205,31 +205,28 @@ class Controller{
 	 * @access protected
 	 * @param mixed $data 要返回的数据，默认返回模板变量
 	 * @param String $type AJAX返回数据格式，默认返回JSON格式
-	 * @param int $json_option 传递给json_encode的option参数
+	 * @param int $option 传递给json_encode的option参数
 	 * @return void
 	 */
-	protected function ajaxReturn($data=null,$type='',$json_option=null){
+	protected function ajaxReturn($data=null,$type='',$option=null){
 		if(empty($type)){
 			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
 		}
-		if(is_null($json_option)){
-			$json_option=defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0;
-		}
 		if(is_null($data)){
-			//使用模板变量
-			$data=$this->view()->get();
+			$data=$this->view()->get(); //使用模板变量
 		}
 		switch(strtoupper($type)){
 			case 'JSON':
 				// 返回JSON数据格式到客户端 包含状态信息
-				View::render(json_encode($data, $json_option));
+                exit(Response::toString($data, $option));
+				View::render(Response::toString($data, $option));
 				break;
 			case 'JSONP':
 				// 返回JSON数据格式到客户端 包含状态信息
 				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
 				$request=make('\Library\Request');
 				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
-				View::render($handler . '(' . json_encode($data, $json_option) . ');');
+				View::render($handler . '(' . Response::toString($data, $option) . ');');
 				break;
 			case 'EVAL':
 				// 返回可执行的js脚本

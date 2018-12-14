@@ -216,9 +216,12 @@ class Request{
 	 * 说明：用于非application/x-www-form-urlencoded格式的Http POST请求
 	 * */
 	public function rawContent(){
-		return !is_null($this->request)  ? 
-                $this->request->rawContent() : 
-                file_get_contents('php://input');
+        return !is_null($this->request)  ?   
+                    $this->request->rawContent() : 
+                    (PHP_SAPI=='cli' ? 
+                        $GLOBALS['HTTP_RAW_POST_DATA'] : 
+                        file_get_contents('php://input')
+                    );
 	}
 	
 	/**

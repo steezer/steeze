@@ -1637,21 +1637,30 @@ class Model implements ArrayAccess{
 	/**
 	 * 得到完整的数据表名
 	 * 
+     * @param bool $isTrue 是否获取真实表名，默认为true（真实表名为包括数据库和前缀）
 	 * @access public
 	 * @return string
 	 */
 	public function getTableName($isTrue=true){
 		if(empty($this->trueTableName)){
-			$prefix=$isTrue && !empty($this->tablePrefix) ? $this->tablePrefix : '';
+            $prefix=$this->tablePrefix;
 			if(!empty($this->tableName)){
-				$tableName=$prefix.$this->tableName;
+				$table=$this->tableName;
 			}else{
-				$table=parse_name($this->escapeTable($this->name,false));
-				$tableName=$prefix==='' || strpos($table,$prefix)===0 ? $table : $prefix.$table;
+				$name=parse_name($this->escapeTable($this->name,false));
+				$table=$prefix!=='' && strpos($name,$prefix)===0 ? substr($name, strlen($prefix)) : $name;
 			}
-			$this->trueTableName=strtolower($tableName);
+            $tableName=strtolower($prefix.$table); //不带数据库前缀的表名
+            $this->trueTableName=!empty($this->dbName) ? $this->dbName . '.' . $tableName : $tableName;
+            return $isTrue ? $this->trueTableName : $table;
 		}
-		return ($isTrue && !empty($this->dbName) ? $this->dbName . '.' : '') . $this->trueTableName;
+        if(!$isTrue){
+            //不带数据库前缀的表名
+            $tableName=!empty($this->dbName) && strpos($this->trueTableName, $this->dbName.'.')===0 ? 
+                    substr($this->trueTableName,strlen($this->dbName)+1) : $this->trueTableName;
+            return $this->tablePrefix==='' ? $tableName : substr($tableName, strlen($this->tablePrefix));
+        }
+        return $this->trueTableName;
 	}
 
 	/**

@@ -141,6 +141,7 @@ class Application{
      * @return void
      */
     private function initSysEnv(&$server, &$header, $config){
+        //设置配置Header
         if(
             isset($config['header']) && 
             is_array($config['header']) && 
@@ -149,6 +150,16 @@ class Application{
             $header=array_merge($header, array_change_key_case($config['header'], CASE_LOWER));
         }
         
+        //设置配置POST信息
+        if(isset($config['data'])){
+            if(is_array($config['data'])){
+                $_POST=array_merge($_POST, $config['data']);
+            }else{
+                $GLOBALS['HTTP_RAW_POST_DATA']=strval($config['data']);
+            }
+        }
+        
+        //系统运行模式及入口
         $server['php_sapi']=$this->request->getSapiName();
         $server['system_entry']='/'.(
                                 isset($server['script_name']) ? 
@@ -159,8 +170,10 @@ class Application{
                                     ),'/')
                                     : 'index.php'
                             );
-        $host=isset($header['host']) ? $header['host'] : DEFAULT_HOST;
+        $host = isset($server['server_name']) ? $server['server_name'] : '';
         $path = '/';
+        
+        //命令行运行模式下的配置
         if($this->request->getSapiName() == 'cli'){
             //解析命令行路由参数，
             //例如：$ php index.php https://api.steeze.cn/test/api?id=23 name=23&year=23
@@ -199,9 +212,21 @@ class Application{
             
             //从第2个命令行参数设置POST参数
             if(isset($argvs[2])){
-                parse_str($argvs[2], $posts);
-                $_POST=array_merge($_POST, $posts);
                 $server['request_method']='POST';
+                if(
+                    strpos($argvs[2],'=')===false && 
+                    strpos($argvs[2],'&')===false
+                ){
+                    $GLOBALS['HTTP_RAW_POST_DATA']=$argvs[2];
+                }else{
+                    parse_str($argvs[2], $posts);
+                    if(count($posts)==1 && array_pop($posts)===''){
+                        unset($posts);
+                        $GLOBALS['HTTP_RAW_POST_DATA']=$argvs[2];
+                    }else{
+                        $_POST=array_merge($_POST, $posts);
+                    }
+                }
             }
             
             //从第3个命令行参数获取Header信息
@@ -221,16 +246,14 @@ class Application{
         }else{
             $paths=explode('?',$this->request->server('REQUEST_URI'),2);
             $path=array_shift($paths);
-            if(isset($server['server_name']) && !empty($server['server_name'])){
-                $host=$server['server_name'];
-            }
-            if(strpos($host, ':')!==false){
-                $host=substr($host,0,strpos($host, ':'));
+            if(!empty($header['host'])){
+                $host=strpos($header['host'], ':')===false ? $header['host'] :
+                        substr($header['host'],0,strpos($header['host'], ':')) ;
             }
         }
         
         //客户端请求主机名称（域名）
-        $server['server_host']=$host;
+        $server['server_host']=$host!='' ? $host : DEFAULT_HOST;
         
         //例如：将"/index.php/user/list"格式地址处理为"/user/list"
 		if(stripos($path, $server['system_entry'])===0){

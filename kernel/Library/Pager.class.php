@@ -20,6 +20,28 @@ class Pager{
 		'none'=>'没有记录信息！',
 		'only'=>'共[total]条记录',
 	];
+    
+	/**
+	 * 获取列表分页
+	 * @param array $config 分页信息参数配置
+	 * @param number $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param $array $array 附加的参数（可选）
+	 * @return string 分页字符串
+	 * 分页信息参数范例：
+	 * 		[
+     *          'total'=> $totalrows,  //记录总数
+     *          'page'=> $currentpage,  //当前页数
+	 * 			'type'=>'page',  //分页参数（可选），默认:page
+	 * 			'size'=> $pagesize,  //每页大小（可选），默认：15
+	 * 			'url'=> $curl, //分页URL（可选），默认：当前页URL
+	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
+	 * 		]
+	 */
+    public static function get($config,$setPages=10,$urlRule='',$array=array()){
+        $pager=make('\Library\pager');
+        return $pager->getListPager($config, $setPages, $urlRule, $array);
+    }
 
 	/**
 	 * 设置分页配置
@@ -36,22 +58,22 @@ class Pager{
 	
 	/**
 	 * 获取列表分页
-	 * @param array $config 分页信息数组
-	 * @param number $setPages 显示页数
-	 * @param string $urlRule 包含变量的URL规则模板参数
-	 * @param $array $array 字符变量数组
+	 * @param array $config 分页信息参数配置
+	 * @param number $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param $array $array 附加的参数（可选）
 	 * @return string 分页字符串
 	 * 分页信息参数范例：
-	 * 		array(
-	 * 			'type'=>'page',  //分页参数
-	 * 			'total'=> $totalrows,  //记录总数
-	 * 			'page'=> $currentpage,  //当前页数
-	 * 			'size'=> $pagesize,  //每页大小
-	 * 			'url'=> $curl, //分页url
-	 * 			'callback'=>'showPage(\'?\')' //js回调函数
-	 * 		)
+	 * 		[
+     *          'total'=> $totalrows,  //记录总数
+     *          'page'=> $currentpage,  //当前页数
+	 * 			'type'=>'page',  //分页参数（可选），默认:page
+	 * 			'size'=> $pagesize,  //每页大小（可选），默认：15
+	 * 			'url'=> $curl, //分页URL（可选），默认：当前页URL
+	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
+	 * 		]
 	 */
-	function getListPager($config,$setPages=10,$urlRule='',$array=array()){
+	function getListPager($config, $setPages=10, $urlRule='', $array=array()){
 		$defaults=['type' => 'page','size' => 15,'count'=>1,'url' => $this->getUrl(1)];
 		$addUrl='';
 		$configs=array_merge($defaults, $config);
@@ -59,7 +81,7 @@ class Pager{
 		if(isset($GLOBALS['URL_RULE']) && $urlRule == ''){
 			$urlRule=$GLOBALS['URL_RULE'];
 			$array=$GLOBALS['URL_ARRAY'];
-		}elseif($urlRule == ''){
+		}else if($urlRule == ''){
 			$urlRule=$this->urlParam($configs['type'] . '={$page}', $configs['url'], $configs['type']);
 		}
 		unset($config);

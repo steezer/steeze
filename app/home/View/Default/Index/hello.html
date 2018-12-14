@@ -2,19 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Member/Index/hello</title>
+<title>/Index/hello</title>
 </head>
 <body>
- <import file="index.css?version=1.0" type="css"/>
- <import file="http://demo.steeze.cn/assets/a.jpg" style="border:none" />
- <import file="index.css,user.css,index.js" base="common/lib"/>
+ <import file="index.css?version=1.0" check="true" type="css"/>
+ <import file="http://steeze.cn/img/logonav.png" style="border:none;width:40px" />
+ <import file="user.css,index.js" check="true" base="common/lib"/>
+
 {++$year}
-<for start="1" end="100" step="1" name="index" comparison="elt">
+<br/>
+<p>
+基本循环输出：
+<for start="1" end="10" step="1" name="index" comparison="elt">
 	{$index}
 </for>
-<p>{$name|md5}:{($year+23)}</p>
-<p>{substr(strtoupper(md5($name)),0,3)}</p>
-<p>{($company.name.s + 12)}</p>
-index.hello: <action name="Index/show" user="4"/>
+</p>
+<p>
+变量输出
+{$name|md5}:{($year+23)}<br/>
+{substr(strtoupper(md5($name)),0,3)}<br/>
+{($company.name.s + 12)}<br/>
+</p>
+
+调用标签方法：<br/>
+Index.show: <action name="Index/show" user="4"/>
+路由参数与数据表绑定：<br/>
+<a href="/index/test/3">View user id:3</a>
 </body>
 </html>

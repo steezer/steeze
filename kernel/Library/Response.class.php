@@ -160,17 +160,18 @@ class Response{
 	/**
 	 * 输出内容格式化
 	 * @param mixed $data 数据
+     * @param mixed $option 转换选项
 	 * @return string
 	 */
-	public static function toString($data){
+	public static function toString($data, $option=null){
         $isModel=is_object($data) && is_a($data,'\Library\Model');
 		if($isModel || is_array($data) || is_object($data)){
             //命令行模式下输出格式化的JSON
-            $option=env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
-                        (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            $jsonOption=is_null($option) ? (env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
+                        (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)) : $option;
             return json_encode(
                     $isModel ? $data->data() : $data,
-                    $option
+                    $jsonOption
                 );
 		}
 		return $data;
