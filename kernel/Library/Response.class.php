@@ -142,7 +142,6 @@ class Response{
 	 */
 	public function end($data=null,$isAsyn=0){
         if( !$this->isEnd ){
-            $this->setIsEnd(true);
             !is_null($data) && $this->write($data);
             if(!is_null($this->response)){
                 $this->response->end();
@@ -154,6 +153,7 @@ class Response{
                     exit(0);
                 }
             }
+            $this->setIsEnd(true);
         }
 	}
 	
