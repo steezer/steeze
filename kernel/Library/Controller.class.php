@@ -99,18 +99,19 @@ class Controller{
 	 * 操作错误跳转的快捷方法
 	 *
 	 * @access protected
-	 * @param string $message 错误信息
-	 * @param int|string|bool $code 错误码
+	 * @param null|string $message 错误信息
+	 * @param int|string|bool $code 错误码，默认为1
 	 * @param string|bool|int $jumpUrl 页面跳转地址
 	 * @param bool|int $ajax 是否为Ajax方式 当数字时指定跳转时间
 	 * @return void
 	 * 调用方式：
-	 * 1. error($message,$code,$jumpUrl,ajax)
-	 * 2. error($message,$jumpUrl,ajax)
-	 * 3. error($message,ajax)
+	 * 1. error($message,$code,$jumpUrl,$ajax)
+	 * 2. error($message,$code,$jumpUrl)
+	 * 3. error($message,$code)
 	 * 4. error($message)
+     * 5. error()
 	 */
-	protected function error($message='',$code=1,$jumpUrl='',$ajax=false){
+	protected function error($message=null,$code=1,$jumpUrl='',$ajax=false){
 		if(is_string($code)){
 			if(is_bool($jumpUrl) || is_int($jumpUrl)){
 				$ajax=$jumpUrl;
@@ -121,6 +122,9 @@ class Controller{
 			$ajax=$code;
 			$code=1;
 		}
+        if(is_null($message)){
+            $message=L('error');
+        }
 		$this->dispatchJump($message, $code, $jumpUrl, $ajax);
 	}
 
@@ -128,13 +132,71 @@ class Controller{
 	 * 操作成功跳转的快捷方法
 	 *
 	 * @access protected
+	 * @param null|string|array $message 提示信息，如果为数组则设置到返回data字段里面
+	 * @param string|array $jumpUrl 页面跳转地址，如果为数组则设置到返回data字段里面
+	 * @param int|bool $ajax 是否为Ajax方式 当数字时指定跳转时间
+	 * @return void
+     * 调用方式：
+	 * 1. success($message,$jumpUrl,$ajax)
+	 * 2. success($message,$jumpUrl)
+	 * 3. success($message)
+     * 5. success()
+	 */
+	protected function success($message=null,$jumpUrl='',$ajax=false){
+        if(is_null($message)){
+            $message=L('success');
+        }else if(is_array($message)){
+            $jumpUrl=$message;
+            $message=L('success');
+        }
+		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
+	}
+    
+    /**
+	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 
+	 * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
+	 *
 	 * @param string $message 提示信息
+	 * @param int $code 状态码
 	 * @param string $jumpUrl 页面跳转地址
-	 * @param mixed $ajax 是否为Ajax方式 当数字时指定跳转时间
+	 * @param bool|int $ajax 是否为Ajax方式 当数字时指定跳转时间
+	 * @access private
 	 * @return void
 	 */
-	protected function success($message='',$jumpUrl='',$ajax=false){
-		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
+	private function dispatchJump($message,$code=0,$jumpUrl='',$ajax=false){
+		if(true === $ajax || env('IS_AJAX')){ // AJAX提交
+			$data=is_array($ajax) ? $ajax : array();
+			$data['message']=$message;
+			$data['code']=$code;
+			if(is_array($jumpUrl)){
+				$data['data']=$jumpUrl;
+				$jumpUrl='';
+			}
+			$data['url']=$jumpUrl;
+			View::render($data);
+		}else{
+			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
+			if(is_array($jumpUrl)){
+				$this->assign('data', $jumpUrl);
+				$jumpUrl='';
+			}
+			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
+			$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
+			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
+			$this->assign('code', $code); // 状态
+			$this->assign('message', $message); // 提示信息
+			$waitSecond=$this->get('waitSecond');
+			$jumpUrl=$this->get('jumpUrl');
+			!isset($jumpUrl) && $this->assign('jumpUrl', 'auto');
+			if(!$code){
+				!isset($waitSecond) && $this->assign('waitSecond', 1000);
+				$this->display(C('TMPL_ACTION_SUCCESS', '/message'));
+			}else{
+				!isset($waitSecond) && $this->assign('waitSecond', 3000);
+				$this->assign('error', $message);
+				$this->display(C('TMPL_ACTION_ERROR', '/message'));
+			}
+		}
 	}
 
 	/**
@@ -192,53 +254,6 @@ class Controller{
 	protected function redirect($url,$params=array(),$delay=0,$msg=''){
 		$url=U($url, $params);
 		redirect($url, $delay, $msg);
-	}
-
-	/**
-	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 
-	 * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
-	 *
-	 * @param string $message 提示信息
-	 * @param Boolean $code 状态
-	 * @param string $jumpUrl 页面跳转地址
-	 * @param mixed $ajax 是否为Ajax方式 当数字时指定跳转时间
-	 * @access private
-	 * @return void
-	 */
-	private function dispatchJump($message,$code=0,$jumpUrl='',$ajax=false){
-		if(true === $ajax || env('IS_AJAX')){ // AJAX提交
-			$data=is_array($ajax) ? $ajax : array();
-			$data['message']=$message;
-			$data['code']=$code;
-			if(is_array($jumpUrl)){
-				$data['data']=$jumpUrl;
-				$jumpUrl='';
-			}
-			$data['url']=$jumpUrl;
-			View::render($data);
-		}else{
-			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
-			if(is_array($jumpUrl)){
-				$this->assign('data', $jumpUrl);
-				$jumpUrl='';
-			}
-			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
-			$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
-			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
-			$this->assign('code', $code); // 状态
-			$this->assign('message', $message); // 提示信息
-			$waitSecond=$this->get('waitSecond');
-			$jumpUrl=$this->get('jumpUrl');
-			!isset($jumpUrl) && $this->assign('jumpUrl', 'auto');
-			if(!$code){
-				!isset($waitSecond) && $this->assign('waitSecond', 1000);
-				$this->display(C('TMPL_ACTION_SUCCESS', '/message'));
-			}else{
-				!isset($waitSecond) && $this->assign('waitSecond', 3000);
-				$this->assign('error', $message);
-				$this->display(C('TMPL_ACTION_ERROR', '/message'));
-			}
-		}
 	}
 
 	/**
