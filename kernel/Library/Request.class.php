@@ -104,8 +104,8 @@ class Request{
 			$_GET=&$request->get;
 			$_POST=&$request->post;
             $_FILES=&$request->files;
-            $this->servers=array_change_key_case($request->server, CASE_LOWER);
             $_COOKIE=&$request->cookie;
+            $this->servers=array_change_key_case($request->server, CASE_LOWER);
 		}else if(PHP_SAPI=='cli'){
             $_GET=$_POST=$_FILES=$_COOKIE=[];
             $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
@@ -254,22 +254,22 @@ class Request{
 	 */
 	private function getAllHeaders(){
 		$headers=array();
-		foreach($_SERVER as $key=>$value){
+		foreach($this->servers as $key=>$value){
 			if('http_' == substr($key, 0, 5)){
 				$headers[str_replace('_', '-', substr($key, 5))]=$value;
 			}
 		}
-		if(isset($_SERVER['php_auth_digest'])){
-			$headers['authorization'] = $_SERVER['php_auth_digest'];
-		}else if(isset($_SERVER['php_auth_user']) && isset($_SERVER['php_auth_pw'])){
-			$headers['authorization'] = base64_encode($_SERVER['php_auth_user'] . ':' . $_SERVER['php_auth_pw']);
+		if(isset($this->servers['php_auth_digest'])){
+			$headers['authorization'] = $this->servers['php_auth_digest'];
+		}else if(isset($this->servers['php_auth_user']) && isset($this->servers['php_auth_pw'])){
+			$headers['authorization'] = base64_encode($this->servers['php_auth_user'] . ':' . $this->servers['php_auth_pw']);
 		}
 		
-		if(isset($_SERVER['content_length'])){
-			$headers['content-length']=$_SERVER['content_length'];
+		if(isset($this->servers['content_length'])){
+			$headers['content-length']=$this->servers['content_length'];
 		}
-		if(isset($_SERVER['content_type'])){
-			$headers['content-type']=$_SERVER['content_type'];
+		if(isset($this->servers['content_type'])){
+			$headers['content-type']=$this->servers['content_type'];
 		}
 		return $headers;
 	}
