@@ -6,6 +6,7 @@ class Request{
 	private $request=null; //外部Request对象
     
     private $headers=null; //Header信息
+    private $servers=null; //Server信息
 	
 	public function __construct(){
 		
@@ -103,13 +104,13 @@ class Request{
 			$_GET=&$request->get;
 			$_POST=&$request->post;
             $_FILES=&$request->files;
-            $_SERVER=array_change_key_case($request->server, CASE_LOWER);
+            $this->servers=array_change_key_case($request->server, CASE_LOWER);
             $_COOKIE=&$request->cookie;
 		}else if(PHP_SAPI=='cli'){
             $_GET=$_POST=$_FILES=$_COOKIE=[];
-            $_SERVER=array_change_key_case($_SERVER, CASE_LOWER);
+            $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
         }else{
-            $_SERVER=array_change_key_case($_SERVER, CASE_LOWER);
+            $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
         }
 	}
 	
@@ -134,7 +135,7 @@ class Request{
 	}
 	
 	/**
-	 * 获取Http请求相关的服务器信息（键名为小写）
+	 * 获取Http请求相关的服务器信息（不区分大小写）
 	 * @param string $key 需要获取的键名，如果为null获取所有
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
@@ -142,12 +143,12 @@ class Request{
 	public function &server($key=null,$default=null){
         if(!is_null($key)){
 			$key=strtolower($key);
-            if(isset($_SERVER[$key])){
-                return $_SERVER[$key];
+            if(isset($this->servers[$key])){
+                return $this->servers[$key];
             }
 			return $default;
 		}
-		return $_SERVER;
+		return $this->servers;
 	}
 	
 	/**
