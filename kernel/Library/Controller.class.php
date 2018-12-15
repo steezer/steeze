@@ -197,6 +197,9 @@ class Controller{
 				$this->display(C('TMPL_ACTION_ERROR', '/message'));
 			}
 		}
+        
+        //结束所有输出
+        make('\Library\Response')->end();
 	}
 
 	/**
