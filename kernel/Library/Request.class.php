@@ -101,13 +101,22 @@ class Request{
         $this->headers=null;
 		if(!empty($request) && is_a($request,'Swoole\\Http\\Request')){
 			$this->request=$request;
-			$_GET=&$request->get;
-			$_POST=&$request->post;
-            $_FILES=&$request->files;
-            $_COOKIE=&$request->cookie;
+            if(isset($request->get)){
+			    $_GET=&$request->get;
+            }
+            if(isset($request->post)){
+			    $_POST=&$request->post;
+            }
+            if(isset($request->files)){
+                $_FILES=&$request->files;
+            }
+            if(isset($request->cookie)){
+                $_COOKIE=&$request->cookie;
+            }
+            $_SERVER=$this->restoreServer($request->server, $request->header);
             $this->servers=array_change_key_case($request->server, CASE_LOWER);
 		}else if(PHP_SAPI=='cli'){
-            $_GET=$_POST=$_FILES=$_COOKIE=[];
+            $_GET=$_POST=$_REQUEST=$_FILES=$_COOKIE=[];
             $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
         }else{
             $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
@@ -273,5 +282,21 @@ class Request{
 		}
 		return $headers;
 	}
+    
+    /**
+     * 从Swoole执行环境中恢复$_SERVER全局变量
+     *
+     * @param array $server Swoole环境中的server变量
+     * @param array $header Swoole环境中的header变量
+     * @return array
+     */
+    private function restoreServer($server, $header){
+        $servers=array_change_key_case($server, CASE_UPPER);
+        foreach ($header as $key => $value) {
+            $newKey='HTTP_'.strtoupper(str_replace('-', '_', $key));
+            $servers[$newKey]=$value;
+        }
+        return $servers;
+    }
 	
 }

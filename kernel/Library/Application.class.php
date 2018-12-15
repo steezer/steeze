@@ -251,6 +251,8 @@ class Application{
                         substr($header['host'],0,strpos($header['host'], ':')) ;
             }
         }
+        //重新设置$_REQUEST全局变量
+        $_REQUEST=array_merge($_GET, $_POST, $_COOKIE);
         
         //客户端请求主机名称（域名）
         $server['server_host']=$host!='' ? $host : DEFAULT_HOST;
