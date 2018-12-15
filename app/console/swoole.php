@@ -14,7 +14,6 @@ include dirname(__FILE__).'/../../kernel/base.php';
 //启动对象
 $http = new swoole_http_server("0.0.0.0", 9501);
 $http->set([
-    'http_parse_post' => false, //不开启解析，系统内部集成
     'document_root'=> ROOT_PATH, //静态文件路径
     'enable_static_handler'=>true, //启用静态文件解析
 ]);
