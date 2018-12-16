@@ -283,7 +283,7 @@ class Application{
 			$path=substr($path, strlen($server['system_entry']));
 		}
         //请求路径（必须以"/"开头，以非"/"结尾）
-		$server['request_path']='/'.trim($path,'/');var_dump($server);
+		$server['request_path']='/'.trim($path,'/');
     }
 	
 	/**
