@@ -171,8 +171,8 @@ function cut_str($sourcestr,$cutlength=80,$addfoot=true,&$isAdd=false){
 	$returnstr='';
 	$i=0;
 	$n=0.0;
-	$str_length=strlen($sourcestr); // 字符串的字节数
-	while(($n < $cutlength) and ($i < $str_length)){
+	$strLen=strlen($sourcestr); // 字符串的字节数
+	while(($n < $cutlength) and ($i < $strLen)){
 		$temp_str=substr($sourcestr, $i, 1);
 		$ascnum=ord($temp_str); // 得到字符串中第$i位字符的ASCII码
 		if($ascnum >= 252){ // 如果ASCII位高与252
@@ -210,7 +210,7 @@ function cut_str($sourcestr,$cutlength=80,$addfoot=true,&$isAdd=false){
 		}
 	}
 	
-	if(($isAdd=$i < $str_length) && $addfoot){
+	if(($isAdd=$i < $strLen) && $addfoot){
 		$returnstr=$returnstr . '...';
 	} // 超过长度时在尾处加上省略号
 	return $returnstr;
@@ -311,27 +311,27 @@ function base64($data,$type='ENCODE',$filter=NULL,$strip=0){
 /**
  * 系统动态加密解密可以设置过期时间的字符串（通常用于授权）
  *
- * @param string $string 需要处理的字符串
+ * @param string $str 需要处理的字符串
  * @param string $operation 处理类型：ENCODE为加密，DECODE为解密，默认为ENCODE
  * @param string $key 自定义秘钥，默认为空
  * @param string $expiry 过期时间，默认为0，不限制
  * @return string 处理后的数据
  */
-function sys_auth($string,$operation='ENCODE',$key='',$expiry=0){
+function sys_auth($str,$operation='ENCODE',$key='',$expiry=0){
 	$operation=strtoupper($operation);
 	$key_length=4;
 	$key=md5($key != '' ? $key : C('auth_key'));
 	$fixedkey=md5($key);
 	$egiskeys=md5(substr($fixedkey, 16, 16));
-	$runtokey=$key_length ? ($operation == 'ENCODE' ? substr(md5(microtime(true)), -$key_length) : substr($string, 0, $key_length)) : '';
+	$runtokey=$key_length ? ($operation == 'ENCODE' ? substr(md5(microtime(true)), -$key_length) : substr($str, 0, $key_length)) : '';
 	$keys=md5(substr($runtokey, 0, 16) . substr($fixedkey, 0, 16) . substr($runtokey, 16) . substr($fixedkey, 16));
-	$string=$operation == 'ENCODE' ? sprintf('%010d', $expiry ? $expiry + time() : 0) . substr(md5($string . $egiskeys), 0, 16) . $string : base64_decode(substr($string, $key_length));
+	$str=$operation == 'ENCODE' ? sprintf('%010d', $expiry ? $expiry + time() : 0) . substr(md5($str . $egiskeys), 0, 16) . $str : base64_decode(substr($str, $key_length));
 	
 	$i=0;
 	$result='';
-	$string_length=strlen($string);
-	for($i=0; $i < $string_length; $i++){
-		$result.=chr(ord($string{$i}) ^ ord($keys{$i % 32}));
+	$strLen=strlen($str);
+	for($i=0; $i < $strLen; $i++){
+		$result.=chr(ord($str{$i}) ^ ord($keys{$i % 32}));
 	}
 	if($operation == 'ENCODE'){
 		return $runtokey . str_replace('=', '', base64_encode($result));
@@ -347,18 +347,18 @@ function sys_auth($string,$operation='ENCODE',$key='',$expiry=0){
 /**
  * 系统加密解密的字符串
  *
- * @param string $string 需要处理的字符串
+ * @param string $str 需要处理的字符串
  * @param string $type 处理类型：1为加密，0为解密，默认为1
  * @param string $key 自定义秘钥，默认为空
  * @return string 处理后的数据
  */
-function sys_crypt($string,$type=1,$key=''){
+function sys_crypt($str,$type=1,$key=''){
 	$keys=md5($key !== '' ? $key : C('auth_key'));
-	$string=$type ? (string)$string : base64($string, 'decode', 1);
-	$string_length=strlen($string);
+	$str=$type ? (string)$str : base64($str, 'decode', 1);
+	$strLen=strlen($str);
 	$result='';
-	for($i=0; $i < $string_length; $i++){
-		$result.=chr(ord($string{$i}) ^ ord($keys{$i % 32}));
+	for($i=0; $i < $strLen; $i++){
+		$result.=chr(ord($str{$i}) ^ ord($keys{$i % 32}));
 	}
 	return $type ? base64($result, 'encode', 1) : $result;
 }
@@ -551,68 +551,68 @@ function array2html($data){
 /**
  * 返回经addslashes处理过的字符串或数组
  *
- * @param string|mixed $string
- * @param number $isadd
- * @return string
+ * @param string|array $data，字符串或数组对象
+ * @param bool $isAdd 是否为添加slashes，默认为true
+ * @return string|array
  */
-function slashes($string,$isadd=1){
-	if(!is_array($string)){
-		return $isadd ? addslashes($string) : stripslashes($string);
+function slashes($data,$isAdd=true){
+	if(!is_array($data)){
+		return $isAdd ? addslashes($data) : stripslashes($data);
 	}
-	foreach($string as $key=>$val){
-		$string[$key]=slashes($val, $isadd);
+	foreach($data as $key=>$val){
+		$data[$key]=slashes($val, $isAdd);
 	}
-	return $string;
+	return $data;
 }
 
 /**
  * 转义 javascript 代码标记
  *
- * @param string $str 原始html字符串
+ * @param string $data 原始html字符串
  * @return string
  */
-function trim_script($str){
-	if(is_array($str)){
-		foreach($str as $key=>$val){
-			$str[$key]=trim_script($val);
+function trim_script($data){
+	if(is_array($data)){
+		foreach($data as $key=>$val){
+			$data[$key]=trim_script($val);
 		}
 	}else{
-		$str=preg_replace('/\<([\/]?)script([^\>]*?)\>/si', '&lt;\\1script\\2&gt;', $str);
-		$str=preg_replace('/\<([\/]?)iframe([^\>]*?)\>/si', '&lt;\\1iframe\\2&gt;', $str);
-		$str=preg_replace('/\<([\/]?)frame([^\>]*?)\>/si', '&lt;\\1frame\\2&gt;', $str);
-		$str=preg_replace('/]]\>/si', ']] >', $str);
+		$data=preg_replace('/\<([\/]?)script([^\>]*?)\>/si', '&lt;\\1script\\2&gt;', $data);
+		$data=preg_replace('/\<([\/]?)iframe([^\>]*?)\>/si', '&lt;\\1iframe\\2&gt;', $data);
+		$data=preg_replace('/\<([\/]?)frame([^\>]*?)\>/si', '&lt;\\1frame\\2&gt;', $data);
+		$data=preg_replace('/]]\>/si', ']] >', $data);
 	}
-	return $str;
+	return $data;
 }
 
 /**
  * 安全过滤函数
  *
- * @param array|string $string
+ * @param array|string $data
  * @return string
  */
-function safe_replace($string){
-	if(!is_array($string)){
-		$string=str_replace('%20', '', $string);
-		$string=str_replace('%27', '', $string);
-		$string=str_replace('%2527', '', $string);
-		$string=str_replace('*', '', $string);
-		$string=str_replace('"', '&quot;', $string);
-		$string=str_replace("'", '', $string);
-		$string=str_replace('"', '', $string);
-		$string=str_replace('`', '', $string);
-		$string=str_replace(';', '', $string);
-		$string=str_replace('<', '&lt;', $string);
-		$string=str_replace('>', '&gt;', $string);
-		$string=str_replace("{", '', $string);
-		$string=str_replace('}', '', $string);
-		$string=str_replace('\\', '', $string);
+function safe_replace($data){
+	if(!is_array($data)){
+		$data=str_replace('%20', '', $data);
+		$data=str_replace('%27', '', $data);
+		$data=str_replace('%2527', '', $data);
+		$data=str_replace('*', '', $data);
+		$data=str_replace('"', '&quot;', $data);
+		$data=str_replace("'", '', $data);
+		$data=str_replace('"', '', $data);
+		$data=str_replace('`', '', $data);
+		$data=str_replace(';', '', $data);
+		$data=str_replace('<', '&lt;', $data);
+		$data=str_replace('>', '&gt;', $data);
+		$data=str_replace("{", '', $data);
+		$data=str_replace('}', '', $data);
+		$data=str_replace('\\', '', $data);
 	}else{
-		foreach($string as $key=>$val){
-			$string[$key]=safe_replace($val);
+		foreach($data as $key=>$val){
+			$data[$key]=safe_replace($val);
 		}
 	}
-	return $string;
+	return $data;
 }
 
 /**
@@ -725,16 +725,17 @@ function session($name='',$value=''){
 	if(is_array($name)){ // session初始化 在session_start 之前调用
 		isset($name['prefix']) && ($prefix=$name['prefix']);
 		$sid=null;
+        $key=isset($name['name']) ? $name['name'] : C('var_session_id','PHPSESSID');
 		if(isset($name['id'])){
 			$sid=$name['id'];
-		}elseif($key=C('var_session_id')){
+		}else{
 			$request=make('\Library\Request');
 			$sid=$request->cookie($key,$request->post($key,$request->get($key)));
 		}
 		!is_null($sid) && session_id($sid);
 		
 		ini_set('session.auto_start', 0);
-		isset($name['name']) && session_name($name['name']);
+		session_name($key);
 		isset($name['path']) && session_save_path($name['path']);
 		isset($name['domain']) && ini_set('session.cookie_domain', $name['domain']);
 		if(isset($name['expire'])){
@@ -750,14 +751,20 @@ function session($name='',$value=''){
 			$class=ucwords(strtolower($name['type']));
 			$path=KERNEL_PATH . 'Service' . DS . 'Session' . DS . 'Driver' . DS . $class . '.class.php';
 			if(is_file($path)){
-				$concrete='Service\\Session\\Driver\\' . $class;
-				$hander=\Library\Container::getInstance()->make($concrete);
-				// 配置驱动
-				session_set_save_handler(array(&$hander,'open'), array(&$hander,'close'), array(&$hander,'read'), array(&$hander,'write'), array(&$hander,'destroy'), array(&$hander,'gc'));
+                // 配置驱动
+				$hander=make('Service\\Session\\Driver\\' . $class);
+				session_set_save_handler(
+                    array(&$hander,'open'), 
+                    array(&$hander,'close'), 
+                    array(&$hander,'read'), 
+                    array(&$hander,'write'), 
+                    array(&$hander,'destroy'), 
+                    array(&$hander,'gc')
+                );
 			}
 		}
 		// 启动session
-		session_start();
+        session('[start]');
 	}elseif('' === $value){
 		if('' === $name){
 			// 获取全部的session
@@ -766,6 +773,11 @@ function session($name='',$value=''){
 			if('[pause]' == $name){ // 暂停session
 				session_write_close();
 			}elseif('[start]' == $name){ // 启动session
+                //如果当前session处于活动状态先删除当前session
+                if(session('[status]')==PHP_SESSION_ACTIVE){
+                    session_unset();
+				    session_destroy();
+                }
 				session_start();
 			}elseif('[destroy]' == $name){ // 销毁session
 				$_SESSION=array();
@@ -775,7 +787,11 @@ function session($name='',$value=''){
 				session_regenerate_id();
 			}elseif('[id]' == $name){ // 返回id
 				return session_id();
-			}
+			}elseif('[name]' == $name){ // 返回name
+				return session_name();
+			}elseif('[status]' == $name){ //返回状态
+                return session_status();
+            }
 		}elseif(0 === strpos($name, '?')){ // 检查session
 			$name=substr($name, 1);
 			if(strpos($name, '.')){ // 支持数组

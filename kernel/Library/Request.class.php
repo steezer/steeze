@@ -9,19 +9,12 @@ class Request{
     private $servers=null; //Server信息
 	
 	public function __construct(){
-		
 		if(get_magic_quotes_gpc()){
 			$_POST=slashes($_POST, 0);
 			$_GET=slashes($_GET, 0);
 			$_REQUEST=slashes($_REQUEST, 0);
 			$_COOKIE=slashes($_COOKIE, 0);
 		}
-		
-		//session_id设置，防止客户端不支持cookie设定
-		if($sessionid=$this->get('PHPSESSID',$this->post('PHPSESSID'))){
-			session_id($sessionid);
-		}
-		
 	}
 	
 	/**
@@ -59,17 +52,17 @@ class Request{
 				            $mobile_browser++;
 				        }elseif($agent){
 				            $mobile_ua=substr($agent,0,4);
-				            $mobile_agents=array(
-				                    'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
-				                    'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
-				                    'ipaq','java','jigs','kddi','keji','leno','lg-c','lg-d','lg-g','lge-',
-				                    'maui','maxo','midp','mits','mmef','mobi','mot-','moto','mwbp','nec-',
-				                    'newt','noki','oper','palm','pana','pant','phil','play','port','prox',
-				                    'qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar',
-				                    'sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-',
-				                    'tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp',
-				                    'wapr','webc','winw','winw','xda','xda-'
-				            );
+				            $mobile_agents=[
+                                'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
+                                'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
+                                'ipaq','java','jigs','kddi','keji','leno','lg-c','lg-d','lg-g','lge-',
+                                'maui','maxo','midp','mits','mmef','mobi','mot-','moto','mwbp','nec-',
+                                'newt','noki','oper','palm','pana','pant','phil','play','port','prox',
+                                'qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar',
+                                'sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-',
+                                'tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp',
+                                'wapr','webc','winw','winw','xda','xda-'
+				            ];
 				            if(in_array($mobile_ua,$mobile_agents)){
 				                $mobile_browser++;
 				            }elseif(strpos(strtolower($all_http),'operamini')!==false){
@@ -101,6 +94,7 @@ class Request{
         $this->headers=null;
 		if(!empty($request) && is_a($request,'Swoole\\Http\\Request')){
 			$this->request=$request;
+            //恢复默认变量为了兼容其它不通过本类获取系统环境变量
             if(isset($request->get)){
 			    $_GET=&$request->get;
             }
@@ -114,12 +108,8 @@ class Request{
                 $_COOKIE=&$request->cookie;
             }
             $_SERVER=$this->restoreServer($request->server, $request->header);
-            $this->servers=array_change_key_case($request->server, CASE_LOWER);
 		}else if(PHP_SAPI=='cli'){
             $_GET=$_POST=$_REQUEST=$_FILES=$_COOKIE=[];
-            $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
-        }else{
-            $this->servers=array_change_key_case($_SERVER, CASE_LOWER);
         }
 	}
 	
@@ -129,95 +119,172 @@ class Request{
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function &header($key=null,$default=null){
-        if(is_null($this->headers)){
-            $this->headers=array_change_key_case(!is_null($this->request) ? $this->request->header : $this->getAllHeaders(), CASE_LOWER);
-        }
-        if(!is_null($key)){
-			$key=strtolower($key);
-            if(isset($this->headers[$key])){
-                return $this->headers[$key];
+	public function header($key=null,$default=null){
+        if(!is_null($this->request)){
+            $headers=&$this->request->header;
+            if(!is_null($key)){
+                if(is_array($key)){
+                    foreach ($key as $k => $v) {
+                        $headers[$k]=$v;
+                    }
+                }else{
+                    $value=$this->caseKeyValue($headers, $key);
+                    if($value!==null){
+                        return $value;
+                    }
+                    return $default;
+                }
             }
-			return $default;
-		}
-		return $this->headers;
+            return $headers;
+        }else{
+            if(!is_null($key)){
+                if(is_array($key)){
+                    foreach ($key as $k => $v) {
+                        $nky='HTTP_'.strtoupper($k);
+                        $_SERVER[$nky]=$v;
+                    }
+                }else{
+                    $key=strtoupper(str_replace('-','_',$key));
+                    if(isset($_SERVER[$key])){
+                        return $_SERVER[$key];
+                    }
+                    $key='HTTP_'.$key;
+                    if(isset($_SERVER[$key])){
+                        return $_SERVER[$key];
+                    }
+                    return $default;
+                }
+            }else{
+                return $this->getAllHeaders();
+            }
+        }
 	}
 	
 	/**
 	 * 获取Http请求相关的服务器信息（不区分大小写）
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string $name 需要获取的键名，如果为null获取所有
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function &server($key=null,$default=null){
-        if(!is_null($key)){
-			$key=strtolower($key);
-            if(isset($this->servers[$key])){
-                return $this->servers[$key];
+	public function &server($name=null,$default=null){
+        if(!is_null($this->request)){
+            $servers=&$this->request->server;
+        }else{
+            $servers=&$_SERVER;
+        }
+        if(!is_null($name)){
+            if(is_array($name)){
+                foreach ($name as $k => $v) {
+                    $nky=strtoupper($k);
+                    $servers[$nky]=$v;
+                }
+            }else{
+                $value=$this->caseKeyValue($servers, $name);
+                if($value!==null){
+                    return $value;
+                }
+                return $default;
             }
-			return $default;
 		}
-		return $this->servers;
+		return $servers;
 	}
 	
 	/**
 	 * 获取Http请求的GET参数
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string $name 需要获取的键名，如果为null获取所有
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array 
 	 */
-	public function &get($key=null,$default=null){
-		if(!is_null($key)){
-            if(isset($_GET[$key])){
-                return $_GET[$key];
-            }
-            return $default;
+	public function &get($name=null,$default=null){
+        if(!is_null($this->request)){
+            $gets=&$this->request->get;
+        }else{
+            $gets=&$_GET;
         }
-		return $_GET;
+		if(!is_null($name)){
+            if(is_array($name)){
+                foreach ($name as $k => $v) {
+                    $gets[$k]=$v;
+                }
+            }else{
+                if(isset($gets[$name])){
+                    return $gets[$name];
+                }
+                return $default;
+            }
+		}
+		return $gets;
 	}
 	
 	/**
 	 * 获取Http请求的POST参数
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string $name 需要获取的键名，如果为null获取所有
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array
 	 */
-	public function &post($key=null,$default=null){
-        if(!is_null($key)){
-            if(isset($_POST[$key])){
-                return $_POST[$key];
-            }
-            return $default;
+	public function &post($name=null,$default=null){
+        if(!is_null($this->request)){
+            $posts=&$this->request->post;
+        }else{
+            $posts=&$_POST;
         }
-		return $_POST;
+		if(!is_null($name)){
+            if(is_array($name)){
+                foreach ($name as $k => $v) {
+                    $posts[$k]=$v;
+                }
+            }else{
+                if(isset($posts[$name])){
+                    return $posts[$name];
+                }
+                return $default;
+            }
+		}
+		return $posts;
 	}
 	
 	/**
 	 * 获取Http请求携带的COOKIE信息
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string $name 需要获取的键名，如果为null获取所有
 	 * @param mixed $default 如果key不存在，则返回默认值
 	 * @return string|array
 	 */
-	public function &cookie($key=null,$default=null){
-        if(!is_null($key)){
-            if(isset($_COOKIE[$key])){
-                return $_COOKIE[$key];
-            }
-            return $default;
+	public function &cookie($name=null,$default=null){
+        if(!is_null($this->request)){
+            $cookies=&$this->request->cookie;
+        }else{
+            $cookies=&$_COOKIE;
         }
-		return $_COOKIE;
+		if(!is_null($name)){
+            if(is_array($name)){
+                foreach ($name as $k => $v) {
+                    $cookies[$k]=$v;
+                }
+            }else{
+                if(isset($cookies[$name])){
+                    return $cookies[$name];
+                }
+                return $default;
+            }
+		}
+		return $cookies;
 	}
 	
 	/**
 	 * 获取文件上传信息
-	 * @param string $key 需要获取的键名，如果为null获取所有
+	 * @param string $name 需要获取的键名，如果为null获取所有
 	 * @return array
 	 */
-	public function &files($key=null){
-        if(!is_null($key)){
-            return $_FILES[$key];
+	public function &files($name=null){
+        if(!is_null($this->request)){
+            $files=&$this->request->files;
+        }else{
+            $files=&$_FILES;
         }
-		return  $_FILES;
+        if(!is_null($name)){
+            return $files[$name];
+        }
+		return  $files;
 	}
 	
 	/**
@@ -263,22 +330,29 @@ class Request{
 	 */
 	private function getAllHeaders(){
 		$headers=array();
-		foreach($this->servers as $key=>$value){
-			if('http_' == substr($key, 0, 5)){
-				$headers[str_replace('_', '-', substr($key, 5))]=$value;
-			}
+        $servers=$this->server();
+		foreach($servers as $key=>$value){
+            if(!strcasecmp('http_', substr($key, 0, 5))){
+                $cKey=strtolower(str_replace('_', '-', substr($key, 5)));
+                $headers[$cKey]=$value;
+            }
 		}
-		if(isset($this->servers['php_auth_digest'])){
-			$headers['authorization'] = $this->servers['php_auth_digest'];
-		}else if(isset($this->servers['php_auth_user']) && isset($this->servers['php_auth_pw'])){
-			$headers['authorization'] = base64_encode($this->servers['php_auth_user'] . ':' . $this->servers['php_auth_pw']);
+		if($this->caseKeyValue($servers,'php_auth_digest')!==null){
+			$headers['authorization'] = $this->caseKeyValue($servers,'php_auth_digest');
+		}else if(
+            $this->caseKeyValue($servers,'php_auth_user')!==null &&
+            $this->caseKeyValue($servers,'php_auth_pw')!==null
+        ){
+            $user=$this->caseKeyValue($servers,'php_auth_user');
+            $pw=$this->caseKeyValue($servers,'php_auth_pw');
+			$headers['authorization'] = base64_encode( $user. ':' . $pw);
 		}
 		
-		if(isset($this->servers['content_length'])){
-			$headers['content-length']=$this->servers['content_length'];
+		if($this->caseKeyValue($servers, 'content_length') !== null){
+			$headers['content-length']=$this->caseKeyValue($servers, 'content_length');
 		}
-		if(isset($this->servers['content_type'])){
-			$headers['content-type']=$this->servers['content_type'];
+		if($this->caseKeyValue($servers, 'content_type') !== null){
+			$headers['content-type']=$this->caseKeyValue($servers, 'content_type');
 		}
 		return $headers;
 	}
@@ -297,6 +371,24 @@ class Request{
             $servers[$newKey]=$value;
         }
         return $servers;
+    }
+    
+    /**
+     * 数组键名大小写不敏感查找
+     *
+     * @param array $array
+     * @param string $key
+     * @return void
+     */
+    private function caseKeyValue(&$array, $key){
+        if(isset($array[$key])){
+            return $array[$key];
+        }
+        $key=strtoupper($key);
+        if(isset($array[$key])){
+            return $array[$key];
+        }
+        return null;
     }
 	
 }

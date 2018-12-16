@@ -129,8 +129,8 @@ class View{
 			if(!empty($sm[0])){
 				$style=$sm[0];  //获取风格名称，例如: Index/list@Default
 			}
-			$sm[1]=trim($sm[1]);
-			if(isset($sm[1]) && !empty($sm[1])){
+			$sm[1]=isset($sm[1]) ? trim($sm[1]) : '' ;
+			if(!empty($sm[1])){
 				$m=trim($sm[1]);  //获取模块名称，例如: Index/list@Default:home
 			}
 		}

@@ -111,22 +111,22 @@ class Application{
         //保存配置
         $this->config=$config;
         
-        $server=&$this->request->server();
-        $header=&$this->request->header();
-        
         //初始化系统环境
-        $this->initSysEnv($server, $header, $config);
+        $this->initSysEnv($config);
         
         //加载应用环境
-		$this->loadAppEnv($server, $header);
+		$this->loadAppEnv();
 		
 		//路由构建和绑定
 		$route=new Route($this->request);
-        $route->bind($server['request_path'], $server['server_host']);
+        $route->bind(
+            $this->request->server('request_path'), 
+            $this->request->server('server_host')
+        );
 		$this->request->setRoute($route);
 
 		//系统配置
-		$this->appConfig($server, $header);
+		$this->appConfig();
         
         //设置初始化状态
         $this->isInit=true;
@@ -140,20 +140,37 @@ class Application{
      * @param array $config 默认配置
      * @return void
      */
-    private function initSysEnv(&$server, &$header, $config){
+    private function initSysEnv($config){
         //设置配置Header
         if(
             isset($config['header']) && 
             is_array($config['header']) && 
             !empty($config['header'])
         ){
-            $header=array_merge($header, array_change_key_case($config['header'], CASE_LOWER));
+            $header=array_change_key_case($config['header'], CASE_LOWER);
+        }else{
+            $header=[];
         }
         
         //设置配置POST信息
+        $get=&$this->request->get();
+        $post=&$this->request->post();
+        $cookie=&$this->request->cookie();
+        $server=&$this->request->server();
+        if($get===null){
+            $get=[];
+        }
+        if($post===null){
+            $post=[];
+        }
+        if($cookie===null){
+            $cookie=[];
+        }
+        
+        //配置的变量初始化到全局变量
         if(isset($config['data'])){
             if(is_array($config['data'])){
-                $_POST=array_merge($_POST, $config['data']);
+                $post=array_merge($post, $config['data']);
             }else{
                 $GLOBALS['HTTP_RAW_POST_DATA']=strval($config['data']);
             }
@@ -164,10 +181,10 @@ class Application{
         $server['system_entry']='/'.(
                                 isset($server['script_name']) ? 
                                     trim(str_replace(
-                                        array('/',ROOT_PATH,DS), 
-                                        array(DS,'/','/'), 
+                                        array('/', ROOT_PATH, DS), 
+                                        array(DS, '/', '/'), 
                                         $server['script_name']
-                                    ),'/')
+                                    ), '/')
                                     : 'index.php'
                             );
         $host = isset($server['server_name']) ? $server['server_name'] : '';
@@ -206,7 +223,7 @@ class Application{
                 //设置GET参数
                 if(isset($argv['query'])){
                     parse_str($argv['query'], $gets);
-                    $_GET=array_merge($_GET, $gets);
+                    $get=array_merge($get, $gets);
                 }
             }
             
@@ -224,7 +241,7 @@ class Application{
                         unset($posts);
                         $GLOBALS['HTTP_RAW_POST_DATA']=$argvs[2];
                     }else{
-                        $_POST=array_merge($_POST, $posts);
+                        $post=array_merge($post, $posts);
                     }
                 }
             }
@@ -240,19 +257,23 @@ class Application{
             //从第4个命令行参数获取Cookie信息
             if(isset($argvs[4])){
                 parse_str($argvs[4], $cookies);
-                $_COOKIE=array_merge($_COOKIE, $cookies);
+                $cookie=array_merge($cookie, $cookies);
             }
             
         }else{
-            $paths=explode('?',$this->request->server('REQUEST_URI'),2);
+            $paths=explode('?',$this->request->server('request_uri'),2);
             $path=array_shift($paths);
-            if(!empty($header['host'])){
-                $host=strpos($header['host'], ':')===false ? $header['host'] :
-                        substr($header['host'],0,strpos($header['host'], ':')) ;
+            $httpHost=isset($header['host']) ? $header['host'] : $this->request->header('host');
+            if(!empty($httpHost)){
+                $host=strpos($httpHost, ':')===false ? $httpHost :
+                        substr($httpHost, 0, strpos($httpHost, ':')) ;
             }
         }
+        if(!empty($header)){
+            $this->request->header($header);
+        }
         //重新设置$_REQUEST全局变量
-        $_REQUEST=array_merge($_GET, $_POST, $_COOKIE);
+        $_REQUEST=array_merge($get, $post, $cookie);
         
         //客户端请求主机名称（域名）
         $server['server_host']=$host!='' ? $host : DEFAULT_HOST;
@@ -262,22 +283,19 @@ class Application{
 			$path=substr($path, strlen($server['system_entry']));
 		}
         //请求路径（必须以"/"开头，以非"/"结尾）
-		$server['request_path']='/'.trim($path,'/');
+		$server['request_path']='/'.trim($path,'/');var_dump($server);
     }
 	
 	/**
 	 * 加载应用环境变量
-     * 
-     * @param array &$server 服务器变量
-     * @param array &$header 发送头
 	 */
-	private function loadAppEnv(&$server, &$header){
+	private function loadAppEnv(){
         //首次初始化环境时执行
         if(!$this->isInit){
             //设置错误处理函数
             if(APP_DEBUG){
                 function_exists('ini_set') && ini_set('display_errors', 'on');
-                error_reporting(version_compare(PHP_VERSION, '5.4', '>=') ? E_ALL ^ E_NOTICE ^ E_WARNING ^ E_STRICT : E_ALL ^ E_NOTICE ^ E_WARNING);
+                error_reporting(E_ALL ^ E_STRICT);
             }else{
                 error_reporting(E_ERROR | E_PARSE);
             }
@@ -286,23 +304,24 @@ class Application{
         }
 
 		//设置应用环境
-		Loader::env('PHP_SAPI', $server['php_sapi']);
+		Loader::env('PHP_SAPI', $this->request->server('php_sapi'));
 		//请求时间
-		Loader::env('NOW_TIME', isset($server['request_time']) ? $server['request_time'] : time());
+		Loader::env('NOW_TIME', $this->request->server('request_time', time()));
 		//检查是否微信登录
-		Loader::env('WECHAT_ACCESS',isset($header['user-agent']) && strpos($header['user-agent'],'MicroMessenger')!==false);
+        $userAgent=$this->request->header('user-agent');
+		Loader::env('WECHAT_ACCESS',$userAgent!==null && strpos($userAgent,'MicroMessenger')!==false);
 		
 		//当前请求方法判断
-		$method=strtoupper(isset($server['request_method']) ? $server['request_method'] : 'GET');
+		$method=strtoupper($this->request->server('request_method','GET'));
 		Loader::env('REQUEST_METHOD', $method);
 		Loader::env('IS_GET', $method == 'GET' ? true : false);
 		Loader::env('IS_POST', $method == 'POST' ? true : false);
 		
 		//系统唯一入口定义，兼任windows系统和cli模式
-		$host=$server['server_host'];
-        $port=isset($server['server_port']) ? intval($server['server_port']) : 80;
-        $entry=$server['system_entry'];
-        $protocol=(isset($server['request_scheme']) && !empty($server['request_scheme']) ? $server['request_scheme']: ($port == 443 ? 'https' : 'http')).'://';
+		$host=$this->request->server('server_host');
+        $port=$this->request->server('server_port', 80);
+        $entry=$this->request->server('system_entry');
+        $protocol=$this->request->server('request_scheme', ($port == 443 ? 'https' : 'http')).'://';
         
 		Loader::env('SYSTEM_ENTRY', $entry);
 		Loader::env('SITE_PROTOCOL', $protocol);
@@ -320,18 +339,16 @@ class Application{
 	
 	/**
 	 * 初始化系统模块配置（此处配置可作用于模块中）
-     * 
-     * @param array &$server 服务器变量
-     * @param array &$header 发送头
 	 */
-	private function appConfig(&$server, &$header){
+	private function appConfig(){
 		// 定义是否为ajax请求
+        $xRequestedWith=$this->request->header('x-requested-with');
 		Loader::env('IS_AJAX', (
                 (
-                    isset($header['x-requested-with']) && 
-                    strtolower($header['x-requested-with']) == 'xmlhttprequest'
+                    isset($xRequestedWith) && 
+                    strtolower($xRequestedWith) == 'xmlhttprequest'
                 ) || 
-                $server['php_sapi']=='cli' ||
+                $this->request->server('php_sapi')=='cli' ||
                 I(C('VAR_AJAX_SUBMIT', 'ajax'))
         ) ? true : false);
 	}

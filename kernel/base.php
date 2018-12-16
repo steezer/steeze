@@ -4,6 +4,9 @@ function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/G
 define('STEEZE_VERSION','1.2.3'); //系统版本
 define('INI_STEEZE', true); //初始化标识
 define('SYS_START_TIME', microtime()); // 设置系统开始时间
+//版本检测，低于php5.4不被支持
+version_compare(PHP_VERSION, '5.4', '<') && 
+    exit('PHP versions smaller than 5.4 are not supported');
 
 /**** 【定义服务器端路径】 ****/
 define('DS', DIRECTORY_SEPARATOR); //简化目录分割符
