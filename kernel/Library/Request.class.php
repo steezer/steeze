@@ -384,6 +384,10 @@ class Request{
         if(isset($array[$key])){
             return $array[$key];
         }
+        $key=strtolower($key);
+        if(isset($array[$key])){
+            return $array[$key];
+        }
         $key=strtoupper($key);
         if(isset($array[$key])){
             return $array[$key];

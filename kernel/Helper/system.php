@@ -730,7 +730,16 @@ function session($name='',$value=''){
 			$sid=$name['id'];
 		}else{
 			$request=make('\Library\Request');
-			$sid=$request->cookie($key,$request->post($key,$request->get($key)));
+            $sid=$request->cookie($key);
+            if($sid===null){
+                $sid=$request->header($key);
+            }
+            if($sid===null){
+                $sid=$request->post($key);
+            }
+            if($sid===null){
+                $sid=$request->get($key);
+            }
 		}
 		!is_null($sid) && session_id($sid);
 		
@@ -778,6 +787,22 @@ function session($name='',$value=''){
                     session_unset();
 				    session_destroy();
                 }
+                $sid=null;
+                $key=C('var_session_id','PHPSESSID');
+                $request=make('\Library\Request');
+                $sid=$request->cookie($key);
+                if($sid===null){
+                    $sid=$request->header($key);
+                }
+                if($sid===null){
+                    $sid=$request->post($key);
+                }
+                if($sid===null){
+                    $sid=$request->get($key);
+                }
+                !is_null($sid) && session_id($sid);
+                ini_set('session.auto_start', 0);
+                session_name($key);
 				session_start();
 			}elseif('[destroy]' == $name){ // 销毁session
 				$_SESSION=array();
