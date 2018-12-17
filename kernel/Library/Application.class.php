@@ -29,7 +29,7 @@ class Application{
      *    'cookie' => [ 'na' => 'test' ], //Cookie信息
      *  ]
 	 */
-	public function start($config=array()){
+	public function start($config=[]){
         //恢复输出
         $this->response->setIsEnd(false);
         
@@ -135,8 +135,6 @@ class Application{
     /**
      * 初始化系统环境
      *
-     * @param array &$server 默认服务器变量
-     * @param array &$header 默认发送头
      * @param array $config 默认配置
      * @return void
      */
