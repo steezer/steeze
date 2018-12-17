@@ -33,7 +33,7 @@ class Container{
 	 * @param string $concrete
 	 * @return mixed
 	 *
-	 * @throws \Library\Exception
+	 * @throws \Exception
 	 */
 	public function build($concrete){
 		try{
@@ -95,7 +95,7 @@ class Container{
 	public function callClosure($closure,array $parameters=[]){
 		try{
 			if($closure instanceof Closure){
-				$reflector=new ReflectionFunction($closure);
+				$reflector=new ReflectionFunction($closure->bindTo($this));
 				$this->with[]=$parameters;
 				$dependencies=$reflector->getParameters();
 				$instances=$this->resolveDependencies($dependencies);
@@ -238,7 +238,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws \Library\Exception
+	 * @throws \Exception
 	 */
 	protected function resolvePrimitive(ReflectionParameter $parameter){
 		return $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
@@ -250,7 +250,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws \Library\Exception
+	 * @throws \Exception
 	 */
 	protected function resolveClass(ReflectionParameter $parameter){
 		try{

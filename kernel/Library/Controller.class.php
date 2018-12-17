@@ -2,13 +2,56 @@
 namespace Library;
 
 class Controller{
-	protected $view=null; //视图对象
-	protected static $_m=''; //当前被调用的模块
-	protected static $_c=''; //当前被调用的控制器
-	protected static $_a=''; //当前被调用的控制器方法
+    
+	private $view=null; //视图对象
+    
+    /**
+     * 应用上下文对象
+     *
+     * @var \Library\Application
+     */
+    private $context=null;
 	
-	protected function middleware($name,$excepts=[]){
-		Route::setMiddleware($name,$excepts);
+    /**
+     * 设置应用上下文对象（系统自动注入）
+     *
+     * @param \Library\Application $context
+     * @return \Library\Controller
+     */
+    public function setContext(Application $context){
+        $this->context=$context;
+        return $this;
+    }
+    
+    /**
+     * 获取应用上下文对象
+     *
+     * @return \Library\Application
+     */
+    public function getContext(){
+        return $this->context;
+    }
+    
+    /**
+     * 渲染输出控制器方法的返回值
+     *
+     * @param \Library\Controller $controller
+     * @param string $action
+     * @param array $param
+     * @return mixed
+     */
+	public function render($controller, $action, array $param=[]){
+		return $this->view()->render($controller, $action, $param);
+	}
+    
+    /**
+     * 设置中间件
+     *
+     * @param string $name 中间件名称
+     * @param array $excepts 排除的方法
+     */
+	protected function middleware($name, $excepts=[]){
+		Route::setMiddleware($name, $excepts);
 	}
 
 	/**
@@ -20,8 +63,7 @@ class Controller{
 	 * @param string $contentType 输出类型
 	 * @return void
 	 */
-	protected function display($templateFile='',$charset='',$contentType=''){
-		$this->view()->setMca(self::$_m, self::$_c, self::$_a);
+	protected function display($templateFile='', $charset='', $contentType=''){
 		$this->view()->display($templateFile, $charset, $contentType);
 	}
 
@@ -34,8 +76,7 @@ class Controller{
 	 * @param string $contentType 输出类型
 	 * @return mixed
 	 */
-	protected function show($content='',$charset='',$contentType=''){
-		$this->view()->setMca(self::$_m, self::$_c, self::$_a);
+	protected function show($content='', $charset='', $contentType=''){
 		$this->view()->display('', $charset, $contentType, $content);
 	}
 
@@ -47,8 +88,7 @@ class Controller{
 	 * @param string $content 模板输出内容
 	 * @return string
 	 */
-	protected function fetch($templateFile='',$content=''){
-		$this->view()->setMca(self::$_m, self::$_c, self::$_a);
+	protected function fetch($templateFile='', $content=''){
 		return $this->view()->fetch($templateFile, $content);
 	}
 
@@ -61,7 +101,7 @@ class Controller{
 	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
 	 * @return string
 	 */
-	protected function buildHtml($htmlfile,$htmlpath='',$templateFile=''){
+	protected function buildHtml($htmlfile, $htmlpath='', $templateFile=''){
 		$content=$this->fetch($templateFile);
 		$htmlpath=!empty($htmlpath) ? $htmlpath : ROOT_PATH;
 		$htmlfile=$htmlpath . $htmlfile . C('HTML_FILE_SUFFIX', '.html');
@@ -79,7 +119,7 @@ class Controller{
 	 * @param mixed $value 变量的值
 	 * @return Controller
 	 */
-	protected function assign($name,$value=''){
+	protected function assign($name, $value=''){
 		$this->view()->assign($name, $value);
 		return $this;
 	}
@@ -111,7 +151,7 @@ class Controller{
 	 * 4. error($message)
      * 5. error()
 	 */
-	protected function error($message=null,$code=1,$jumpUrl='',$ajax=false){
+	protected function error($message=null, $code=1, $jumpUrl='', $ajax=false){
 		if(is_string($code)){
 			if(is_bool($jumpUrl) || is_int($jumpUrl)){
 				$ajax=$jumpUrl;
@@ -164,6 +204,7 @@ class Controller{
 	 * @return void
 	 */
 	private function dispatchJump($message,$code=0,$jumpUrl='',$ajax=false){
+        $response=$this->getContext()->getResponse();
 		if(true === $ajax || env('IS_AJAX')){ // AJAX提交
 			$data=is_array($ajax) ? $ajax : array();
 			$data['message']=$message;
@@ -173,7 +214,7 @@ class Controller{
 				$jumpUrl='';
 			}
 			$data['url']=$jumpUrl;
-			View::render($data);
+            $response->flush($data, C('mimetype.json'), 'utf-8');
 		}else{
 			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
 			if(is_array($jumpUrl)){
@@ -181,7 +222,7 @@ class Controller{
 				$jumpUrl='';
 			}
 			!empty($jumpUrl) && $this->assign('jumpUrl', $jumpUrl);
-			$this->assign('msgTitle', !$code ? '操作成功！' : '操作失败！');
+			$this->assign('msgTitle', !$code ? L('success') : L('error'));
 			$this->get('closeWin') && $this->assign('jumpUrl', 'close');
 			$this->assign('code', $code); // 状态
 			$this->assign('message', $message); // 提示信息
@@ -199,7 +240,7 @@ class Controller{
 		}
         
         //结束所有输出
-        make('\Library\Response')->end();
+        $response->end();
 	}
 
 	/**
@@ -218,27 +259,31 @@ class Controller{
 		if(is_null($data)){
 			$data=$this->view()->get(); //使用模板变量
 		}
-		switch(strtoupper($type)){
-			case 'JSON':
+        $type=strtolower($type);
+		switch($type){
+			case 'json':
 				// 返回JSON数据格式到客户端 包含状态信息
-                exit(Response::toString($data, $option));
-				View::render(Response::toString($data, $option));
+                $data=to_string($data, $option);
 				break;
-			case 'JSONP':
+			case 'jsonp':
 				// 返回JSON数据格式到客户端 包含状态信息
 				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
-				$request=make('\Library\Request');
+				$request=$this->getContext()->getRequest();
 				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
-				View::render($handler . '(' . Response::toString($data, $option) . ');');
+                $data=$handler . '(' . to_string($data, $option) . ');';
+                $type='js';
 				break;
-			case 'EVAL':
-				// 返回可执行的js脚本
-				View::render($data,'utf-8','text/javascript');
+			case 'eval':
+            case 'js':
+                $type='js';
 				break;
 			default:
-				View::render(var_export($data, true));
+                $type='html';
+                $data=var_export($data, true);
 				break;
 		}
+        $response=$this->getContext()->getResponse();
+        $response->flush($data, C('mimetype.'.$type), 'utf-8');
 	}
 
 	/**
@@ -251,10 +296,31 @@ class Controller{
 	 * @param string $msg 跳转提示信息
 	 * @return void
 	 */
-	protected function redirect($url,$params=array(),$delay=0,$msg=''){
-		$url=U($url, $params);
-		redirect($url, $delay, $msg);
+	protected function redirect($url, $params=array(), $delay=0, $msg=''){
+		$targetUrl=U($url, $params);
+		$this->context->getResponse()->redirect($targetUrl, $delay, $msg);
 	}
+    
+    /**
+	 * 获取列表分页
+	 * @param array $config 分页信息参数配置
+	 * @param int $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param array $array 附加的参数（可选）
+	 * @return array 分页配置，包括html和info字段
+	 * @example 分页信息参数范例：
+	 * 		[
+     *          'total'=> $totalrows,  //记录总数
+     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
+     *          'size'=> $pagesize,  //每页大小（可选），默认：15
+     *          'url'=> $curl, //分页URL（可选），默认使用当前页
+	 * 			'type'=>'page',  //分页参数（可选），默认:page
+	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
+	 * 		]
+	 */
+    protected function getPager($config=[], $setPages=10, $urlRule='', $array=[]){
+        $this->view()->getPager($config, $setPages, $urlRule, $array);
+    }
 
 	/**
 	 * 获取视图对象
@@ -263,52 +329,10 @@ class Controller{
 	 */
 	private function view(){
 		if(is_null($this->view)){
-			$this->view=make('\Library\View');
+            $this->view=$this->context->make('\Library\View');
+            $this->view->setContext($this->context);
 		}
 		return $this->view;
-	}
-
-	/**
-	 * 运行控制器方法
-	 *
-	 * @param string|object $concrete 控制器对象或类型
-	 * @param string $method 方法名称
-	 * @param array $parameters 参数
-	 * @param array $isInCalled 是否在模板内部调用 
-	 * @return mixed 说明：增加对调用控制器类和方法的感知
-	 */
-	public static function run($concrete,$method,array $parameters=[],$isInCalled=false){
-		static $classStacks=[];
-		
-		// 获取控制器类名
-		$classname=is_object($concrete) ? get_class($concrete) : $concrete;
-		
-		// 入栈操作
-		array_push($classStacks, $classname);
-		
-		// 记录控制器的调用信息
-		$classes=explode('\\', $classname);
-		array_shift($classes);
-		$cm=array_shift($classes);
-		if($cm!='Controller'){
-			self::$_m=strtolower($cm);
-			array_shift($classes);
-		}else{
-			self::$_m='';
-		}
-		self::$_c=implode('/',$classes);
-		self::$_a=$method;
-		// 设置内部调用标识
-		View::setInCalled($isInCalled);
-		$container=Container::getInstance();
-		$result=$container->callMethod($concrete, $method, $parameters);
-		
-		// 出栈操作
-		$container->forgetInstance(array_pop($classStacks));
-		
-		// 重置内部调用标识
-		View::setInCalled(false);
-		return $result;
 	}
 	
 }

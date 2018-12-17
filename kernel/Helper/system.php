@@ -5,19 +5,50 @@
 // ////////////////////////////////////
 
 /**
- * 快速日志记录
+ * 快速日志记录（支持日志分割及文件增量清理）
  *
  * @param mixed $content
  * @param string $file
  * @param number $is_append
  * @return number 写入日志字节数
  */
-function fastlog($content,$isAppend=true,$file='system.log'){
-	$datetime=date('Y-m-d H:i:s');
+function fastlog($content, $isAppend=true, $file='system.log'){
+    $datetime=date('Y-m-d H:i:s');
 	$content='[' . $datetime . '] ' . dump($content, true);
-	$dirname=dirname(LOGS_PATH . $file);
+    $filename=LOGS_PATH . $file;
+	$dirname=dirname($filename);
 	!is_dir($dirname) && mkdir($dirname,0755,true);
-	return file_put_contents(LOGS_PATH . $file, $content . "\n", ($isAppend ? FILE_APPEND : 0));
+    $maxSize=C('max_logfile_size', 20) * 1048576;
+    $maxNum=C('max_logfile_num', 5);
+    
+    $files=glob($filename.'*', GLOB_NOSORT);
+    $total=count($files);
+    if($total>0){
+        //文件名排序
+        usort($files, function($a, $b) use($filename){
+            $an=intval(str_replace($filename, '', $a));
+            $bn=intval(str_replace($filename, '', $b));
+            return $an > $bn ? 1 : -1;
+        });
+        //删除先前的文件
+        if($total > $maxNum){
+            foreach ($files as $k=> &$value) {
+                if($k>= $total-$maxNum){
+                    break;
+                }
+                unlink($value);
+            }
+        }
+        //判断是否生成新文件
+        $lastFile=array_pop($files);
+        if(filesize($lastFile) >= $maxSize){
+            $num=(intval(str_replace($filename, '', $lastFile))+1);
+            $filename=$filename.$num;
+        }else{
+            $filename=$lastFile;
+        }
+    }
+	return file_put_contents($filename, $content . "\n", ($isAppend ? FILE_APPEND : 0));
 }
 
 /**
@@ -29,7 +60,7 @@ function fastlog($content,$isAppend=true,$file='system.log'){
  * @param boolean $record 是否记录日志
  * @return void|array
  */
-function trace($value='[steeze]',$label='',$level='DEBUG',$record=false){
+function trace($value='[steeze]', $label='', $level='DEBUG', $record=false){
 }
 
 /**
@@ -40,7 +71,7 @@ function trace($value='[steeze]',$label='',$level='DEBUG',$record=false){
  * @return void|mixed
  *
  */
-function dump($var,$isReturn=false){
+function dump($var, $isReturn=false){
 	if(is_array($var)){
 		foreach($var as $k=>$v){
 			$var[$k]=dump($v, $isReturn);
@@ -71,7 +102,7 @@ function getip($isOnline=0){
  * @param number $bits
  * @return string
  */
-function sizeformat($size,$bits=2){
+function sizeformat($size, $bits=2){
 	$unit=array('B','KB','MB','GB','TB','PB');
 	return round($size / pow(1024, ($i=floor(log($size, 1024)))), $bits) . $unit[$i];
 }
@@ -102,7 +133,7 @@ function timeformat($tm){
  * @param string $ftype
  * @return multitype:string
  */
-function filelist($dir='.',$ftype='*'){
+function filelist($dir='.', $ftype='*'){
 	$farr=[];
 	if($handle=opendir($dir)){
 		while(false !== ($file=readdir($handle))){
@@ -132,7 +163,7 @@ function filelist($dir='.',$ftype='*'){
  * @param number $isGetRemot 是否获取远程图片
  * @return string 处理后的图片路径（相对于网站根目录）
  */
-function thumb($imgUrl,$maxWidth=0,$maxHeight=0,$cutType=0,$defaultImg='',$isGetRemot=0){
+function thumb($imgUrl, $maxWidth=0, $maxHeight=0, $cutType=0, $defaultImg='', $isGetRemot=0){
 	return Library\Image::thumb($imgUrl, $maxWidth, $maxHeight, $cutType, $defaultImg, $isGetRemot);
 }
 
@@ -158,10 +189,10 @@ function simplify_ds($path){
  * @param string $sourcestr 待截取的字符串
  * @param number $cutlength 截取长度
  * @param bool $addfoot 是否添加"..."在末尾
- * @param bool &$isAdd 是否处理特殊字符，引用方式传入
+ * @param bool $isAdd 是否处理特殊字符，引用方式传入
  * @return string
  */
-function cut_str($sourcestr,$cutlength=80,$addfoot=true,&$isAdd=false){
+function cut_str($sourcestr, $cutlength=80, $addfoot=true, &$isAdd=false){
 	$isAdd=false;
 	if(function_exists('mb_substr')){
 		return mb_substr($sourcestr, 0, $cutlength, 'utf-8') . ($addfoot && ($isAdd=strlen_utf8($sourcestr) > $cutlength) ? '...' : '');
@@ -257,7 +288,7 @@ function strlen_utf8($str){
  * @param string $func 对数组处理的函数
  * @param bool $applyKey 是否同时处理数组键名
  */
-function array_map_deep($array,$func,$applyKey=false){
+function array_map_deep($array, $func, $applyKey=false){
 	foreach($array as $key=>$value){
 		$array[$key]=is_array($value) ? array_map_deep($array[$key], $func, $applyKey) : $func($value);
 		if($applyKey){
@@ -280,7 +311,7 @@ function array_map_deep($array,$func,$applyKey=false){
  * @param string $strip 是否对部分字符进行处理，处理后符合URL编码规范，默认为0（不处理）
  * @return string 处理后的数据
  */
-function base64($data,$type='ENCODE',$filter=NULL,$strip=0){
+function base64($data, $type='ENCODE', $filter=null, $strip=0){
 	$type=strtoupper($type);
 	$filterArr=is_array($filter) ? $filter : (is_string($filter) ? explode(',', $filter) : NULL);
 	$strip=is_int($filter) ? $filter : $strip;
@@ -317,7 +348,7 @@ function base64($data,$type='ENCODE',$filter=NULL,$strip=0){
  * @param string $expiry 过期时间，默认为0，不限制
  * @return string 处理后的数据
  */
-function sys_auth($str,$operation='ENCODE',$key='',$expiry=0){
+function sys_auth($str, $operation='ENCODE', $key='', $expiry=0){
 	$operation=strtoupper($operation);
 	$key_length=4;
 	$key=md5($key != '' ? $key : C('auth_key'));
@@ -352,7 +383,7 @@ function sys_auth($str,$operation='ENCODE',$key='',$expiry=0){
  * @param string $key 自定义秘钥，默认为空
  * @return string 处理后的数据
  */
-function sys_crypt($str,$type=1,$key=''){
+function sys_crypt($str, $type=1, $key=''){
 	$keys=md5($key !== '' ? $key : C('auth_key'));
 	$str=$type ? (string)$str : base64($str, 'decode', 1);
 	$strLen=strlen($str);
@@ -373,7 +404,7 @@ function sys_crypt($str,$type=1,$key=''){
  * @param bool $isCompile 是否需要编译，如果为true，返回编译后的路径，否则返回模板路径
  * @return string 返回模板路径
  */
-function template($template='index',$dir='',$style='',$module='',$isCompile=true){
+function template($template='index', $dir='', $style='', $module='', $isCompile=true){
 	$tplExists=false;
 	is_bool($dir) && ($dir='');
 	is_bool($style) && ($style='');
@@ -418,13 +449,34 @@ function template($template='index',$dir='',$style='',$module='',$isCompile=true
  */
 
 /**
+ * 将对象或数组转换为JSON字符串
+ *
+ * @param mixed $data 带转换的对象或数组
+ * @param int $option 转换选项
+ * @return string
+ */
+function to_string($data, $option=null){
+    $isModel=is_object($data) && is_a($data,'\Library\Model');
+    if($isModel || is_array($data) || is_object($data)){
+        //命令行模式下输出格式化的JSON
+        $jsonOption=is_null($option) ? (env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
+                    (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)) : $option;
+        return json_encode(
+                $isModel ? $data->data() : $data,
+                $jsonOption
+            );
+    }
+    return $data;
+}
+
+/**
  * 字符串命名风格转换 type 0 将Java风格转换为C的风格 1 将C风格转换为Java的风格
  * 
  * @param string $name 字符串
  * @param integer $type 转换类型
  * @return string
  */
-function parse_name($name,$type=0){
+function parse_name($name, $type=0){
 	if($type){
 		if(strpos($name, '_') !== false){
 			$names=explode('_', $name);
@@ -450,7 +502,7 @@ function parse_name($name,$type=0){
  * @param int $max_ext_length 允许获取扩展名的最大长度
  * @return string 扩展名
  */
-function fileext($filename,$default='jpg',$max_ext_length=5){
+function fileext($filename, $default='jpg', $max_ext_length=5){
 	if(strrpos($filename, '/') !== false){
 		$filename=substr($filename, strrpos($filename, '/') + 1);
 	}
@@ -464,11 +516,11 @@ function fileext($filename,$default='jpg',$max_ext_length=5){
 /**
  * 从提供的字符串中，产生随机字符串
  *
- * @param number $length 输出长度
+ * @param int $length 输出长度
  * @param string $chars 范围字符串，默认为：0123456789
  * @return string 生成的字符串
  */
-function random($length,$chars='0123456789'){
+function random($length, $chars='0123456789'){
 	$hash='';
 	$max=strlen($chars) - 1;
 	for($i=0; $i < $length; $i++){
@@ -498,19 +550,20 @@ function string2array($data){
  * 将数组转换为字符串
  *
  * @param array $data
+ * @param bool $isSlashes
  * @return string
  */
-function array2string($data,$isformdata=1){
+function array2string($data, $isSlashes=true){
 	if($data == ''){
 		return '';
 	}
 	if(!is_array($data)){
 		return $data;
 	}
-	if($isformdata){
+	if($isSlashes){
 		$data=slashes($data, 0);
 	}
-	return var_export($data, TRUE);
+	return var_export($data, true);
 }
 
 /**
@@ -521,7 +574,7 @@ function array2string($data,$isformdata=1){
  */
 function array2html($data){
 	if(is_array($data)){
-		$str='array(';
+		$str='[';
 		foreach($data as $key=>$val){
 			if(is_string($key)){
 				$key='\'' . $key . '\'';
@@ -543,7 +596,7 @@ function array2html($data){
 				}
 			}
 		}
-		return $str . ')';
+		return $str . ']';
 	}
 	return false;
 }
@@ -555,7 +608,7 @@ function array2html($data){
  * @param bool $isAdd 是否为添加slashes，默认为true
  * @return string|array
  */
-function slashes($data,$isAdd=true){
+function slashes($data, $isAdd=true){
 	if(!is_array($data)){
 		return $isAdd ? addslashes($data) : stripslashes($data);
 	}
@@ -616,44 +669,6 @@ function safe_replace($data){
 }
 
 /**
- * URL重定向
- *
- * @param string $url 重定向的URL地址
- * @param integer $time 重定向的等待时间（秒）
- * @param string $msg 重定向前的提示信息
- * @return void
- */
-function redirect($url,$time=0,$msg=''){
-	$response=make('\Library\Response');
-	// 多行URL地址支持
-	$url=str_replace(array("\n","\r"), '', $url);
-	if(empty($msg)){
-		$msg="系统将在{$time}秒之后自动跳转到{$url}！";
-	}
-	if(!$response->hasSendHeader()){
-		if(0 === $time){
-			$response->header('Location', $url);
-			$response->status(302);
-			$response->end();
-		}else{
-			$contentType=C('mimetype.html','text/html');
-			$charset=C('charset', 'utf-8');
-			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
-			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			$response->header('X-Powered-By','steeze');
-			$response->header('refresh', $time . ';url=' . $url);
-			$response->end($msg);
-		}
-	}else{
-		$str='<meta http-equiv="Refresh" content="'.$time.';URL='.$url.'"/>';
-		if($time != 0){
-			$str.=$msg;
-		}
-		$response->end($str);
-	}
-}
-
-/**
  * 获取远程文件
  *
  * @param string $url 文件地址
@@ -661,7 +676,7 @@ function redirect($url,$time=0,$msg=''){
  * @param string $savepath 文件保存路径，如果为空则返回获取的文件内容
  * @return number|mixed
  */
-function get_remote_file($url,$data=null,$headers=null,$savepath=null){
+function get_remote_file($url, $data=null, $headers=null, $savepath=null){
 	if(trim($url) == ''){
 		return null;
 	}
@@ -718,31 +733,16 @@ function get_remote_file($url,$data=null,$headers=null,$savepath=null){
  * @param mixed $value session值
  * @return mixed
  */
-function session($name='',$value=''){
+function session($name='', $value=''){
 	static $prefix=NULL;
 	is_null($prefix) && ($prefix=C('session_prefix'));
 	
 	if(is_array($name)){ // session初始化 在session_start 之前调用
 		isset($name['prefix']) && ($prefix=$name['prefix']);
-		$sid=null;
         $key=isset($name['name']) ? $name['name'] : C('var_session_id','PHPSESSID');
-		if(isset($name['id'])){
-			$sid=$name['id'];
-		}else{
-			$request=make('\Library\Request');
-            $sid=$request->cookie($key);
-            if($sid===null){
-                $sid=$request->header($key);
-            }
-            if($sid===null){
-                $sid=$request->post($key);
-            }
-            if($sid===null){
-                $sid=$request->get($key);
-            }
-		}
+		$sid=isset($name['id']) ? $name['id'] : env('SESSION_ID');
+        
 		!is_null($sid) && session_id($sid);
-		
 		ini_set('session.auto_start', 0);
 		session_name($key);
 		isset($name['path']) && session_save_path($name['path']);
@@ -789,17 +789,7 @@ function session($name='',$value=''){
                 }
                 $sid=null;
                 $key=C('var_session_id','PHPSESSID');
-                $request=make('\Library\Request');
-                $sid=$request->cookie($key);
-                if($sid===null){
-                    $sid=$request->header($key);
-                }
-                if($sid===null){
-                    $sid=$request->post($key);
-                }
-                if($sid===null){
-                    $sid=$request->get($key);
-                }
+                $sid=env('SESSION_ID');
                 !is_null($sid) && session_id($sid);
                 ini_set('session.auto_start', 0);
                 session_name($key);
@@ -881,93 +871,6 @@ function session($name='',$value=''){
 }
 
 /**
- * Cookie 设置、获取、删除
- *
- * @param string $name cookie名称
- * @param mixed $value cookie值
- * @param mixed $option cookie参数
- * @return mixed
- */
-function cookie($name='',$value='',$option=null){
-	// 默认设置
-	$config=array(
-			'prefix' => C('cookie_pre'), // cookie 名称前缀
-			'expire' => C('cookie_ttl', 0), // cookie 保存时间
-			'path' => C('cookie_path'), // cookie 保存路径
-			'domain' => C('cookie_domain'), // cookie 有效域名
-			'secure' => C('cookie_secure', false), // cookie 启用安全传输
-			'httponly' => C('cookie_httponly', false) // httponly设置
-		);
-	// 参数设置(会覆盖黙认设置)
-	if(!is_null($option)){
-		if(is_numeric($option)){
-			$option=array('expire' => $option);
-		}elseif(is_string($option)){
-			parse_str($option, $option);
-		}
-		$config=array_merge($config, array_change_key_case($option));
-	}
-	if(!empty($config['httponly'])){
-		ini_set('session.cookie_httponly', 1);
-	}
-	
-	$response=make('\Library\Response');
-	$cookies=make('\Library\Request')->cookie();
-	
-	// 清除指定前缀的所有cookie
-	if(is_null($name)){
-		if(empty($cookies)){
-			return null;
-		}
-		// 要删除的cookie前缀，不指定则删除config设置的指定前缀
-		$prefix=empty($value) ? $config['prefix'] : $value;
-		if(!empty($prefix)){ // 如果前缀为空字符串将不作处理直接返回
-			foreach($cookies as $key=>$val){
-				if(0 === stripos($key, $prefix)){
-					$response->cookie($key, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-					unset($cookies[$key]);
-				}
-			}
-		}
-		return null;
-	}elseif('' === $name){
-		// 获取全部的cookie
-		return $cookies;
-	}
-	
-	$name=$config['prefix'] . str_replace('.', '_', $name);
-	if('' === $value){
-		if(isset($cookies[$name])){
-			$value=sys_crypt($cookies[$name], 0);
-			if(0 === strpos($value, 'st:')){
-				$ret=substr($value, 3);
-				$ret=json_decode(MAGIC_QUOTES_GPC ? stripslashes($ret) : $ret, true);
-				return is_array($ret) ? array_map_deep($ret, 'urldecode', true) : $value;
-			}else{
-				return $value;
-			}
-		}else{
-			return null;
-		}
-	}else{
-		if(is_null($value)){
-			$response->cookie($name, '', time() - 3600, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-			unset($cookies[$name]); // 删除指定cookie
-		}else{
-			// 设置cookie
-			if(is_array($value)){
-				$value='st:' . json_encode(array_map_deep($value, 'urlencode', true));
-			}
-			$value=sys_crypt($value, 1);
-			$expire=!empty($config['expire']) ? time() + intval($config['expire']) : 0;
-			$response->cookie($name, $value, $expire, $config['path'], $config['domain'], $config['secure'], $config['httponly']);
-			$cookies[$name]=$value;
-		}
-	}
-	return null;
-}
-
-/**
  * 导入静态文件路径 如：'js/show.js@daoke:home'，则返回/assets/app/home/daoke/js/show.js
  *
  * @param string $file 文件模式路径
@@ -975,7 +878,7 @@ function cookie($name='',$value='',$option=null){
  * @param bool $check 是否检查存在，如果不存在返回空
  * @param string $default='default' 如果不存在，默认检查的风格名称
  */
-function assets($file,$type='',$check=false,$default='default'){
+function assets($file, $type='', $check=false, $default='default'){
 	if(!is_string($type)){
 		if(is_string($check)){
 			$default=$check;
@@ -1059,22 +962,32 @@ function assets($file,$type='',$check=false,$default='default'){
  *
  * @param string $concrete 类型名称
  * @param array $parameters 参数
+ * @param \Library\Container $container 使用的容器对象，为null则使用系统容器
  * @return object 类型实例
  */
-function make($concrete,array $parameters=[]){
-	$container=\Library\Container::getInstance();
-	return $container->make($concrete, $parameters);
+function make($concrete, $parameters=[], $container=null){
+    if(is_object($parameters)){
+        $container=&$parameters;
+    }
+    if(is_null($container)){
+	    $container=\Library\Container::getInstance();
+    }
+	return $container->make($concrete, is_array($parameters) ? $parameters : []);
 }
 
 /**
  * 获取渲染后的视图内容
  * 
  * @param string $name 视图名称，可以是直接的文件路径，或者视图路径
- * @param array $datas 视图变量
+ * @param array | \Library\Container $datas 视图变量或容器对象
+ * @param \Library\Container $container 使用的容器对象，为null则使用系统容器
  * @return string 渲染后的视图内容
  */
-function view($name,$datas=[]){
-	$viewer=make('\Library\View');
+function view($name, $datas=[], $container=null){
+    if(is_object($datas)){
+        $container=&$datas;
+    }
+	$viewer=make('\Library\View', [], $container);
 	if(is_array($datas)){
 		foreach($datas as $key=>&$value){
 			$viewer->assign($key, $value);
@@ -1095,12 +1008,19 @@ function env($key,$default=null){
 }
 
 /**
- * 记录和统计时间（微秒）和内存使用情况 使用方法: <code> G('begin'); // 记录开始标记位 // ... 区间运行代码 G('end'); // 记录结束标签位 echo G('begin','end',6); // 统计区间运行时间 精确到小数后6位 echo G('begin','end','m'); // 统计区间内存使用情况 如果end标记位没有定义，则会自动以当前作为标记位 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 </code>
- * 
+ * 记录和统计时间（微秒）和内存使用情况 
+ *
  * @param string $start 开始标签
  * @param string $end 结束标签
  * @param integer|string $dec 小数位或者m
  * @return mixed
+ * @example 使用方法: 
+ * G('begin'); // 记录开始标记位 
+ * G('end');   //记录结束标签位
+ * echo G('begin','end',6);  //统计区间运行时间 精确到小数后6位
+ * echo G('begin','end','m'); 
+ * 统计区间内存使用情况 如果end标记位没有定义，则会自动以当前作为标记位 
+ * 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 
  */
 function G($start,$end='',$dec=4){
 	static $_info=array();
@@ -1379,38 +1299,32 @@ function C($key='',$default=''){
 	return null;
 }
 
-/*
- * 获取输入参数，非空值，依次为GET、POST @param string $name 参数名称 @param mixed $default 默认值 @handle string|\Closure 处理器，可以是函数名称或者回调函数 @return mixed
- */
-function I($name,$default='',$handle=null){
-	$request=make('\Library\Request');
-	$value=$request->get($name, $request->post($name, $default));
-	return !is_null($handle) && ((is_string($handle) && function_exists($handle)) || ($handle instanceof \Closure)) ? $handle($value) : $value;
-}
 
-/*
- * 生成错误异常 @param mixed $name 参数名称 @param int|array $code 错误码，也可以传入一个包括code键的数组 @param null|bool $isRender 是否进行渲染，为默认值null抛出错误，为true返回渲染后的错误，false直接输出 @return mixed
+/**
+ * 生成错误异常 
+ * 
+ * @param mixed $error 参数名称 
+ * @param int|array $code 错误码，也可以传入一个包括code键的数组 
+ * @return \Exception
  */
-function E($obj,$code=404,$isRender=null){
+function E($error, $code=404){
 	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
-	if(!is_object($obj)){
-		$e=new \Library\Exception($obj, $errorCode);
-	}else if(($obj instanceof \Exception) || ($obj instanceof \Library\Exception)){
-		$e=&$obj;
+	if(!is_object($error)){
+		throw new \Exception(strval($error), $errorCode);
+	}else if($error instanceof \Exception){
+		throw $error;
 	}else{
-		$e=new \Library\Exception(L('An unknown error'), $errorCode);
-	}
-	if(is_null($isRender)){
-		throw $e;
-	}else{
-		return \Library\Exception::render($e, (array)$code, $isRender);
+		throw new \Exception(L('Error: '.get_class($error)), $errorCode);
 	}
 }
 
-/*
- * 语言转化 @param string $message 语言键名 @return 转换后的语言
+/** 
+ * 语言转化
+ *  
+ * @param string $message 语言键名 
+ * @return string 转换后的语言
  */
-function L($message,$datas=[]){
+function L($message, $datas=[]){
 	static $langs=null;
 	if(is_null($langs)){
 		$langs=[];

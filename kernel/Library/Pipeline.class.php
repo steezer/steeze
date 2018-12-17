@@ -102,12 +102,7 @@ class Pipeline{
 	protected function prepareDestination(Closure $destination){
 		return function () use ($destination){
 			$passables=func_get_args();
-			try{
-				return call_user_func_array($destination, $passables);
-			}catch(\Exception $e){
-				array_unshift($passables, $e);
-				return call_user_func_array(array($this,'handleException'), $passables);
-			}
+			return call_user_func_array($destination, $passables);
 		};
 	}
 
@@ -120,14 +115,9 @@ class Pipeline{
 		return function ($stack,$pipe){
 			return function () use ($stack,$pipe){
 				$passables=func_get_args();
-				try{
-					$slice=$this->getSlice();
-					$callable=$slice($stack, $pipe);
-					return call_user_func_array($callable, $passables);
-				}catch(\Exception $e){
-					array_unshift($passables, $e);
-					return call_user_func_array(array($this,'handleException'), $passables);
-				}
+				$slice=$this->getSlice();
+                $callable=$slice($stack, $pipe);
+                return call_user_func_array($callable, $passables);
 			};
 		};
 	}
@@ -160,21 +150,4 @@ class Pipeline{
 		};
 	}
 
-	/**
-	 * 处理给定的异常
-	 *
-	 * @param \Library\Exception $e
-	 * @param array $passables
-	 * 
-	 * @return mixed
-	 *
-	 * @throws \Library\Exception
-	 */
-	protected function handleException(){
-		$passables=func_get_args();
-		$e=array_shift($passables);
-		$handler=new Exception();
-		$handler->report($e);
-		return $handler->render($e,$passables);
-	}
 }

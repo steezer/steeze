@@ -12,10 +12,10 @@ return [
 	'lock_ex' => 1, // 写入缓存时是否建立文件互斥锁定（如果使用nfs建议关闭）
 	'default_thumb'=>'', //默认缩略图片
 	'db_conn'=>'default', //数据库默认连接配置
-	
 	'attachment_stat' => 1, // 附件状态使用情况统计
 	'errorlog' => 0, // 是否保存错误日志到LOGS_PATH/exception.log
-	'errorlog_size' => 20, // 错误日志预警大小，单位：M
+	'max_logfile_size' => 20, // 单个日志文件最大大小（单位：M），超过之后自动增量重命名
+    'max_logfile_num' => 5, // 单类日志文件最大个数
 	'gzip' => 0,
 	'tmpl_exception_tpl' => KERNEL_PATH.'View'.DS.'exception.php', //错误显示PHP原生模板路径【不支持模板变量】
 	
@@ -24,18 +24,15 @@ return [
 	'default_assets' => 'default', // 前台访问静态文件路径，如果以/开头相对于ASSETS_URL，如果为相对路径则相对于ASSETS_URL/app/MODULE_NAME/
 
 	//默认路由参数
+    'var_module'=>'m', //控制器变量名称
+    'var_controller'=>'c', //控制器变量名称
+    'var_action'=>'a', //处理方法变量名称
 	'default_c'=>'index', //默认控制器
 	'default_a'=>'index', //默认方法
 	
 	// Session配置
 	'session_prefix' => 'sts_',
 	'var_session_id' => 'PHPSESSID',
-
-	// Cookie配置
-	'cookie_domain' => '', // Cookie 作用域
-	'cookie_path' => '', // Cookie 作用路径
-	'cookie_pre' => 'stc_', // Cookie 前缀，同一域名下安装多套系统时，请修改Cookie前缀
-	'cookie_ttl' => 0, // Cookie 生命周期，0 表示随浏览器进程
 
 	//数据缓存设置
 	'data_cache_time'       =>  60,      // 数据缓存有效期 0表示永久缓存

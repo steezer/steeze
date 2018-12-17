@@ -4,6 +4,9 @@ return [
 	'Page not found' => '页面未找到',
 	'template {0} is not exists' => '模板文件 {0} 不存在',
 	'class for {0} is not exists' => '类 {0} 不存在',
+    'System will automatically jump to {0} after {1} seconds' => '系统将在{1}秒之后自动跳转到{0}',
+    'success' => '操作成功',
+    'error' => '操作失败',
 	
 	//数据库相关语言配置
 	'no database driver: {0}' => '未找到数据库驱动：{0} ',

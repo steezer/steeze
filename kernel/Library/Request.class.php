@@ -242,6 +242,44 @@ class Request{
 		}
 		return $posts;
 	}
+    
+    /**
+    * 获取POST/GET输入参数，优先级为: POST> GET
+    * @param string $key 获取的键名，默认为null，取所有值
+    * @param default 默认值
+    * @return string | array
+    */
+    public function input($name=null, $default=null){
+        if(is_null($name)){
+            return array_merge(
+                    $this->get(),
+                    $this->post()
+                );
+        }
+        
+        $type='';
+        if(strpos($name,'/')){
+            $keys=explode('/', $name, 2);
+            $name=trim($keys[0]);
+            $type=trim($keys[1]);
+        }
+
+        //获取值
+        $value=$this->post($name);
+        if(is_null($value)){
+            $value=$this->get($name, $default);
+        }
+
+        //值处理函数
+        if($type=='d'){
+            return intval($value);
+        }else if($type=='f'){
+            return floatval($value);
+        }else if(!empty($type) && function_exists($type)){
+            return $type($value);
+        }
+        return $value;
+    }
 	
 	/**
 	 * 获取Http请求携带的COOKIE信息

@@ -59,10 +59,19 @@ class Route{
 				!empty($cas) && ($route_c=implode('/', $cas));
 				!empty($res) && ($route_m=strtolower(array_pop($res)));
 			}
+            
 			//设置默认路由常量，同时使用传统路由方式匹配模式
 			if($path==env('ROOT_URL') || USE_DEFUALT_HANDLE){
-				!isset($route_c) && ($route_c=defined('BIND_CONTROLLER') ? BIND_CONTROLLER : ucfirst(I('c', C('default_c'))));
-				!isset($route_a) && ($route_a=defined('BIND_ACTION') ? BIND_ACTION : I('a', C('default_a')));
+				!isset($route_c) && 
+                    ($route_c=defined('BIND_CONTROLLER') ? 
+                        BIND_CONTROLLER : 
+                        ucfirst($this->request->input(C('var_controller', 'c'), C('default_c')))
+                    );
+				!isset($route_a) && 
+                    ($route_a=defined('BIND_ACTION') ? 
+                        BIND_ACTION : 
+                        $this->request->input(C('var_action', 'a'), C('default_a'))
+                    );
 			}
 		}else if(is_callable($handle)){
 			$this->setDisposer($handle);
@@ -214,7 +223,18 @@ class Route{
 			
 		}
 		
-		Loader::env('BIND_MODULE', strtolower(!empty($cacheHosts[$host]) ? $cacheHosts[$host] : (USE_DEFUALT_HANDLE ? I('m',DEFAULT_APP_NAME) : DEFAULT_APP_NAME)));
+        //绑定系统应用模块
+		Loader::env('BIND_MODULE', 
+            strtolower(
+                !empty($cacheHosts[$host]) ? 
+                    $cacheHosts[$host] : 
+                    (
+                        USE_DEFUALT_HANDLE ? 
+                            $this->request->input(C('var_module','m'),DEFAULT_APP_NAME) : 
+                            DEFAULT_APP_NAME
+                    )
+            )
+        );
 		
 		$sHost='*'.strstr($host,'.');
 		return isset($cacheRoutes[$host]) ? $cacheRoutes[$host] : (isset($cacheRoutes[$sHost]) ? $cacheRoutes[$sHost] : null);

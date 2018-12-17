@@ -20,28 +20,6 @@ class Pager{
 		'none'=>'没有记录信息！',
 		'only'=>'共[total]条记录',
 	];
-    
-	/**
-	 * 获取列表分页
-	 * @param array $config 分页信息参数配置
-	 * @param number $setPages 显示页数（可选），默认：10
-	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
-	 * @param $array $array 附加的参数（可选）
-	 * @return string 分页字符串
-	 * 分页信息参数范例：
-	 * 		[
-     *          'total'=> $totalrows,  //记录总数
-     *          'page'=> $currentpage,  //当前页数
-	 * 			'type'=>'page',  //分页参数（可选），默认:page
-	 * 			'size'=> $pagesize,  //每页大小（可选），默认：15
-	 * 			'url'=> $curl, //分页URL（可选），默认：当前页URL
-	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
-	 * 		]
-	 */
-    public static function get($config,$setPages=10,$urlRule='',$array=array()){
-        $pager=make('\Library\pager');
-        return $pager->getListPager($config, $setPages, $urlRule, $array);
-    }
 
 	/**
 	 * 设置分页配置
@@ -56,27 +34,32 @@ class Pager{
 		}
 	}
 	
-	/**
+    /**
 	 * 获取列表分页
 	 * @param array $config 分页信息参数配置
-	 * @param number $setPages 显示页数（可选），默认：10
+	 * @param int $setPages 显示页数（可选），默认：10
 	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
-	 * @param $array $array 附加的参数（可选）
-	 * @return string 分页字符串
-	 * 分页信息参数范例：
+	 * @param array $array 附加的参数（可选）
+	 * @return array 分页配置，包括html和info字段
+	 * @example 分页信息参数范例：
 	 * 		[
      *          'total'=> $totalrows,  //记录总数
-     *          'page'=> $currentpage,  //当前页数
+     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
+     *          'size'=> $pagesize,  //每页大小（可选），默认：15
+     *          'url'=> $curl, //分页URL（可选），默认使用当前页
 	 * 			'type'=>'page',  //分页参数（可选），默认:page
-	 * 			'size'=> $pagesize,  //每页大小（可选），默认：15
-	 * 			'url'=> $curl, //分页URL（可选），默认：当前页URL
 	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
 	 * 		]
 	 */
-	function getListPager($config, $setPages=10, $urlRule='', $array=array()){
-		$defaults=['type' => 'page','size' => 15,'count'=>1,'url' => $this->getUrl(1)];
+	function getPager($config, $setPages=10, $urlRule='', $array=[]){
+		$defaults=['type' => 'page','size' => 15,'count'=>1,'url' => '/'];
 		$addUrl='';
 		$configs=array_merge($defaults, $config);
+        if(is_string($configs['page']) && strpos($configs['page'], ',')!==false){
+            $pagesizes=explode($configs['page'], ',');
+            $configs['page']=intval(trim($pagesizes[0]));
+            $configs['size']=intval(trim($pagesizes[1]));
+        }
 		$callback=isset($config['callback']) ? $config['callback'] : '';
 		if(isset($GLOBALS['URL_RULE']) && $urlRule == ''){
 			$urlRule=$GLOBALS['URL_RULE'];
@@ -168,73 +151,6 @@ class Pager{
 	}
 	
 	/**
-	 * 内容页分页
-	 *
-	 * @param int $total 总页数
-	 * @param int $currPage 当前页
-	 * @param string $$this->pageUrls 所有页面的url集合
-	 * @return string 分页字符串
-	 */
-	function getDetailPager($total,$currPage,$pageUrls){
-		$multipage='';
-		$page=11;
-		$offset=4;
-		$pages=$total;
-		$from=$currPage - $offset;
-		$to=$currPage + $offset;
-		$more=0;
-		if($page >= $pages){
-			$from=2;
-			$to=$pages - 1;
-		}else{
-			if($from <= 1){
-				$to=$page - 1;
-				$from=2;
-			}elseif($to >= $pages){
-				$from=$pages - ($page - 2);
-				$to=$pages - 1;
-			}
-			$more=1;
-		}
-		
-		if($currPage > 0){
-			if($currPage == 1){
-				$multipage.='<span class="page_pre page_none">上一页</span>';
-			}else{
-				$multipage.='<a class="page_pre" href="' . $pageUrls[$currPage - 1] . '">上一页</a>';
-			}
-			if($currPage == 1){
-				$multipage.=' <span class="page_cur">1</span>';
-			}elseif($currPage > 6 && $more){
-				$multipage.=' <a class="page_no" href="' . $pageUrls[1] . '">1</a><span class="page_dot">..</span>';
-			}else{
-				$multipage.=' <a class="page_no" href="' . $pageUrls[1] . '">1</a>';
-			}
-		}
-		
-		for($i=$from; $i <= $to; $i++){
-			if($i != $currPage){
-				$multipage.=' <a class="page_no" href="' . $pageUrls[$i] . '">' . $i . '</a>';
-			}else{
-				$multipage.=' <span class="page_cur" >' . $i . '</span>';
-			}
-		}
-		
-		if($currPage < $pages){
-			if($currPage < $pages - 5 && $more){
-				$multipage.=' <span class="page_dot">..</span><a class="page_no" href="' . $pageUrls[$pages] . '">' . $pages . '</a> <a class="page_next" href="' . $pageUrls[$currPage + 1] . '">下一页</a>';
-			}else{
-				$multipage.=' <a class="page_no" href="' . $pageUrls[$pages] . '">' . $pages . '</a> <a class="page_next" href="' . $pageUrls[$currPage + 1] . '">下一页</a>';
-			}
-		}elseif($currPage == $pages){
-			$multipage.=' <span class="page_cur">' . $pages . '</span> <span class="page_next page_none">下一页</span>';
-		}else{
-			$multipage.=' <a class="page_no" href="' . $pageUrls[$currPage] . '">' . $pages . '</a> <span class="page_next page_none">下一页</span>';
-		}
-		return $multipage;
-	}
-	
-	/**
 	 * 生成分页html标签
 	 *
 	 * @param string $tagName 标签名称
@@ -298,9 +214,6 @@ class Pager{
 	 * @return string 重新设置的URL
 	 */
 	private function urlParam($par,$url='',$key='page'){
-		if($url == ''){
-			$url=getUrl(1);
-		}
 		$pos=strpos($url, '?');
 		if($pos === false){
 			$url.='?' . (is_array($par) ? http_build_query($par) : $par);
@@ -326,36 +239,5 @@ class Pager{
 		}
 		return $url;
 	}
-	
-	/**
-	 * 获取当前页面URL地址
-	 *
-	 * @param int $type 需要获取的类型，取值及返回值意义 0->绝对地址，1->相对地址，2->不带参数绝对地址，3->不带参数相对地址
-	 * @return string 获取的URL，类型由$type决定
-	 */
-	private function getUrl($type=0){
-		$server=make('\Library\Request')->server();
-		$sys_protocal=env('SITE_PROTOCOL');
-		$php_self=$server['php_self'] ? $server['php_self'] : $server['script_name'];
-		$path_info=isset($server['path_info']) ? $server['path_info'] : '';
-		$relate_url=isset($server['request_uri']) ? $server['request_uri'] : $php_self . (isset($server['query_string']) ? '?' . safe_replace($server['query_string']) : $path_info);
-		if(strpos($relate_url, '?')===false && !empty($server['query_string'])){
-			$relate_url.='?'.$server['query_string'];
-		}
-		$relate_url_nopara=strpos($relate_url, '?') === false ? $relate_url : substr($relate_url, 0, strpos($relate_url, '?'));
-		switch($type){
-			case 0:
-				return $sys_protocal . env('SITE_HOST') . $relate_url;
-				break;
-			case 1:
-				return $relate_url;
-				break;
-			case 2:
-				return $sys_protocal . env('SITE_HOST') . $relate_url_nopara;
-				break;
-			case 3:
-				return $relate_url_nopara;
-				break;
-		}
-	}
+    
 }

@@ -102,12 +102,12 @@ class Response{
 	 * @param bool $isConsole 是否直接写入到控制台
 	 * 
 	 */
-	public function write($data,$isConsole=0){
-        if( !$this->isEnd ){
+	public function write($data, $isConsole=false){
+        if( !$this->isEnd && !is_null($data)){
             if(!$isConsole && !is_null($this->response)){
-                $this->response->write(self::toString($data));
+                $this->response->write(to_string($data));
             }else{
-                echo self::toString($data);
+                echo to_string($data);
             }
         }
 	}
@@ -156,25 +156,66 @@ class Response{
             $this->setIsEnd(true);
         }
 	}
-	
-	/**
-	 * 输出内容格式化
-	 * @param mixed $data 数据
-     * @param mixed $option 转换选项
-	 * @return string
-	 */
-	public static function toString($data, $option=null){
-        $isModel=is_object($data) && is_a($data,'\Library\Model');
-		if($isModel || is_array($data) || is_object($data)){
-            //命令行模式下输出格式化的JSON
-            $jsonOption=is_null($option) ? (env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
-                        (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)) : $option;
-            return json_encode(
-                    $isModel ? $data->data() : $data,
-                    $jsonOption
-                );
+    
+    /**
+     * 输出数据到客户端
+     *
+     * @param mixed $data 需要输出的数据
+     * @param string $dataType 数据类型，如果为空从系统配置获取
+     * @param string|bool $charset 数据编码，如果为false不输出编码，为空从系统配置获取
+     */
+    public function flush($data, $dataType='', $charset=''){
+        if(!$this->hasSendHeader()){
+			if(empty($dataType)){
+				$type=is_array($data) || is_object($data) ? 'json' : 'html';
+				$dataType=C('mimetype.'.$type, 'text/html');
+			}
+            if($charset!==false){
+                $dataType=$dataType . '; charset=' . ($charset ?: C('charset', 'utf-8'));
+            }
+			$this->header('Content-Type', $dataType); // 网页字符编码
+			$this->header('Cache-control', C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
+			$this->header('X-Powered-By', 'steeze');
 		}
-		return $data;
-	}
+        //结束输出
+        $this->end($data);
+    }
+    
+    /**
+     * URL重定向
+     *
+     * @param string $url 重定向的URL地址
+     * @param integer $time 重定向的等待时间（秒）
+     * @param string $msg 重定向前的提示信息
+     * @return void
+     */
+    public function redirect($url, $time=0, $msg=''){
+        // 多行URL地址支持
+        $url=str_replace(["\n","\r"], '', $url);
+        if($time && empty($msg)){
+            $msg=L('System will automatically jump to {0} after {1} seconds', [$url, $time]);
+        }
+        if(!$this->hasSendHeader()){
+            if(0 === $time){
+                $this->header('Location', $url);
+                $this->status(302);
+                $this->end();
+            }else{
+                $contentType=C('mimetype.html','text/html');
+                $charset=C('charset', 'utf-8');
+                $this->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
+                $this->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
+                $this->header('X-Powered-By','steeze');
+                $this->header('refresh', $time . ';url=' . $url);
+                $this->end($msg);
+            }
+        }else{
+            $str='<meta http-equiv="Refresh" content="'.$time.';URL='.$url.'"/>';
+            if($time != 0){
+                $str.=$msg;
+            }
+            $this->end($str);
+        }
+    }
 	
 }

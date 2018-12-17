@@ -317,7 +317,8 @@ class Manager {
 				$class=$m.'.'.implode('/', $route_cs);
 			}
 			unset($datas['name']);
-			$str.=(!empty($return) ? '$' . $return . ' = ' : 'echo \Library\Response::toString') . '(\Library\Controller::run(\Loader::controller(\''.$class.'\'),\'_'.$action.'\','.array2html($datas).',true));';
+            $dataArr=array2html($datas);
+            $str.=(!empty($return) ? '$' . $return . ' = ' : 'echo to_string') . '($this->render(\''.$class.'\',\'_'.$action.'\','.$dataArr.'));';
 		}
 		return !empty($str) ? '<?php ' . $str . ' ?>' : '';
 	}
@@ -466,7 +467,9 @@ class Manager {
 				try{
 					$tagPath=str_replace('\\\\','\\','\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
 					$tagCaches[$tag]=$container->make($tagPath);
-				}catch (\Exception $e){}
+				}catch (\Exception $e){
+                    
+                }
 			}
 			
 			//再从系统中查找标签类

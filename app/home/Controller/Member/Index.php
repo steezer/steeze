@@ -9,8 +9,8 @@ class Index extends Controller{
 		$this->display();
 	}
 	
-	public function _info(Model $user){
-		$this->assign('info',$user);
+	public function _info(){
+		$this->assign('info',['id'=>12,'name'=>'spring']);
 		$this->display();
 	}
 	

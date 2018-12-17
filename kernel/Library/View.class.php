@@ -1,12 +1,66 @@
 <?php
 namespace Library;
+use Loader;
 class View{
 	protected $tVar=[]; //模板输出变量
 	protected $theme=''; //模板主题
 	protected static $_m=''; //默认模块
 	protected static $_c=''; //默认控制器
 	protected static $_a=''; //默认方法
-	protected static $isInCalled=false; //是否在内部调用
+    
+    /**
+     * 应用上下文对象
+     *
+     * @var \Library\Application
+     */
+    private $context=null;
+    
+    /**
+     * 分页对象
+     *
+     * @var \Library\Pager
+     */
+	private $pager=null;
+    
+    /**
+     * 设置应用上下文对象
+     *
+     * @param \Library\Application $context
+     * @return \Library\Controller
+     */
+    public function setContext($context){
+        if($context instanceof Application){
+            $this->context=$context;
+        }
+        return $this;
+    }
+    
+    /**
+     * 获取应用上下文对象
+     *
+     * @return \Library\Application
+     */
+    public function getContext(){
+        return $this->context;
+    }
+    
+    /**
+	 * 获取列表分页
+	 * @param array $config 分页信息参数配置
+	 * @param int $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param array $array 附加的参数（可选）
+	 * @return array 分页配置，包括html和info字段
+	 */
+    public function getPager($config=[], $setPages=10, $urlRule='', $array=[]){
+        if(is_null($this->pager)){
+            $this->pager=new Pager();
+        }
+        if(!isset($config['url']) && !is_null($this->context)){
+            $config['url']=$this->context->getRequest()->server('request_uri','/');
+        }
+        return $this->pager->getPager($config, $setPages, $urlRule, $array);
+    }
 	
 	/**
 	 * 设置默认的模块、控制器和方法
@@ -14,7 +68,7 @@ class View{
 	 * @param string $c 控制器名称
 	 * @param string $a 方法名称
 	 * */
-	public function setMca($m,$c,$a){
+	public function setMca($m, $c, $a){
 		self::$_m=$m;
 		self::$_c=$c;
 		self::$_a=$a;
@@ -62,16 +116,14 @@ class View{
 	 * @access public
 	 * @param string $templateFile 模板文件名
 	 * @param string $charset 模板输出字符集
-	 * @param string $contentType 输出类型
-	 * @param string $content 模板输出内容
-	 * @param string $prefix 模板缓存前缀
 	 * @return mixed
 	 */
-	public function display($templateFile='',$charset='',$contentType='',$content=''){
+	public function display($templateFile=''){
 		// 解析并获取模板内容
-		$content=$this->fetch($templateFile, $content);
+		$content=$this->fetch($templateFile);
 		// 输出模板内容
-		self::render($content, $charset, $contentType);
+        $this->getContext()->getResponse()
+            ->write($content);
 	}
 
 	/**
@@ -101,12 +153,58 @@ class View{
 		extract($this->tVar, EXTR_OVERWRITE|EXTR_PREFIX_INVALID,'_');
 		$this->tVar=[];
 		// 直接载入PHP模板
-		empty($_content) ? include $templateFile : eval('?>' . $_content);
+        if(empty($_content)){
+            include $templateFile;
+        }else{
+            eval('?>' . $_content);
+        }
 		// 获取并清空缓存
 		$content=ob_get_clean();
 		// 输出模板文件
 		return $content;
 	}
+    
+    /**
+     * 渲染输出控制器方法的返回值
+     *
+     * @param \Library\Controller $concrete
+     * @param string $method
+     * @param array $param
+     * @return mixed
+     */
+    public function render($concrete, $method, array $param=[]){
+        $context=$this->getContext();
+        if(!is_null($context)){
+            if(
+                (is_object($concrete) && $concrete instanceof Controller) || 
+                is_string($concrete)
+            ){
+                if(is_string($concrete)){
+                    $concrete=Loader::controller($concrete, $param, $context );
+                    if(is_null($concrete)){
+                        return null;
+                    }
+                }
+                // 获取控制器类名
+                $classname=get_class($concrete);
+                // 记录控制器的调用信息
+                $classes=explode('\\', $classname);
+                array_shift($classes);
+                $cm=array_shift($classes);
+                if($cm!='Controller'){
+                    self::$_m=strtolower($cm);
+                    array_shift($classes);
+                }else{
+                    self::$_m='';
+                }
+                self::$_c=implode('/',$classes);
+                self::$_a=$method;
+        
+                return $context->callMethod($concrete, $method, $param);
+            }
+        }
+        return null;
+    }
 
 	/**
 	 * 自动定位模板文件
@@ -116,7 +214,7 @@ class View{
 	 * @return string
 	 */
 	public static function resolvePath($template=''){
-		$a=ltrim(empty(self::$_a) && env('ROUTE_A',false) ? env('ROUTE_A') : self::$_a,'_');
+		$a=empty(self::$_a) && env('ROUTE_A',false) ? env('ROUTE_A') : self::$_a;
 		$c=empty(self::$_c) && env('ROUTE_C',false) ? env('ROUTE_C') : self::$_c;
 		$m=empty(self::$_m) && env('ROUTE_M',false) ? env('ROUTE_M') : self::$_m;
 		$depr=defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
@@ -163,40 +261,4 @@ class View{
 		return ['a'=>$a,'c'=>$c,'style'=>$style,'m'=>$m];
 	}
 	
-	/**
-	 * 设置是否内部调用
-	 * @param bool $isInCalled 是否在内部调用
-	 */
-	public static function setInCalled($isInCalled){
-		self::$isInCalled=$isInCalled;
-	}
-	
-	/**
-	 * 输出内容文本可以包括Html
-	 *
-	 * @access private
-	 * @param string $content 输出内容
-	 * @param string $charset 模板输出字符集
-	 * @param string $contentType 输出类型
-	 * @return mixed
-	 */
-	public static function render($content,$charset='',$contentType=''){
-		$response=make('\Library\Response');
-		if(!$response->hasSendHeader()){
-			if(empty($charset) || !is_string($charset)){
-				$charset=C('charset', 'utf-8');
-			}
-			if(empty($contentType) || !is_string($contentType)){
-				$type=is_array($content) || is_object($content) ? 'json' : 'html';
-				$contentType=C('mimetype.'.$type,'text/html');
-			}
-			$response->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
-			$response->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			$response->header('X-Powered-By','steeze');
-		}
-		
-		//输出内容
-		!is_null($content) && 
-			$response->write($content,self::$isInCalled);
-	}
 }

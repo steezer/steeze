@@ -1,7 +1,7 @@
 <?php
 /**** 【定义系统基础常量】 ****/
 function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/GMT-8'); //设置时区
-define('STEEZE_VERSION','1.2.3'); //系统版本
+define('STEEZE_VERSION','1.3.0'); //系统版本
 define('INI_STEEZE', true); //初始化标识
 define('SYS_START_TIME', microtime()); // 设置系统开始时间
 //版本检测，低于php5.4不被支持
@@ -21,7 +21,6 @@ define('ASSETS_PATH', ROOT_PATH . 'assets' . DS); //资源文件路径
 define('UPLOAD_PATH', ASSETS_PATH . 'ufs' . DS); //文件上传目录路径
 !defined('STORAGE_TYPE') && define('STORAGE_TYPE', (function_exists('saeAutoLoader') ? 'Sae' : 'File'));
 
-
 /**** 【运行环境判断】 ****/
 //加载系统函数库和环境变量
 Loader::helper('system');
@@ -31,6 +30,10 @@ Loader::env();
 /**** 【从环境变量初始化常量】 ****/
 // 系统默认在开发模式下运行
 !defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug',true)); 
+// 系统调试信息级别
+!defined('APP_DEBUG_LEVEL') && define('APP_DEBUG_LEVEL', 
+        APP_DEBUG ? (E_ALL ^ E_STRICT ^ E_NOTICE) : (E_ERROR | E_PARSE)
+    );
 //当找不到处理器时，是否使用默认处理器
 !defined('USE_DEFUALT_HANDLE') && define('USE_DEFUALT_HANDLE', env('use_defualt_handle',false));
 //默认主机，命令行模式时使用
@@ -40,9 +43,10 @@ define('DEFAULT_HOST',env('default_host','127.0.0.1'));
 
 //注册类加载器
 spl_autoload_register('Loader::import');
-//配置错误处理
-set_exception_handler(array('\Library\Exception', 'render'));
 
+//配置错误处理
+set_error_handler(array('\Library\ErrorException', 'onError'), APP_DEBUG_LEVEL);
+set_exception_handler(array('\Library\ErrorException', 'onException'));
 
 class Loader{
 	
@@ -81,22 +85,22 @@ class Loader{
 	public static function import($path){
 		$path=str_replace('\\', DS, $path);
 		if(strpos($path, DS)){
-			try{
-				if(strpos($path, 'App'.DS)===0){
-					if(defined('DEFAULT_APP_NAME') && DEFAULT_APP_NAME===''){
-						include APP_PATH.substr($path,4).'.php';
-					}else{
-						$pos=strpos($path, DS,4);
-						include APP_PATH.strtolower(substr($path,4,$pos-4)).substr($path,$pos).'.php';
-					}
-				}else if(strpos($path, 'Vendor'.DS)===0){
-					include VENDOR_PATH.substr($path,7).'.php';
-				}else{
-					include KERNEL_PATH.$path.'.class.php';
-				}
-			}catch (\Library\Exception $e){
-				E(L('class for {0} is not exists',$path),$e->getCode());
-			}
+            $filename=null;
+            if(strpos($path, 'App'.DS)===0){
+                if(defined('DEFAULT_APP_NAME') && DEFAULT_APP_NAME===''){
+                    $filename=APP_PATH.substr($path,4).'.php';
+                }else{
+                    $pos=strpos($path, DS,4);
+                    $filename=APP_PATH.strtolower(substr($path,4,$pos-4)).substr($path,$pos).'.php';
+                }
+            }else if(strpos($path, 'Vendor'.DS)===0){
+                $filename=VENDOR_PATH.substr($path,7).'.php';
+            }else{
+                $filename=KERNEL_PATH.$path.'.class.php';
+            }
+            if(!is_null($filename) && is_file($filename)){
+                include $filename;
+            }
 		}
 	}
 
@@ -108,7 +112,7 @@ class Loader{
 	 * @param string $para 传递给类初始化的参赛
 	 * @return object
 	 */
-	public static function controller($name,array $parameters=[]){
+	public static function controller($name, array $parameters=[], $container=null){
 		if($pos=strpos($name, '.', 1)){
 			$m=substr($name, 0, $pos);
 			$c=substr($name, $pos + 1);
@@ -126,9 +130,13 @@ class Loader{
 		$c=implode('\\',$ces);
 
 		$concrete=str_replace('\\\\','\\','App\\'.ucfirst(strtolower($m)).'\\Controller\\'.$c);
-		$container=Library\Container::getInstance();
+        if(is_null($container)){
+            $container=\Library\Container::getInstance();
+        }
 		try{
-			return $container->make($concrete,$parameters);
+			$controller=$container->make($concrete,$parameters);
+            $controller->setContext($container);
+            return $controller;
 		}catch (\Exception $e){
 			return null;
 		}
@@ -152,7 +160,7 @@ class Loader{
 		if(is_file($path)){
 			try{
 				include_once $path;
-			}catch(Exception $e){
+			}catch(\Exception $e){
 				return false;
 			}
 		}else{

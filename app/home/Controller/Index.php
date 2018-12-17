@@ -14,7 +14,7 @@ class Index extends Controller{
 	public function hello(){
 		$this->assign('name','liming');
 		$this->assign('year',23);
-		$this->assign('company',['year'=>12,'name'=>['s'=>'liuyun']]);
+		$this->assign('company',['year'=>12,'name'=>['s'=>121]]);
 		$this->display();
 	}
 	

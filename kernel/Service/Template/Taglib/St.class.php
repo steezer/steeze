@@ -59,7 +59,7 @@ class St{
 				}else{
 					$str.='$count = $__dbObj->cache('.$cache.')->table('.$attrs['table'].')'.($attrs['where'] ? '->where('.$attrs['where'].')': '').'->count();';
 				}
-				$str.='$pages=\Library\Pager::get(array(' . (isset($attrs['pagefunc']) ? '\'callback\'=> \'' . addslashes(stripcslashes($attrs['pagefunc'])) . '\',' : '') . '\'total\'=> $count,\'page\'=> $__page,\'type\'=> $__pagetype,\'size\'=> $__pagesize),$__setpages);';
+				$str.='$pages=$this->getPager(array(' . (isset($attrs['pagefunc']) ? '\'callback\'=> \'' . addslashes(stripcslashes($attrs['pagefunc'])) . '\',' : '') . '\'total\'=> $count,\'page\'=> $__page,\'type\'=> $__pagetype,\'size\'=> $__pagesize),$__setpages);';
 			}
 			
 			$qAction='';

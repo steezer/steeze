@@ -1092,11 +1092,9 @@ class Model implements ArrayAccess{
 	 * @param string $type 状态
 	 * @return mixed
 	 */
-	public function create($data='',$type=''){
+	public function create($data, $type=''){
 		// 如果没有传值默认取POST数据
-		if(empty($data)){
-			$data=I('post.');
-		}elseif(is_object($data)){
+		if(is_object($data)){
 			$data=get_object_vars($data);
 		}
 		// 验证数据
