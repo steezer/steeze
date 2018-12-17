@@ -137,7 +137,7 @@ class Pipeline{
 				}elseif(!is_object($pipe)){
 					// 解析命名的字符串通道，并构建
 					list($name, $parameters)=$this->parsePipeString($pipe);
-					$pipe=$this->getContainer()->make($name, [$this]);
+					$pipe=$this->getContainer()->make($name);
 					$parameters=array_merge([$stack], $passables, $parameters);
 				}else{
 					$parameters=array_merge([$stack], $passables);

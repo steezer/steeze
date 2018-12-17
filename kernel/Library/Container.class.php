@@ -254,8 +254,13 @@ class Container{
 	 */
 	protected function resolveClass(ReflectionParameter $parameter){
 		try{
-			return $this->make($parameter->getClass()->name);
-		}		
+			$classname=$parameter->getClass()->name;
+            //如果此类属于容器本身，则注入容器对象
+            if(is_a($this, $classname)){
+                return $this;
+            }
+			return $this->make($classname);
+        }	
 		
 		/*
 		 * 如果我们不能解析类实例，我们将检查这个值是否是可选的，
