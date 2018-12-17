@@ -81,10 +81,12 @@ class Client{
 		}
 		if(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){ // 获取代理ip
 			$ips=explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-		}
-		if($ip){
-			$ips=array_unshift($ips, $ip);
-		}
+		}else{
+            $ips=[];
+        }
+        if($ip){
+            array_unshift($ips, $ip);
+        }
 		$count=count($ips);
 		for($i=0; $i < $count; $i++){
 			if(!preg_match("/^(10|172\.16|192\.168)\./i", $ips[$i])){ // 排除局域网ip
