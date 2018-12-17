@@ -16,6 +16,30 @@ class Request{
 			$_COOKIE=slashes($_COOKIE, 0);
 		}
 	}
+    
+    /**
+     * 上下文应用对象
+     *
+     * @var \Library\Application
+     */
+    private $context=null;
+    
+    /**
+     * 设置上下文应用对象
+     *
+     * @param Application $context
+     */
+    public function setContext(Application $context){
+        $this->context=$context;
+    }
+    
+    /**
+     * 获取上下文应用对象
+     * 
+     */
+    public function getContext(){
+        return $this->context;
+    }
 	
 	/**
 	 * 动态方法调用

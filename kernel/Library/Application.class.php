@@ -52,7 +52,7 @@ class Application extends Context{
          //输出数据到浏览器
         $this->response->flush(
                 (new Pipeline($this))
-                ->send($this->request,$this->response)
+                ->send($this->request, $this->response)
                 ->through($route->getMiddleware(!$isClosure && $route_a ? $route_a : null))
                 ->then($this->dispatchToRouter())
             );

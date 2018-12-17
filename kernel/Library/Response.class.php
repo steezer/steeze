@@ -6,6 +6,30 @@ class Response{
 	private $isHeaderSend=false; //是否已经发送头部信息
 	private $isEnd=false; //是否已经结束发送
     
+    /**
+     * 上下文应用对象
+     *
+     * @var \Library\Application
+     */
+    private $context=null;
+    
+    /**
+     * 设置上下文应用对象
+     *
+     * @param Application $context
+     */
+    public function setContext(Application $context){
+        $this->context=$context;
+    }
+    
+    /**
+     * 获取上下文应用对象
+     * 
+     */
+    public function getContext(){
+        return $this->context;
+    }
+    
 	/**
 	 * 设置外部响应对象
 	 * @param Response $response 外部响应对象

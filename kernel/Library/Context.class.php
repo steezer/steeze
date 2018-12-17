@@ -27,6 +27,8 @@ class Context extends Container{
 		$this->response=$this->make('\Library\Response');
 		$this->request->setRequest($request);
 		$this->response->setResponse($response);
+        $this->request->setContext($this);
+        $this->response->setContext($this);
 	}
     
     /**
