@@ -100,7 +100,13 @@ class Container{
 				$dependencies=$reflector->getParameters();
 				$instances=$this->resolveDependencies($dependencies);
 				array_pop($this->with);
-				return $reflector->invokeArgs($instances);
+                
+                //支持注入Closure的参数，同时在Closure函数中可以调用容器对象的公共方法
+                return call_user_func_array(Closure::bind(
+                    $reflector->getClosure(),
+                    $reflector->getClosureThis(),
+                    $reflector->getClosureScopeClass()->name
+                ), $instances);
 			}
 		}catch(\Exception $e){
 			E($e);
