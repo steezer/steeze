@@ -134,7 +134,7 @@ class Loader
         }
         $c = str_replace('/', '\\', trim($c, '\\/.'));
 
-		//将以下划线分割的控制器（或分组名）转化为首字母大写的驼峰式
+        //将以下划线分割的控制器（或分组名）转化为首字母大写的驼峰式
         $ces = explode('\\', $c);
         foreach ($ces as &$v) {
             $v = ucfirst(parse_name($v, 1));
@@ -201,10 +201,10 @@ class Loader
         static $appConfigs = []; //应用缓存
         static $globalConfigs = []; //全局缓存
 		
-		//应用名称
+        // 应用名称
         $appName = env('ROUTE_M', env('BIND_MODULE', '/'));
 		
-		// 如果为第二个参数为数组则直接写入配置
+        // 如果为第二个参数为数组则直接写入配置
         if (is_array($key)) {
             $appConfigs[$appName][$name] = (isset($appConfigs[$appName][$name]) ? 
                                     array_merge($appConfigs[$appName][$name], $key) : $key
