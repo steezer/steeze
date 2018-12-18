@@ -52,6 +52,10 @@ class Loader{
 	
 	/**
 	 * 初始化应用程序
+     * 
+     * @param object $request 外部Request对象（可选）
+     * @param object $response 外部Response对象（可选）
+     * @return \Library\Application 应用程序对象
 	 */
 	public static function app($request=null, $response=null){
 		$app=new Library\Application($request, $response);
@@ -60,9 +64,11 @@ class Loader{
 	
 	/**
 	 * 加载环境变量
+     * 
 	 * @param string $key 环境变量键名，如果为null则重写设置日志
 	 * @param string $value 环境变量键值
 	 * @param string $default 默认值
+     * @return mixed
 	 */
 	public static function env($key=null,$value=null,$default=null){
 		if(is_null($key)){
@@ -81,6 +87,9 @@ class Loader{
 	
 	/**
 	 * 类加载器 
+     * 
+     * @param string $path 类路径
+     * @return string
 	 */
 	public static function import($path){
 		$path=str_replace('\\', DS, $path);
@@ -105,12 +114,12 @@ class Loader{
 	}
 
 	/**
-	 * 加载控制器 可以指定模块，以“.”分割：“模块名.控制器”
+	 * 加载控制器
 	 *
-	 * @param string $name 类名称
-	 * @param number $initialize 是否初始化
-	 * @param string $para 传递给类初始化的参赛
-	 * @return object
+	 * @param string $name 控制器名称（可以指定模块，以“.”分割：“模块名.控制器”）
+	 * @param array $parameters 参数列表
+	 * @param \Library\Container $container 使用的容器对象
+	 * @return \Library\Controller
 	 */
 	public static function controller($name, array $parameters=[], $container=null){
 		if($pos=strpos($name, '.', 1)){
@@ -177,7 +186,7 @@ class Loader{
 	 * @param string $name 配置文件
 	 * @param string $key 要获取的配置键值
 	 * @param string $default 默认配置，当获取配置项目失败时该值发生作用
-	 * @return object
+	 * @return mixed
 	 */
 	public static function config($name,$key='',$default=''){
 		static $appConfigs=[]; //应用缓存
