@@ -73,14 +73,14 @@ class Application extends Context{
             
 			if($disposer instanceof \Closure){
 				//直接运行回调函数
-				return $this->callClosure($disposer,$params);
+				return $this->invokeFunc($disposer,$params);
 			}else if(
 				//控制器方法不能以“_”开头，以“_”开头的方法用于模板内部控制器方法调用
 				$route_a && strpos($route_a, '_') !== 0 && is_object($disposer) &&
 					is_callable(array($disposer, $route_a))
 			){
 				//运行控制器方法
-                return $this->callMethod($disposer, $route_a, $params);
+                return $this->invokeMethod($disposer, $route_a, $params);
 			}else if(
 				C('use_view_route',env('use_view_route',true)) && 
 					$route_c && $route_a &&

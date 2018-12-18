@@ -1,7 +1,7 @@
 <?php
 namespace Library;
 use Loader;
-class View{
+final class View{
 	protected $tVar=[]; //模板输出变量
 	protected $theme=''; //模板主题
 	protected static $_m=''; //默认模块
@@ -26,13 +26,13 @@ class View{
      * 设置应用上下文对象
      *
      * @param \Library\Application $context
-     * @return \Library\Controller
      */
-    public function setContext($context){
+    public function __construct(Application $context){
         if($context instanceof Application){
             $this->context=$context;
+        }else{
+            E(L('You should create view in Application context!'));
         }
-        return $this;
     }
     
     /**
@@ -200,7 +200,7 @@ class View{
                 self::$_c=implode('/',$classes);
                 self::$_a=$method;
         
-                return $context->callMethod($concrete, $method, $param);
+                return $context->invokeMethod($concrete, $method, $param);
             }
         }
         return null;

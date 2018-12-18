@@ -14,14 +14,14 @@ class Response{
     private $context=null;
     
     /**
-     * 设置上下文应用对象
+     * 构造函数（由容器调用）
      *
-     * @param Application $context
+     * @param Application $context 应用程序对象
      */
-    public function setContext(Application $context){
+    public function __construct(Application $context){
         $this->context=$context;
     }
-    
+
     /**
      * 获取上下文应用对象
      * 
@@ -32,13 +32,12 @@ class Response{
     
 	/**
 	 * 设置外部响应对象
+     * 
 	 * @param Response $response 外部响应对象
 	 */
-	public function setResponse($response){
+	public function setResponse($response=null){
 		//对Swoole的支持
-		if(!empty($response) && is_a($response,'Swoole\\Http\\Response')){
-			$this->response=$response;
-		}
+		$this->response=$response;
         $this->isHeaderSend=false;
         $this->setIsEnd(false);
 	}
@@ -54,6 +53,7 @@ class Response{
 	
 	/**
 	 * 判断是否成功发送请求头部信息
+     * 
 	 * @return bool
 	 */
 	public function hasSendHeader(){
@@ -62,6 +62,7 @@ class Response{
 	
 	/**
 	 * 设置HTTP响应的Header信息
+     * 
 	 * @param string $key http头的键名
 	 * @param string $value http头的键值
 	 * @param bool   $hasSend 是否设置为已发送，默认为true
@@ -82,6 +83,7 @@ class Response{
 	
 	/**
 	 * 设置HTTP响应的Header信息
+     * 
 	 * @see http://php.net/manual/en/function.setcookie.php
 	 * 
 	 * 说明： cookie设置必须在end方法之前
@@ -96,6 +98,7 @@ class Response{
 	
 	/**
 	 * 发送Http状态码
+     * 
 	 * @param int $code 状态码
 	 * 
 	 * 说明：$http_status_code必须为合法的HttpCode，如200， 502， 301, 404等，否则会报错
@@ -111,6 +114,7 @@ class Response{
 	
 	/**
 	 * 压缩级别设置
+     * 
 	 * @param int $level 压缩等级，范围是1-9，等级越高压缩后的尺寸越小，但CPU消耗更多。默认为1
 	 * 
 	 * 说明：启用Http GZIP压缩。压缩可以减小HTML内容的尺寸，有效节省网络带宽，提高响应时间。
@@ -122,9 +126,9 @@ class Response{
 	
 	/**
 	 * 启用Http Chunk分段向浏览器发送相应内容
+     * 
 	 * @param string $data 要发送的数据内容，最大长度不得超过2M
 	 * @param bool $isConsole 是否直接写入到控制台
-	 * 
 	 */
 	public function write($data, $isConsole=false){
         if( !$this->isEnd && !is_null($data)){
@@ -138,6 +142,7 @@ class Response{
 	
 	/**
 	 * 发送文件到浏览器
+     * 
 	 * @param string $filename 要发送的文件名称
 	 * @param int $offset 上传文件的偏移量，可以指定从文件的中间部分开始传输数据。此特性可用于支持断点续传
 	 * @param int $length 发送数据的尺寸，默认为整个文件的尺寸
@@ -159,6 +164,7 @@ class Response{
 	
 	/**
 	 * 发送Http响应体，并结束请求处理
+     * 
 	 * @param string $data 字符串数据
 	 * @param bool $isAsyn 是否使用异步输出，默认为false
 	 * 
@@ -209,9 +215,8 @@ class Response{
      * URL重定向
      *
      * @param string $url 重定向的URL地址
-     * @param integer $time 重定向的等待时间（秒）
+     * @param int $time 重定向的等待时间（秒）
      * @param string $msg 重定向前的提示信息
-     * @return void
      */
     public function redirect($url, $time=0, $msg=''){
         // 多行URL地址支持

@@ -43,65 +43,49 @@ class Controller{
 	public function render($controller, $action, array $param=[]){
 		return $this->view()->render($controller, $action, $param);
 	}
-    
-    /**
-     * 设置中间件
-     *
-     * @param string $name 中间件名称
-     * @param array $excepts 排除的方法
-     */
-	protected function middleware($name, $excepts=[]){
-		Route::setMiddleware($name, $excepts);
-	}
 
 	/**
 	 * 模板显示 调用内置的模板引擎显示方法，
 	 *
-	 * @access protected
 	 * @param string $templateFile 指定要调用的模板文件 默认为空则由系统自动定位模板文件
 	 * @param string $charset 输出编码
 	 * @param string $contentType 输出类型
-	 * @return void
 	 */
-	protected function display($templateFile='', $charset='', $contentType=''){
+	public function display($templateFile='', $charset='', $contentType=''){
 		$this->view()->display($templateFile, $charset, $contentType);
 	}
 
 	/**
 	 * 输出内容文本可以包括Html 并支持内容解析
 	 *
-	 * @access protected
 	 * @param string $content 输出内容
 	 * @param string $charset 模板输出字符集
 	 * @param string $contentType 输出类型
-	 * @return mixed
 	 */
-	protected function show($content='', $charset='', $contentType=''){
+	public function show($content='', $charset='', $contentType=''){
 		$this->view()->display('', $charset, $contentType, $content);
 	}
 
 	/**
 	 * 获取输出页面内容 调用内置的模板引擎fetch方法，
 	 *
-	 * @access protected
 	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
 	 * @param string $content 模板输出内容
 	 * @return string
 	 */
-	protected function fetch($templateFile='', $content=''){
+	public function fetch($templateFile='', $content=''){
 		return $this->view()->fetch($templateFile, $content);
 	}
 
 	/**
 	 * 创建静态页面
 	 *
-	 * @access protected 
 	 * @param string htmlfile 生成的静态文件名称 
 	 * @param string htmlpath 生成的静态文件路径，默认生成到系统根目录
 	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
 	 * @return string
 	 */
-	protected function buildHtml($htmlfile, $htmlpath='', $templateFile=''){
+	public function buildHtml($htmlfile, $htmlpath='', $templateFile=''){
 		$content=$this->fetch($templateFile);
 		$htmlpath=!empty($htmlpath) ? $htmlpath : ROOT_PATH;
 		$htmlfile=$htmlpath . $htmlfile . C('HTML_FILE_SUFFIX', '.html');
@@ -114,12 +98,11 @@ class Controller{
 	/**
 	 * 模板变量赋值
 	 *
-	 * @access protected
 	 * @param mixed $name 要显示的模板变量
 	 * @param mixed $value 变量的值
 	 * @return Controller
 	 */
-	protected function assign($name, $value=''){
+	public function assign($name, $value=''){
 		$this->view()->assign($name, $value);
 		return $this;
 	}
@@ -138,12 +121,11 @@ class Controller{
 	/**
 	 * 操作错误跳转的快捷方法
 	 *
-	 * @access protected
 	 * @param null|string $message 错误信息
 	 * @param int|string|bool $code 错误码，默认为1
 	 * @param string|bool|int $jumpUrl 页面跳转地址
 	 * @param bool|int $ajax 是否为Ajax方式 当数字时指定跳转时间
-	 * @return void
+     * 
 	 * 调用方式：
 	 * 1. error($message,$code,$jumpUrl,$ajax)
 	 * 2. error($message,$code,$jumpUrl)
@@ -151,7 +133,7 @@ class Controller{
 	 * 4. error($message)
      * 5. error()
 	 */
-	protected function error($message=null, $code=1, $jumpUrl='', $ajax=false){
+	public function error($message=null, $code=1, $jumpUrl='', $ajax=false){
 		if(is_string($code)){
 			if(is_bool($jumpUrl) || is_int($jumpUrl)){
 				$ajax=$jumpUrl;
@@ -171,18 +153,17 @@ class Controller{
 	/**
 	 * 操作成功跳转的快捷方法
 	 *
-	 * @access protected
 	 * @param null|string|array $message 提示信息，如果为数组则设置到返回data字段里面
 	 * @param string|array $jumpUrl 页面跳转地址，如果为数组则设置到返回data字段里面
 	 * @param int|bool $ajax 是否为Ajax方式 当数字时指定跳转时间
-	 * @return void
+     * 
      * 调用方式：
 	 * 1. success($message,$jumpUrl,$ajax)
 	 * 2. success($message,$jumpUrl)
 	 * 3. success($message)
      * 5. success()
 	 */
-	protected function success($message=null,$jumpUrl='',$ajax=false){
+	public function success($message=null,$jumpUrl='',$ajax=false){
         if(is_null($message)){
             $message=L('success');
         }else if(is_array($message)){
@@ -191,19 +172,104 @@ class Controller{
         }
 		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
 	}
+
+	/**
+	 * Ajax方式返回数据到客户端
+	 *
+	 * @param mixed $data 要返回的数据，默认返回模板变量
+	 * @param String $type AJAX返回数据格式，默认返回JSON格式
+	 * @param int $option 传递给json_encode的option参数
+	 */
+	public function ajaxReturn($data=null, $type='', $option=null){
+		if(empty($type)){
+			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
+		}
+		if(is_null($data)){
+			$data=$this->view()->get(); //使用模板变量
+		}
+        $type=strtolower($type);
+		switch($type){
+			case 'json':
+				// 返回JSON数据格式到客户端 包含状态信息
+                $data=to_string($data, $option);
+				break;
+			case 'jsonp':
+				// 返回JSON数据格式到客户端 包含状态信息
+				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
+				$request=$this->getContext()->getRequest();
+				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
+                $data=$handler . '(' . to_string($data, $option) . ');';
+                $type='js';
+				break;
+			case 'eval':
+            case 'js':
+                $type='js';
+				break;
+			default:
+                $type='html';
+                $data=var_export($data, true);
+				break;
+		}
+        $response=$this->getContext()->getResponse();
+        $response->flush($data, C('mimetype.'.$type), 'utf-8');
+	}
+
+	/**
+	 * Action跳转(URL重定向） 支持指定模块和延时跳转
+	 *
+	 * @param string $url 跳转的URL表达式
+	 * @param array $params 其它URL参数
+	 * @param integer $delay 延时跳转的时间 单位为秒
+	 * @param string $msg 跳转提示信息
+	 */
+	public function redirect($url, $params=array(), $delay=0, $msg=''){
+		$targetUrl=U($url, $params);
+		$this->context->getResponse()->redirect($targetUrl, $delay, $msg);
+	}
     
     /**
-	 * 默认跳转操作 支持错误导向和正确跳转 调用模板显示 
-	 * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
+	 * 获取列表分页
+     * 
+	 * @param array $config 分页信息参数配置
+	 * @param int $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param array $array 附加的参数（可选）
+	 * @return array 分页配置，包括html和info字段
+	 * @example 分页信息参数范例：
+	 * 		[
+     *          'total'=> $totalrows,  //记录总数
+     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
+     *          'size'=> $pagesize,  //每页大小（可选），默认：15
+     *          'url'=> $curl, //分页URL（可选），默认使用当前页
+	 * 			'type'=>'page',  //分页参数（可选），默认:page
+	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
+	 * 		]
+	 */
+    public function getPager($config=[], $setPages=10, $urlRule='', $array=[]){
+        $this->view()->getPager($config, $setPages, $urlRule, $array);
+    }
+    
+    /**
+     * 设置中间件
+     *
+     * @param string $name 中间件名称
+     * @param array $excepts 排除的方法
+     */
+	protected function middleware($name, $excepts=[]){
+		Route::setMiddleware($name, $excepts);
+	}
+
+    /**
+	 * 跳转操作 支持错误导向和正确跳转 调用模板显示 
 	 *
 	 * @param string $message 提示信息
 	 * @param int $code 状态码
 	 * @param string $jumpUrl 页面跳转地址
 	 * @param bool|int $ajax 是否为Ajax方式 当数字时指定跳转时间
-	 * @access private
-	 * @return void
+     * 
+     * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
 	 */
-	private function dispatchJump($message,$code=0,$jumpUrl='',$ajax=false){
+	private function dispatchJump($message, $code=0, $jumpUrl='', $ajax=false){
         $response=$this->getContext()->getResponse();
 		if(true === $ajax || env('IS_AJAX')){ // AJAX提交
 			$data=is_array($ajax) ? $ajax : array();
@@ -242,86 +308,7 @@ class Controller{
         //结束所有输出
         $response->end();
 	}
-
-	/**
-	 * Ajax方式返回数据到客户端
-	 *
-	 * @access protected
-	 * @param mixed $data 要返回的数据，默认返回模板变量
-	 * @param String $type AJAX返回数据格式，默认返回JSON格式
-	 * @param int $option 传递给json_encode的option参数
-	 * @return void
-	 */
-	protected function ajaxReturn($data=null,$type='',$option=null){
-		if(empty($type)){
-			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
-		}
-		if(is_null($data)){
-			$data=$this->view()->get(); //使用模板变量
-		}
-        $type=strtolower($type);
-		switch($type){
-			case 'json':
-				// 返回JSON数据格式到客户端 包含状态信息
-                $data=to_string($data, $option);
-				break;
-			case 'jsonp':
-				// 返回JSON数据格式到客户端 包含状态信息
-				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
-				$request=$this->getContext()->getRequest();
-				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
-                $data=$handler . '(' . to_string($data, $option) . ');';
-                $type='js';
-				break;
-			case 'eval':
-            case 'js':
-                $type='js';
-				break;
-			default:
-                $type='html';
-                $data=var_export($data, true);
-				break;
-		}
-        $response=$this->getContext()->getResponse();
-        $response->flush($data, C('mimetype.'.$type), 'utf-8');
-	}
-
-	/**
-	 * Action跳转(URL重定向） 支持指定模块和延时跳转
-	 *
-	 * @access protected
-	 * @param string $url 跳转的URL表达式
-	 * @param array $params 其它URL参数
-	 * @param integer $delay 延时跳转的时间 单位为秒
-	 * @param string $msg 跳转提示信息
-	 * @return void
-	 */
-	protected function redirect($url, $params=array(), $delay=0, $msg=''){
-		$targetUrl=U($url, $params);
-		$this->context->getResponse()->redirect($targetUrl, $delay, $msg);
-	}
     
-    /**
-	 * 获取列表分页
-	 * @param array $config 分页信息参数配置
-	 * @param int $setPages 显示页数（可选），默认：10
-	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
-	 * @param array $array 附加的参数（可选）
-	 * @return array 分页配置，包括html和info字段
-	 * @example 分页信息参数范例：
-	 * 		[
-     *          'total'=> $totalrows,  //记录总数
-     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
-     *          'size'=> $pagesize,  //每页大小（可选），默认：15
-     *          'url'=> $curl, //分页URL（可选），默认使用当前页
-	 * 			'type'=>'page',  //分页参数（可选），默认:page
-	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
-	 * 		]
-	 */
-    protected function getPager($config=[], $setPages=10, $urlRule='', $array=[]){
-        $this->view()->getPager($config, $setPages, $urlRule, $array);
-    }
-
 	/**
 	 * 获取视图对象
 	 *
@@ -330,7 +317,6 @@ class Controller{
 	private function view(){
 		if(is_null($this->view)){
             $this->view=$this->context->make('\Library\View');
-            $this->view->setContext($this->context);
 		}
 		return $this->view;
 	}

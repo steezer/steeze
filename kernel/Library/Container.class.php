@@ -14,7 +14,94 @@ class Container{
 	protected $aliases=[]; //容器的别名
 	protected $extenders=[]; //扩展闭包服务
 	protected $with=[]; //参数栈
-
+    
+    /**
+	 * 对象方法或函数依赖注入调用
+	 * 
+	 * @param string|array $name 调用名称，如果为字符串
+	 * @param array $parameters 方法参数
+	 * @return mixed
+	 */
+    public function invoke($name, array $parameters=[]){
+        if(is_array($name)){
+            return $this->invokeMethod($name[0], $name[1], $parameters);
+        }else{
+            return $this->invokeFunc($name, $parameters); 
+        }
+    }
+    
+    /**
+	 * 对象方法调用
+	 * 
+	 * @param object|string $concrete 实例或类名
+	 * @param string $method 方法名称
+	 * @param array $parameters 方法参数
+	 * @return mixed
+     * 
+     * @throws \Exception
+	 */
+	public function invokeMethod($concrete, $method, array $parameters=[]){
+		if(!is_object($concrete)){
+			$concrete=$this->resolve($concrete, $parameters);
+		}
+		try{
+			if(method_exists($concrete, $method)){
+				$reflector=new ReflectionClass(get_class($concrete));
+				$this->with[]=$parameters;
+				$dependencies=$reflector->getMethod($method)->getParameters();
+				$instances=$this->resolveDependencies($dependencies);
+				array_pop($this->with);
+				return call_user_func_array(array($concrete,$method), $instances);
+			}
+		}catch(\Exception $e){
+			E($e);
+		}
+	}
+	
+	/**
+	 * 一般函数或Closure匿名函数调用
+	 *
+	 * @param string|Closure $closure 为一般函数名称或Closure对象，如果为Closure对象，$this指向当前容器
+	 * @param array $parameters 方法参数
+	 * @return mixed
+     * 
+     * @throws \Exception
+	 */
+	public function invokeFunc($closure, array $parameters=[]){
+		try{
+            $reflector=null;
+			if($closure instanceof Closure){
+                $reflector=new ReflectionFunction($closure->bindTo($this));
+            }else if(is_string($closure)){
+                if(function_exists($closure)){
+                    $reflector=new ReflectionFunction($closure);
+                }else{
+                    E(L('The function {0} you called not existed', $closure));
+                }
+            }
+            if(!is_null($reflector)){
+                $this->with[]=$parameters;
+                $dependencies=$reflector->getParameters();
+                $instances=$this->resolveDependencies($dependencies);
+                array_pop($this->with);
+                if($reflector->isClosure()){
+                    // 匿名函数的调用
+                    // 支持注入Closure的参数，同时在Closure函数中可以调用容器对象的公共方法
+                    return call_user_func_array(Closure::bind(
+                        $reflector->getClosure(),
+                        $reflector->getClosureThis(),
+                        $reflector->getClosureScopeClass()->name
+                    ), $instances);
+                }else{
+                    // 一般函数的调用 
+                    return $reflector->invokeArgs($instances);
+                }
+            }
+		}catch(\Exception $e){
+			E($e);
+		}
+	}
+	
 	/**
 	 * 从容器中解析给定的类型
 	 *
@@ -23,7 +110,7 @@ class Container{
 	 * @param bool $isCache 是否需要存储，默认为true
 	 * @return mixed
 	 */
-	public function make($concrete,$parameters=[],$isCache=true){
+	public function make($concrete, $parameters=[], $isCache=true){
 		return $this->resolve($concrete, $parameters,$isCache);
 	}
 	
@@ -57,63 +144,6 @@ class Container{
 	}
 	
 	/**
-	 * 对象方法调用
-	 * 
-	 * @param object|string $concrete 实例或类名
-	 * @param string $method 方法名称
-	 * @param array $parameters 方法参数
-	 * @return mixed
-	 */
-	
-	public function callMethod($concrete,$method,array $parameters=[]){
-		if(!is_object($concrete)){
-			$concrete=$this->resolve($concrete, $parameters);
-		}
-		try{
-			if(method_exists($concrete, $method)){
-				$reflector=new ReflectionClass(get_class($concrete));
-				$this->with[]=$parameters;
-				$dependencies=$reflector->getMethod($method)->getParameters();
-				$instances=$this->resolveDependencies($dependencies);
-				array_pop($this->with);
-				return call_user_func_array(array($concrete,$method), $instances);
-			}
-		}catch(\Exception $e){
-			E($e);
-		}
-	}
-	
-	
-	/**
-	 * Closure匿名函数调用
-	 *
-	 * @param Closure $closure 匿名函数对象
-	 * @param array $parameters 方法参数
-	 * @return mixed
-	 */
-	
-	public function callClosure($closure,array $parameters=[]){
-		try{
-			if($closure instanceof Closure){
-				$reflector=new ReflectionFunction($closure->bindTo($this));
-				$this->with[]=$parameters;
-				$dependencies=$reflector->getParameters();
-				$instances=$this->resolveDependencies($dependencies);
-				array_pop($this->with);
-                
-                //支持注入Closure的参数，同时在Closure函数中可以调用容器对象的公共方法
-                return call_user_func_array(Closure::bind(
-                    $reflector->getClosure(),
-                    $reflector->getClosureThis(),
-                    $reflector->getClosureScopeClass()->name
-                ), $instances);
-			}
-		}catch(\Exception $e){
-			E($e);
-		}
-	}
-	
-	/**
 	 * 从容器中解析给定的类型.
 	 *
 	 * @param string $concrete
@@ -121,7 +151,7 @@ class Container{
 	 * @param bool $isCache
 	 * @return mixed
 	 */
-	protected function resolve($concrete,$parameters=[],$isCache=true){
+	protected function resolve($concrete, $parameters=[], $isCache=true){
 		$concrete=$this->getAlias($concrete);
 		/**
 		 * 如果类型的一个实例是目前管理作为一个单例,我们就返回一个现有的实例,

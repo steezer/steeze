@@ -18,49 +18,72 @@ function fastlog($content, $isAppend=true, $file='system.log'){
     $filename=LOGS_PATH . $file;
 	$dirname=dirname($filename);
 	!is_dir($dirname) && mkdir($dirname,0755,true);
-    $maxSize=C('max_logfile_size', 20) * 1048576;
-    $maxNum=C('max_logfile_num', 5);
     
-    $files=glob($filename.'*', GLOB_NOSORT);
-    $total=count($files);
-    if($total>0){
-        //文件名排序
-        usort($files, function($a, $b) use($filename){
-            $an=intval(str_replace($filename, '', $a));
-            $bn=intval(str_replace($filename, '', $b));
-            return $an > $bn ? 1 : -1;
-        });
-        //删除先前的文件
-        if($total > $maxNum){
-            foreach ($files as $k=> &$value) {
-                if($k>= $total-$maxNum){
-                    break;
+    //处理日志分割及删除
+    if(C('split_logfile', true)){
+        $maxSize=max(C('max_logfile_size', 20), 0.01) * 1048576; //最小值为：10kb
+        $maxNum=C('max_logfile_num', 5);
+        
+        $files=glob($filename.'*', GLOB_NOSORT);
+        $total=count($files);
+        if($total>0){
+            //自动清理先前的日志文件
+            
+            //文件名排序
+            usort($files, function($a, $b) use($filename){
+                $an=intval(str_replace($filename, '', $a));
+                $bn=intval(str_replace($filename, '', $b));
+                return $an > $bn ? 1 : -1;
+            });
+            
+            //删除先前的文件
+            if($maxNum>0 && $total > $maxNum){
+                foreach ($files as $k=> &$value) {
+                    if($k>= $total-$maxNum){
+                        break;
+                    }
+                    unlink($value);
                 }
-                unlink($value);
+            }
+            
+            //判断是否生成新文件
+            $lastFile=array_pop($files);
+            if(filesize($lastFile) >= $maxSize){
+                $num=intval(substr($lastFile, strlen($filename)))+1;
+                $filename=$filename.$num;
+            }else{
+                $filename=$lastFile;
             }
         }
-        //判断是否生成新文件
-        $lastFile=array_pop($files);
-        if(filesize($lastFile) >= $maxSize){
-            $num=(intval(str_replace($filename, '', $lastFile))+1);
-            $filename=$filename.$num;
-        }else{
-            $filename=$lastFile;
-        }
     }
+    
+    //日志写入
 	return file_put_contents($filename, $content . "\n", ($isAppend ? FILE_APPEND : 0));
 }
 
 /**
  * 添加和获取页面Trace记录
- * 
  * @param string $value 变量
  * @param string $label 标签
- * @param string $level 日志级别
+ * @param string $level 日志级别(或者页面Trace的选项卡)
  * @param boolean $record 是否记录日志
  * @return void|array
  */
-function trace($value='[steeze]', $label='', $level='DEBUG', $record=false){
+function trace($value=null, $label='', $level='DEBUG', $record=false) {
+    static $_trace=[];
+    if(is_null($value)){ // 获取trace信息
+        return $_trace; 
+    }
+    $info=($label ? $label.':' : '') . print_r($value, true);
+    $level=strtoupper($level);
+    if( env('IS_AJAX', false) || !C('show_system_trace', false)  || $record) {
+        fastlog('['.$level.']'.$info, true, 'trace.log');
+    }else{
+        if(!isset($_trace[$level]) || count($_trace[$level]) > C('trace_max_record', 100)) {
+            $_trace[$level] =  [];
+        }
+        $_trace[$level][] = $info;
+    }
 }
 
 /**
@@ -1003,7 +1026,7 @@ function view($name, $datas=[], $container=null){
  * @param array $default 默认值
  * @return string 环境变量值
  */
-function env($key,$default=null){
+function env($key, $default=null){
 	return Loader::env($key, null, $default);
 }
 
@@ -1022,7 +1045,7 @@ function env($key,$default=null){
  * 统计区间内存使用情况 如果end标记位没有定义，则会自动以当前作为标记位 
  * 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 
  */
-function G($start,$end='',$dec=4){
+function G($start, $end='', $dec=4){
 	static $_info=array();
 	static $_mem=array();
 	if(is_float($end)){ // 记录时间
@@ -1053,7 +1076,7 @@ function G($start,$end='',$dec=4){
  * @param mixed $options 缓存参数
  * @return mixed
  */
-function S($name,$value='',$options=null){
+function S($name, $value='', $options=null){
 	static $cache='';
 	if(is_array($options)){
 		// 缓存操作的同时初始化
@@ -1088,7 +1111,7 @@ function S($name,$value='',$options=null){
  * @param string $path 缓存路径
  * @return mixed
  */
-function F($name,$value='',$path=null){
+function F($name, $value='', $path=null){
 	static $_cache=array();
 	if(is_null($path)){
 		$path=CACHE_PATH . 'Data' . DS;
@@ -1138,7 +1161,7 @@ function F($name,$value='',$path=null){
  * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
  * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
  */
-function M($name='',$conn=''){
+function M($name='', $conn=''){
 	static $_model=array();
 	$tablePrefix=''; // 使用连接配置
 	if(is_string($conn) && strpos($conn, '^') === 0){
@@ -1164,7 +1187,7 @@ function M($name='',$conn=''){
  * @param integer $type 使用的URL类型，为-1系统自动判断，为0前端，为1后台
  * @return string 使用方式说明： 1、外部地址解析（地址以“http://”或“https://”开头）：U('http://www.baidu.com','name=spring&id=2') 返回：http://www.baidu.com?name=spring&id=2 2、本地绝对地址解析（地址以“/”开头）：U('/api/','name=spring&id=2',true) 返回：http://www.h928.com/api/?name=spring&id=2 3、本地插件地址解析（地址以“:”开头）: U(':houserent/add','name=spring&id=2') 返回：/index.php?plugin_c=houserent&plugin_a=add&name=spring&id=2 4、本地控制器地址解析：U('houserent/add','name=spring&id=2') 返回：/index.php?c=houserent&a=add&name=spring&id=2
  */
-function U($url='',$vars='',$domain=false,$type=-1){
+function U($url='', $vars='', $domain=false, $type=-1){
 	$info=parse_url($url);
 	$type=is_int($vars) ? $vars : (is_int($domain) ? $domain : $type);
 	$domain=is_bool($vars) ? $vars : (is_bool($domain) ? $domain : false);
@@ -1267,7 +1290,7 @@ function U($url='',$vars='',$domain=false,$type=-1){
  * @param string $default 默认值
  * @return mixed 配置信息
  */
-function C($key='',$default=''){
+function C($key='', $default=''){
 	if(is_string($key)){
 		$keys=explode('.', $key);
 		count($keys) < 2 && array_unshift($keys, 'system');

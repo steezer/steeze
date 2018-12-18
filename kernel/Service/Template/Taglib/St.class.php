@@ -49,7 +49,7 @@ class St{
 			if(isset($attrs['page'])){
 				$str.='$__pagesize = ' . $num . ';';
 				$str.='$__pagetype = \'' . (isset($attrs['pagetype']) && !empty($attrs['pagetype']) ? $attrs['pagetype'] : 'page') . '\';';
-				$str.='$__page = max(intval(isset(' . $attrs['page'] . ')?' . $attrs['page'] . ':$_GET[$__pagetype]),1);';
+				$str.='$__page = max(intval(' . $attrs['page'] . '?:($_GET[$__pagetype]?:1)),1);';
 				$str.='$__offset = ($__page - 1) * $__pagesize;'; //
 				$str.='$__setpages = ' . (isset($attrs['setpages']) && !empty($attrs['setpages']) ? $attrs['setpages'] : 6) . ';';
 				$limit='$__offset,$__pagesize';

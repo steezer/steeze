@@ -6,6 +6,13 @@ class Context extends Container{
     
     private $config=[]; //系统配置
     private $isInit=false; //是否已经初始化
+    
+    /**
+     * 内置Controller对象
+     *
+     * @var \Library\Controller
+     */
+    private $controller=null;
 	
     /**
      * Request对象
@@ -27,9 +34,22 @@ class Context extends Container{
 		$this->response=$this->make('\Library\Response');
 		$this->request->setRequest($request);
 		$this->response->setResponse($response);
-        $this->request->setContext($this);
-        $this->response->setContext($this);
 	}
+    
+    /**
+     * 默认调用控制器方法（一般在Closure路由中调用）
+     *
+     * @param string $name 方法名称
+     * @param array $args 参数数组
+     * @return mixed
+     */
+    public function __call($name, $args=[]){
+        if(is_null($this->controller)){
+            $this->controller=$this->make('\Library\Controller');
+            $this->controller->setContext($this);
+        }
+        return call_user_func_array([&$this->controller, $name], $args);
+    }
     
     /**
      * 获取Request对象

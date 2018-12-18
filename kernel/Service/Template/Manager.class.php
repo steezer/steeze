@@ -128,6 +128,9 @@ class Manager {
 		$str=preg_replace('/{(.+?)\+\+}/', '<?php \\1++; ?>', $str);
 		$str=preg_replace('/{(.+?)\-\-}/', '<?php \\1--; ?>', $str);
 		
+        // 资源文件输出
+        $str=preg_replace('/{@([^{}\']*)}/', '<?php echo assets(\'\\1\'); ?>', $str);
+        
 		// 函数调用解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{:?(([\$@]?[a-zA-Z_][a-zA-Z0-9_:]*)\(([^{}]*)\))}/', array($this,'parseFunc'), $str); // parse function or var function call like {date('Y-m-d',$r['addtime'])}
 		// 变量输出（支持“.”语法表示数组）
@@ -296,25 +299,26 @@ class Manager {
 		if(isset($datas['name'])){
 			$m=isset($datas['app']) ? $datas['app'] : env('ROUTE_M');
 			$name=str_replace('.','/',$datas['name']);
-			if(strpos($name, '/')===0){ // 从分组顶层向下获取类，例如：/Member/Index/info
+            $sysRc=env('ROUTE_C', false);
+			if(strpos($name, '/')===0 || $sysRc===false){ // 从分组顶层向下获取类，例如：/Member/Index/info
 				$cas=explode('/', trim($name,'/'));
 				$action=array_pop($cas);
-				$class=$m.'.'.(!empty($cas) ? implode('/',$cas) : env('ROUTE_C'));
+				$class=$m.'.'.(!empty($cas) ? implode('/',$cas) : ($sysRc!==false ? $sysRc : ''));
 			}else{  // 从当前分组层向上获取，例如：Member/Index/info
-				$route_cs=explode('/',env('ROUTE_C'));
-				$cas=explode('/', $name);
-				$action=array_pop($cas);
-				for($total=max(count($route_cs),count($cas)),$i=0; $i<$total; $i++){
-					if(empty($cas)){
-						break;
-					}
-					if(isset($route_cs[$total-$i-1])){
-						$route_cs[$total-$i-1]=array_pop($cas);
-					}else{
-						array_unshift($route_cs, array_pop($cas));
-					}
-				}
-				$class=$m.'.'.implode('/', $route_cs);
+                $route_cs=explode('/', $sysRc);
+                $cas=explode('/', $name);
+                $action=array_pop($cas);
+                for($total=max(count($route_cs),count($cas)),$i=0; $i<$total; $i++){
+                    if(empty($cas)){
+                        break;
+                    }
+                    if(isset($route_cs[$total-$i-1])){
+                        $route_cs[$total-$i-1]=array_pop($cas);
+                    }else{
+                        array_unshift($route_cs, array_pop($cas));
+                    }
+                }
+                $class=$m.'.'.implode('/', $route_cs);
 			}
 			unset($datas['name']);
             $dataArr=array2html($datas);
@@ -486,7 +490,7 @@ class Manager {
 			isset($tagCaches[$tag]) && is_object($tagCaches[$tag]) && 
 			is_callable(array($tagCaches[$tag], $method))
 		){
-			return $container->callMethod($tagCaches[$tag], $method,[
+			return $container->invokeMethod($tagCaches[$tag], $method,[
 						'attrs'=>$this->parseAttrs($matches[3]),
 						'html'=>(isset($matches[4]) ? $matches[4] : ''),
 					]);
