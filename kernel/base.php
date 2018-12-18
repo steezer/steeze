@@ -50,8 +50,7 @@ spl_autoload_register('Loader::import');
 set_error_handler(array('\Library\ErrorException', 'onError'), APP_DEBUG_LEVEL);
 set_exception_handler(array('\Library\ErrorException', 'onException'));
 
-class Loader
-{
+class Loader {
 
     /**
      * 初始化应用程序
