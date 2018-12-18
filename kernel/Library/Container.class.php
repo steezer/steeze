@@ -213,7 +213,7 @@ class Container{
 								$depObject->where($where)->find();
 						}else{
 							//则根据路由变量名称为表名，查找ID主键为路由参数值的记录，
-							$depObject->table($name)->where($where)->find();
+							$depObject->table(parse_name($name))->where($where)->find();
 						}
                         unset($where);
 					}
@@ -229,6 +229,10 @@ class Container{
 				if($depObject instanceof Model){
 					//@!模型不缓存
 					$this->forgetInstance($depClass->name);
+                    //自动设置表名
+                    if($depObject->getTableName(false) === ''){
+                       $depObject->table(parse_name($name));
+                    }
 				}
 			}else{
 				$depObject=$this->resolvePrimitive($dependency);

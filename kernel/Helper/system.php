@@ -493,10 +493,10 @@ function to_string($data, $option=null){
 }
 
 /**
- * 字符串命名风格转换 type 0 将Java风格转换为C的风格 1 将C风格转换为Java的风格
+ * 字符串命名风格转换
  * 
  * @param string $name 字符串
- * @param integer $type 转换类型
+ * @param integer $type 转换类型，0:输出C的风格（下划线分割）、1:输出Java的风格（驼峰式）
  * @return string
  */
 function parse_name($name, $type=0){
@@ -509,9 +509,8 @@ function parse_name($name, $type=0){
 				}
 			}
 			return implode('', $names);
-		}else{
-			return $name;
 		}
+        return $name;
 	}else{
 		return strtolower(trim(preg_replace('/[A-Z]/', '_\\0', $name), '_'));
 	}
