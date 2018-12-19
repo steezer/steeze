@@ -7,7 +7,7 @@ return [
     'System will automatically jump to {0} after {1} seconds' => '系统将在{1}秒之后自动跳转到{0}',
     'success' => '操作成功',
     'error' => '操作失败',
-    'You should create view in Application context!'=>'你应该在应用上下文创建试图对象',
+    'You should create view in Application context!'=>'你应该在应用上下文创建视图对象',
 	
 	//数据库相关语言配置
 	'no database driver: {0}' => '未找到数据库驱动：{0} ',
