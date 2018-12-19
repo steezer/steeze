@@ -95,17 +95,19 @@ function trace($value=null, $label='', $level='DEBUG', $record=false) {
  *
  */
 function dump($var, $isReturn=false){
-	if(is_array($var)){
-		foreach($var as $k=>$v){
-			$var[$k]=dump($v, $isReturn);
-		}
-	}
-	$return=is_object($var) ? get_class($var) : (is_string($var) ? $var : trim(var_export($var, true), '"\''));
-	if(!$isReturn){
-		echo $return . "\n";
-	}else{
-		return $return;
-	}
+    if(is_array($var)){
+        foreach($var as $k=>$v){
+            if(is_object($v)){
+                $var[$k]=dump($v, $isReturn);
+            }
+        }
+    }
+    $return=is_object($var) ? get_class($var) : (is_string($var) ? $var : var_export($var, true));
+    if(!$isReturn){
+        echo $return . "\n";
+    }else{
+        return $return;
+    }
 }
 
 /**
