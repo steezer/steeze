@@ -100,7 +100,7 @@ function dump($var, $isReturn=false){
 			$var[$k]=dump($v, $isReturn);
 		}
 	}
-	$return=is_object($var) ? get_class($var) : (is_string($var) ? $var : var_export($var, true));
+	$return=is_object($var) ? get_class($var) : (is_string($var) ? $var : trim(var_export($var, true), '"\''));
 	if(!$isReturn){
 		echo $return . "\n";
 	}else{
