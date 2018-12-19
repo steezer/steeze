@@ -113,14 +113,13 @@ final class View{
 	/**
 	 * 加载模板和页面输出 可以返回输出内容
 	 *
-	 * @access public
-	 * @param string $templateFile 模板文件名
-	 * @param string $charset 模板输出字符集
+	 * @param string $file 需要渲染的文件名
+	 * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
 	 * @return mixed
 	 */
-	public function display($templateFile=''){
+	public function display($file='', $data=''){
 		// 解析并获取模板内容
-		$content=$this->fetch($templateFile);
+		$content=$this->fetch($file, $data);
 		// 输出模板内容
         $this->getContext()->getResponse()
             ->write($content);
@@ -129,39 +128,42 @@ final class View{
 	/**
 	 * 解析和获取模板内容 用于输出
 	 *
-	 * @access public
-	 * @param string $templateFile 模板文件名
-	 * @param string $content 模板输出内容
+	 * @param string $file 需要渲染的文件名
+	 * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
 	 * @return string
 	 */
-	public function fetch($templateFile='',$content=''){
-		if(empty($content)){
-			$res=!is_file($templateFile) ? self::resolvePath($templateFile) : $templateFile;
-			$templateFile=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
+	public function fetch($file='', $data=''){
+        if(is_array($data)){
+            $this->assign($data);
+            $data='';
+        }
+		if(empty($data)){
+			$res=!is_file($file) ? self::resolvePath($file) : $file;
+			$file=is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
 			unset($res);
 			// 模板文件不存在直接返回
 			
-			if(!is_file($templateFile)){
+			if(!is_file($file)){
 				return null;
 			}
 		}
 		// 页面缓存
 		ob_start();
 		ob_implicit_flush(0);
-		$_content=$content;
+		$_content=$data;
 		// 模板阵列变量分解成为独立变量，如果为数字索引，则加前缀“_”
 		extract($this->tVar, EXTR_OVERWRITE|EXTR_PREFIX_INVALID,'_');
 		$this->tVar=[];
 		// 直接载入PHP模板
         if(empty($_content)){
-            include $templateFile;
+            include $file;
         }else{
             eval('?>' . $_content);
         }
 		// 获取并清空缓存
-		$content=ob_get_clean();
+		$data=ob_get_clean();
 		// 输出模板文件
-		return $content;
+		return $data;
 	}
     
     /**
