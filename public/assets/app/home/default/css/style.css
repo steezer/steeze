@@ -1,45 +1,42 @@
-body {
-	margin: 0; padding: 0; text-align: center; background: #fff;
-}
-
 body, td, div {
-	font-size: 12px; line-height: 1.5em; color: #666;
-}
-
-ul, li, form, h1, h2, h3, h4 {
-	margin: 0; padding: 0
+    padding: 15px;
+    margin: 15px;
+	font-size: 13px; line-height: 1.5em; color: #666;
 }
 
 img {
 	border: 0
 }
 
-
-h3 {
-	font-size: 14px; margin: 10px 0;
+a{
+    text-decoration: none;
+    color: #666;
 }
 
-a:link, a:visited {
-	color: #666; TEXT-DECORATION: none
+a:hover{
+    text-decoration: underline;
+    color: #f00;
 }
 
-a:hover {
-	color: #f60; TEXT-DECORATION: none
+.page{
+    width: 100%;
 }
-
-a.green:link, a.green:visited {
-	color: #7CC346; TEXT-DECORATION: none
+.page li{
+    list-style: none;
+    display: inline;
 }
-
-a.green:hover {
-	color: #f60; TEXT-DECORATION: none
+.page li a, .page li span{
+    display: inline-block; 
+    margin-left: 5px; 
+    height: 20px;
+    padding: 0 10px;
+    border: 1px solid #d1cccc; 
+    line-height: 20px; 
+    text-align: center;
 }
-
-.clear {
-	clear: both
+.page .disabled span{
+    color: #999; cursor: default;
 }
-
-.over-hide {
-	overflow: hidden; white-space: nowrap; -o-text-overflow: ellipsis;
-	text-overflow: ellipsis;
+table td{
+    padding: 5px 10px;
 }

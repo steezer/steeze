@@ -998,27 +998,6 @@ function make($concrete, $parameters=[], $container=null){
 }
 
 /**
- * 获取渲染后的视图内容
- * 
- * @param string $name 视图名称，可以是直接的文件路径，或者视图路径
- * @param array | \Library\Container $datas 视图变量或容器对象
- * @param \Library\Container $container 使用的容器对象，为null则使用系统容器
- * @return string 渲染后的视图内容
- */
-function view($name, $datas=[], $container=null){
-    if(is_object($datas)){
-        $container=&$datas;
-    }
-	$viewer=make('\Library\View', [], $container);
-	if(is_array($datas)){
-		foreach($datas as $key=>&$value){
-			$viewer->assign($key, $value);
-		}
-	}
-	return $viewer->fetch($name);
-}
-
-/**
  * 获取环境变量（键名不区分大小写）
  * 
  * @param string $key 键名称

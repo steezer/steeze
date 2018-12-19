@@ -89,7 +89,7 @@ class Manager {
 		stripos($str, $ld . 'import ') !== false && ($str=preg_replace_callback('/' . $ld . 'import\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseImport'), $str));
 		(stripos($str, $ld . 'template ') !== false || stripos($str, $ld . 'include ') !== false) && ($str=preg_replace_callback('/' . $ld . '(?:template|include)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseInclude'), $str));
 		stripos($str, $ld . 'action ') !== false && ($str=preg_replace_callback('/' . $ld . 'action\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAction'), $str));
-
+        
 		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+([^'.$ld.$rd.']*)\s*\/' . $rd . '/is', array($this,'parseTagLib'), $str);
 		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/\1:\2' . $rd . '/is', array($this,'parseTagLib'), $str);
 		
@@ -138,7 +138,7 @@ class Manager {
 		// 数组变量常规输出
 		$str=preg_replace_callback('/{(\$[a-zA-Z0-9_\[\]\'\"\$]+)(\|[^{}]+)?}/s', array($this,'parseArray'), $str); // parse var array var like {$r['add']|md5}
 		// 表达式解析（支持“.”语法表示数组）
-		$str=preg_replace_callback('/{\((.+?)\)}/s', array($this,'parseExpression'), $str); // parse expression like "{(a=10?1:0)}"
+		$str=preg_replace_callback('/{[\({](.+?)[\)}]}/s', array($this,'parseExpression'), $str); // parse expression like "{(a=10?1:0)}" or "{{a=10?1:0}}"
 		// 解析表达式转义字符
 		$str=str_replace(array('\\{','\\}'), array('{','}'), $str);
 		

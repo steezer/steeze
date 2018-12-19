@@ -19,7 +19,7 @@ class Index extends Controller{
 	}
 	
     //数据库表的参数绑定
-	public function test(Model $user){
+	public function lists(Model $user){
 		$this->assign('user',$user);
 		$this->display();
 	}
