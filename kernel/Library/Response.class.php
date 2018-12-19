@@ -205,7 +205,7 @@ class Response{
             }
 			$this->header('Content-Type', $dataType); // 网页字符编码
 			$this->header('Cache-control', C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			$this->header('X-Powered-By', 'steeze');
+			$this->header('X-Powered-By', 'steeze'.STEEZE_VERSION);
 		}
         //结束输出
         $this->end($data);
@@ -234,7 +234,7 @@ class Response{
                 $charset=C('charset', 'utf-8');
                 $this->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
                 $this->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-                $this->header('X-Powered-By','steeze');
+                $this->header('X-Powered-By','steeze'.STEEZE_VERSION);
                 $this->header('refresh', $time . ';url=' . $url);
                 $this->end($msg);
             }
