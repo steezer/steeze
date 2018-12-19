@@ -34,6 +34,11 @@ class Context extends Container{
 		$this->response=$this->make('\Library\Response');
 		$this->request->setRequest($request);
 		$this->response->setResponse($response);
+        
+        //非swoole模式下运行将应用对象绑定到容器静态实例
+        if($this->request->getSapiName()!='swoole'){
+            self::$instance=$this;
+        }
 	}
     
     /**

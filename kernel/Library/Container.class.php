@@ -8,12 +8,18 @@ use ReflectionParameter;
 use ReflectionFunction;
 
 class Container{
-	
-	protected static $instance; //当前全局可用的容器
+
 	protected $instances=[]; //容器中的共享实例
 	protected $aliases=[]; //容器的别名
 	protected $extenders=[]; //扩展闭包服务
 	protected $with=[]; //参数栈
+    
+    /**
+     * 当前容器实例对象
+     *
+     * @var \Library\Container
+     */
+    protected static $instance; //当前全局可用的容器
     
     /**
 	 * 对象方法或函数依赖注入调用

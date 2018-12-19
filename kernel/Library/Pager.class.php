@@ -52,9 +52,12 @@ class Pager{
 	 * 		]
 	 */
 	function getPager($config, $setPages=10, $urlRule='', $array=[]){
-		$defaults=['type' => 'page','size' => 15,'count'=>1,'url' => '/'];
+		$defaults=['type' => 'page','size' => 15,'count'=>1];
 		$addUrl='';
 		$configs=array_merge($defaults, $config);
+        if(!isset($configs['url'])){
+            $configs['url'] = $this->getUrl();   
+        }
         if(is_string($configs['page']) && strpos($configs['page'], ',')!==false){
             $pagesizes=explode($configs['page'], ',');
             $configs['page']=intval(trim($pagesizes[0]));
@@ -214,6 +217,9 @@ class Pager{
 	 * @return string 重新设置的URL
 	 */
 	private function urlParam($par,$url='',$key='page'){
+        if($url === ''){
+			$url=$this->getUrl();
+		}
 		$pos=strpos($url, '?');
 		if($pos === false){
 			$url.='?' . (is_array($par) ? http_build_query($par) : $par);
@@ -238,6 +244,33 @@ class Pager{
 			$url=substr($url, 0, $pos) . (empty($querystring) ? '' : '?' . $querystring);
 		}
 		return $url;
+	}
+    
+    /**
+	 * 获取当前页面URL地址
+	 *
+	 * @param int $type 需要获取的类型（取值及返回值意义：0-相对地址；1-绝对地址；2-不带参数相对地址；3-不带参数绝对地址；）
+	 * @return string 获取的URL，类型由$type决定
+	 */
+	private function getUrl($type=0){
+		$sys_protocal=env('SITE_PROTOCOL');
+		$php_self=$_SERVER['PHP_SELF'] ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME'];
+		$path_info=isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '';
+		$relate_url=isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : $php_self . (isset($_SERVER['QUERY_STRING']) ? '?' . safe_replace($_SERVER['QUERY_STRING']) : $path_info);
+		if(strpos($relate_url, '?')===false && !empty($_SERVER['QUERY_STRING'])){
+			$relate_url.='?'.$_SERVER['QUERY_STRING'];
+		}
+		$relate_url_nopara=strpos($relate_url, '?') === false ? $relate_url : substr($relate_url, 0, strpos($relate_url, '?'));
+		switch($type){
+            case 0: //相对地址
+				return $relate_url;
+			case 1: //绝对地址
+				return $sys_protocal . env('SITE_HOST') . $relate_url;
+			case 2: //不带参数相对地址
+				return $relate_url_nopara;
+            case 3: //不带参数绝对地址
+				return $sys_protocal . env('SITE_HOST') . $relate_url_nopara;
+		}
 	}
     
 }
