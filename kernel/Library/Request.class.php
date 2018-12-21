@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * 系统请求类型
+ * 
+ * @package Library
+ */
 class Request{
 	private $route=null; //路由对象
 	private $request=null; //外部Request对象

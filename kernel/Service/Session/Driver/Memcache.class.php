@@ -1,6 +1,11 @@
 <?php
 namespace Service\Session\Driver;
 
+/**
+ * Memcache方式Session驱动
+ * 
+ * @package Session
+ */
 class Memcache {
 	protected $lifeTime     = 3600;
 	protected $sessionName  = '';

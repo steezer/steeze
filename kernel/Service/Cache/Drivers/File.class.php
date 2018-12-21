@@ -1,10 +1,13 @@
 <?php
-
 namespace Service\Cache\Drivers;
+
 use Service\Cache\Manager as Cache;
 
 /**
  * 文件类型缓存类
+ * 
+ * @package Cache
+ * @subpackage Drivers
  */
 class File extends Cache {
 

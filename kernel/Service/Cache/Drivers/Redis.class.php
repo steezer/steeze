@@ -1,11 +1,14 @@
 <?php
 namespace Service\Cache\Drivers;
-use Service\Cache\Manager as Cache;
 
+use Service\Cache\Manager as Cache;
 
 /**
  * Redis缓存驱动 
  * 要求安装phpredis扩展：https://github.com/nicolasff/phpredis
+ * 
+ * @package Cache
+ * @subpackage Drivers
  */
 class Redis extends Cache {
 	 /**

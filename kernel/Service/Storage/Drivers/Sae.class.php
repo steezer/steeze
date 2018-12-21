@@ -1,7 +1,14 @@
 <?php
 namespace Service\Storage\Drivers;
+
 use Service\Storage\Manager as Storage;
-// SAE环境文件写入存储类
+
+/**
+ * SAE环境文件写入存储类
+ * 
+ * @package Storage
+ * @subpackage Drivers
+ */
 class Sae extends Storage{
 
     /**

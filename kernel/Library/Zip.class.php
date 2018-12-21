@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * ZIP压缩/解压类
+ * 
+ * @package Library
+ */
 class Zip{
 	private $ctrl_dir=array();
 	private $datasec=array();

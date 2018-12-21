@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * 中间件基类
+ * 
+ * @package Library
+ */
 class Middleware{
     /**
      * 应用上下文对象

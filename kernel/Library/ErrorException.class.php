@@ -1,7 +1,9 @@
 <?php
 namespace Library;
+
 /**
  * 错误异常处理类
+ * @package Library
  */
 class ErrorException extends \Exception {
 	

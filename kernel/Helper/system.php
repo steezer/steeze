@@ -1,16 +1,18 @@
 <?php
-
-// ////////////////////////////////////
-// //////////公共函数库////////////////
-// ////////////////////////////////////
+/**
+ * 系统默认函数库
+ * 
+ * @package default
+ * @subpackage Helper
+ */
 
 /**
  * 快速日志记录（支持日志分割及文件增量清理）
  *
- * @param mixed $content
- * @param string $file
- * @param number $is_append
- * @return number 写入日志字节数
+ * @param mixed $content 日志内容
+ * @param int $isAppend 是否附加内容
+ * @param string $file 日志文件名
+ * @return int 写入日志字节数
  */
 function fastlog($content, $isAppend=true, $file='system.log'){
     $datetime=date('Y-m-d H:i:s');
@@ -90,7 +92,7 @@ function trace($value=null, $label='', $level='DEBUG', $record=false) {
  * 输出变量信息
  * 
  * @param mixed $var 变量
- * @param bool $isOutput 是否直接输出
+ * @param bool $isReturn 是否返回值
  * @return void|mixed
  *
  */
@@ -135,7 +137,7 @@ function sizeformat($size, $bits=2){
 /**
  * 转换字节数为其他单位
  *
- * @param int $tm
+ * @param int $tm 时间戳
  * @return string
  */
 function timeformat($tm){
@@ -154,17 +156,17 @@ function timeformat($tm){
 /**
  * 从指定目录根据知道路径读取文件列表（只检索当前目录）
  *
- * @param string $dir
- * @param string $ftype
- * @return multitype:string
+ * @param string $dir 需要获取的目录
+ * @param string $type 过滤文件类型
+ * @return array
  */
-function filelist($dir='.', $ftype='*'){
+function filelist($dir='.', $type='*'){
 	$farr=[];
 	if($handle=opendir($dir)){
 		while(false !== ($file=readdir($handle))){
 			if($file != '.' && $file != '..'){
-				if($ftype != '*'){
-					if(preg_match("/{$ftype}\s*$/i", $file) && is_file($file)){
+				if($type != '*'){
+					if(preg_match("/{$type}\s*$/i", $file) && is_file($file)){
 						$farr[]=$file;
 					}
 				}else{
@@ -214,7 +216,7 @@ function simplify_ds($path){
  * @param string $sourcestr 待截取的字符串
  * @param number $cutlength 截取长度
  * @param bool $addfoot 是否添加"..."在末尾
- * @param bool $isAdd 是否处理特殊字符，引用方式传入
+ * @param bool &$isAdd 是否进行过截取操作
  * @return string
  */
 function cut_str($sourcestr, $cutlength=80, $addfoot=true, &$isAdd=false){
@@ -523,10 +525,10 @@ function parse_name($name, $type=0){
  *
  * @param string $filename 文件名
  * @param string $default 默认扩展名
- * @param int $max_ext_length 允许获取扩展名的最大长度
+ * @param int $maxExtLen 允许获取扩展名的最大长度
  * @return string 扩展名
  */
-function fileext($filename, $default='jpg', $max_ext_length=5){
+function fileext($filename, $default='jpg', $maxExtLen=5){
 	if(strrpos($filename, '/') !== false){
 		$filename=substr($filename, strrpos($filename, '/') + 1);
 	}
@@ -534,7 +536,7 @@ function fileext($filename, $default='jpg', $max_ext_length=5){
 		return $default;
 	}
 	$ext=strtolower(trim(substr(strrchr($filename, '.'), 1)));
-	return strlen($ext) > $max_ext_length ? $default : $ext;
+	return strlen($ext) > $maxExtLen ? $default : $ext;
 }
 
 /**
@@ -556,7 +558,7 @@ function random($length, $chars='0123456789'){
 /**
  * 将字符串转换为数组
  *
- * @param string $data
+ * @param string $data 需要转换的字符串
  * @return array
  */
 function string2array($data){
@@ -697,8 +699,9 @@ function safe_replace($data){
  *
  * @param string $url 文件地址
  * @param string $data POST请求时为数组
+ * @param array $headers 设置请求头信息
  * @param string $savepath 文件保存路径，如果为空则返回获取的文件内容
- * @return number|mixed
+ * @return string|int|null
  */
 function get_remote_file($url, $data=null, $headers=null, $savepath=null){
 	if(trim($url) == ''){
@@ -900,7 +903,7 @@ function session($name='', $value=''){
  * @param string $file 文件模式路径
  * @param string $type 文件类型
  * @param bool $check 是否检查存在，如果不存在返回空
- * @param string $default='default' 如果不存在，默认检查的风格名称
+ * @param string $default 如果不存在，默认的风格包名称
  */
 function assets($file, $type='', $check=false, $default='default'){
 	if(!is_string($type)){
@@ -1003,7 +1006,7 @@ function make($concrete, $parameters=[], $container=null){
  * 获取环境变量（键名不区分大小写）
  * 
  * @param string $key 键名称
- * @param array $default 默认值
+ * @param string $default 默认值
  * @return string 环境变量值
  */
 function env($key, $default=null){
@@ -1012,18 +1015,21 @@ function env($key, $default=null){
 
 /**
  * 记录和统计时间（微秒）和内存使用情况 
- *
- * @param string $start 开始标签
- * @param string $end 结束标签
- * @param integer|string $dec 小数位或者m
- * @return mixed
- * @example 使用方法: 
- * G('begin'); // 记录开始标记位 
+ * 
+ * 使用方法: 
+ * <code>
+ * G('begin'); // 记录开始标记位
  * G('end');   //记录结束标签位
  * echo G('begin','end',6);  //统计区间运行时间 精确到小数后6位
- * echo G('begin','end','m'); 
- * 统计区间内存使用情况 如果end标记位没有定义，则会自动以当前作为标记位 
- * 其中统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 
+ * echo G('begin','end','m');  //统计区间内存使用情况
+ * </code>
+ * 如果end标记位没有定义，则会自动以当前作为标记位
+ * 统计内存使用需要 MEMORY_LIMIT_ON 常量为true才有效 
+ * 
+ * @param string $start 开始标签
+ * @param string $end 结束标签
+ * @param int|string $dec 小数位或者m
+ * @return mixed
  */
 function G($start, $end='', $dec=4){
 	static $_info=array();
@@ -1132,14 +1138,17 @@ function F($name, $value='', $path=null){
 
 /**
  * 模型快速操作
- *
- * @param string $name 需要操作的表
- * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
- * @return \Library\Model object 数据库模型对象 
- * @example $conn参数为字符串类型时举例说明： 
+ * 
+ * <pre>
+ * $conn参数为字符串类型时举例说明： 
  * 1、"xxx": 使用"xxx"为连接名称，表前缀使用连接配置； 
  * 2、"^aaa_@xxx"（或"^@xxx"）: 使用"aaa_"（或为空）为表前缀,xxx为连接名称； 
  * 3、"^aaa_"（或"^"）: 使用"aaa_"（或为空）为表前缀，连接名称使用系统默认配置
+ * </pre>
+ *
+ * @param string $name 需要操作的表
+ * @param mixed $conn 为字符串时，如果以"^xxx"开头，表示表前缀，否则表示数据库配置名；如果为数组，表示配置
+ * @return \Library\Model 数据库Model模型对象 
  */
 function M($name='', $conn=''){
 	static $_model=array();
@@ -1160,12 +1169,29 @@ function M($name='', $conn=''){
 
 /**
  * URL组装 支持不同URL模式
- *
+ * 
+ * <pre>
+ * 使用方式说明： 
+ * 1、外部地址解析（地址以“http://”或“https://”开头）： 
+ *    U('http://www.baidu.com','name=spring&id=2') 
+ *    返回：http://www.baidu.com?name=spring&id=2 
+ * 2、本地绝对地址解析（地址以“/”开头）：
+ *    U('/api/','name=spring&id=2',true) 
+ *    返回：http://www.h928.com/api/?name=spring&id=2 
+ * 3、本地插件地址解析（地址以“:”开头）: 
+ *    U(':houserent/add','name=spring&id=2') 
+ *    返回：/index.php?plugin_c=houserent&plugin_a=add&name=spring&id=2 
+ * 4、本地控制器地址解析：
+ *    U('houserent/add','name=spring&id=2') 
+ *    返回：/index.php?c=houserent&a=add&name=spring&id=2
+ * </pre>
+ * 
+ * @deprecated 1.3.0
  * @param string $url URL表达式，格式：'[:][模块/控制器/操作#锚点@域名]?参数1=值1&参数2=值2...'
  * @param string|array $vars 传入的参数，支持数组和字符串
  * @param boolean $domain 是否显示域名
  * @param integer $type 使用的URL类型，为-1系统自动判断，为0前端，为1后台
- * @return string 使用方式说明： 1、外部地址解析（地址以“http://”或“https://”开头）：U('http://www.baidu.com','name=spring&id=2') 返回：http://www.baidu.com?name=spring&id=2 2、本地绝对地址解析（地址以“/”开头）：U('/api/','name=spring&id=2',true) 返回：http://www.h928.com/api/?name=spring&id=2 3、本地插件地址解析（地址以“:”开头）: U(':houserent/add','name=spring&id=2') 返回：/index.php?plugin_c=houserent&plugin_a=add&name=spring&id=2 4、本地控制器地址解析：U('houserent/add','name=spring&id=2') 返回：/index.php?c=houserent&a=add&name=spring&id=2
+ * @return string 
  */
 function U($url='', $vars='', $domain=false, $type=-1){
 	$info=parse_url($url);
@@ -1323,8 +1349,12 @@ function E($error, $code=404){
 
 /** 
  * 语言转化
+ * 
+ * 使用范例：
+ * L('hello: {name}', ['name'=>'steeze'])
  *  
- * @param string $message 语言键名 
+ * @param string $message 语言键名
+ * @param array $datas 参数变量数组
  * @return string 转换后的语言
  */
 function L($message, $datas=[]){

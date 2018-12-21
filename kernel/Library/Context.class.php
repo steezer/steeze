@@ -2,6 +2,11 @@
 namespace Library;
 use Loader;
 
+/**
+ * 系统上下文类
+ * 
+ * @package Library
+ */
 class Context extends Container{
     
     private $config=[]; //系统配置

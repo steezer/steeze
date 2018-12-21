@@ -1,12 +1,23 @@
 <?php
 namespace Library;
 use Loader;
+
+/**
+ * 系统视图类
+ * 
+ * @package Library
+ */
 final class View{
-	protected $tVar=[]; //模板输出变量
-	protected $theme=''; //模板主题
-	protected static $_m=''; //默认模块
-	protected static $_c=''; //默认控制器
-	protected static $_a=''; //默认方法
+    /**
+     * 模板输出变量
+     *
+     * @var array
+     */
+	protected $tVar=[];
+    
+	private static $_m=''; //默认模块
+	private static $_c=''; //默认控制器
+	private static $_a=''; //默认方法
     
     /**
      * 应用上下文对象
@@ -61,18 +72,6 @@ final class View{
         }
         return $this->pager->getPager($config, $setPages, $urlRule, $array);
     }
-	
-	/**
-	 * 设置默认的模块、控制器和方法
-	 * @param string $m 模块名称
-	 * @param string $c 控制器名称
-	 * @param string $a 方法名称
-	 * */
-	public function setMca($m, $c, $a){
-		self::$_m=$m;
-		self::$_c=$c;
-		self::$_a=$a;
-	}
 	
 	/**
 	 * 模板变量赋值

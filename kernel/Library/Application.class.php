@@ -2,6 +2,11 @@
 namespace Library;
 use Loader;
 
+/**
+ * 上下文应用程序类
+ * 
+ * @package Library
+ */
 class Application extends Context{
 
 	public function __construct($request=null, $response=null){
@@ -20,7 +25,7 @@ class Application extends Context{
 	 * 运行应用并返回结果到浏览器
      * 
      * @param array $config 启动配置参数，如果为空则从系统环境中获取
-     * @example 
+     *  
      * 示例：[
      *    'url' => 'https://www.steeze.cn/api/test?id=1', //带Get参数的URL地址
      *    'method'=> 'GET', //请求方法

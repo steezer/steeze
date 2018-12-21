@@ -1,59 +1,138 @@
 <?php
+/**
+ * 系统运行基础文件
+ * 
+ * 此文件主要定义系统基础常量和加载器，如果需要写命令行程序，只需要引入此文件即可
+ * 
+ * @package default
+ */
 
-/**** 【定义系统基础常量】 ****/
-function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/GMT-8'); //设置时区
-define('STEEZE_VERSION', '1.3.0'); //系统版本
-define('INI_STEEZE', true); //初始化标识
-define('SYS_START_TIME', microtime()); // 设置系统开始时间
 //版本检测，低于php5.4不被支持
 version_compare(PHP_VERSION, '5.4', '<') &&
     exit('PHP versions smaller than 5.4 are not supported');
 
-/**** 【定义服务器端路径】 ****/
-define('DS', DIRECTORY_SEPARATOR); //简化目录分割符
-define('KERNEL_PATH', dirname(__FILE__) . DS); //框架目录
-!defined('APP_PATH') && define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS); //应用目录
-!defined('VENDOR_PATH') && define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS); //外部库目录
-!defined('STORAGE_PATH') && define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS); //数据存储目录
-define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS); //缓存目录
-define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS); //日志目录
-!defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS); //网站根目录路径
-define('ASSETS_PATH', ROOT_PATH . 'assets' . DS); //资源文件路径
-define('UPLOAD_PATH', ASSETS_PATH . 'ufs' . DS); //文件上传目录路径
+ //设置时区
+function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/GMT-8');
+
+/**
+ * 系统当前版本号
+ */
+define('STEEZE_VERSION', '1.3.0');
+
+/**
+ * @ignore 系统初始化标志
+ */
+define('INI_STEEZE', true);
+
+/**
+ * 系统开始时间值
+ */
+define('SYS_START_TIME', microtime());
+
+/**
+ * 系统目录分隔符
+ */
+define('DS', DIRECTORY_SEPARATOR);
+
+/**
+ * 内核框架路径
+ */
+define('KERNEL_PATH', dirname(__FILE__) . DS);
+
+/**
+ * 应用目录（支持自定义）
+ */
+!defined('APP_PATH') && define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS);
+
+/**
+ * 应用目录（支持自定义）
+ */
+!defined('VENDOR_PATH') && define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS);
+
+/**
+ * 数据存储目录（支持自定义，权限为可读写）
+ */
+!defined('STORAGE_PATH') && define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
+
+/**
+ * 缓存文件目录（权限为可读写）
+ */
+define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS);
+
+/**
+ * 日志目录（权限为可读写）
+ */
+define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS);
+
+/**
+ * 入口文件根目录路径（支持自定义）
+ */
+!defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS);
+
+/**
+ * 资源文件路径
+ */
+define('ASSETS_PATH', ROOT_PATH . 'assets' . DS);
+
+/**
+ * 文件上传目录路径
+ */
+define('UPLOAD_PATH', ASSETS_PATH . 'ufs' . DS);
+
+/**
+ * 文件存储类型
+ */
 !defined('STORAGE_TYPE') && define('STORAGE_TYPE', (function_exists('saeAutoLoader') ? 'Sae' : 'File'));
 
-/**** 【运行环境判断】 ****/
-//加载系统函数库和环境变量
+// 加载系统函数库
 Loader::helper('system');
-//加载系统环境变量
+// 加载环境变量
 Loader::env();
 
-/**** 【从环境变量初始化常量】 ****/
-// 系统默认在开发模式下运行
+/**
+ * 系统默认在调试模式下运行（支持自定义常量或环境变量app_debug），建议在生产系统中配置环境变量为false
+ */
 !defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug', true)); 
-// 系统调试信息级别
+
+/**
+ * 系统错误信息显示级别（支持自定义）
+ */
 !defined('APP_DEBUG_LEVEL') && define(
     'APP_DEBUG_LEVEL',
     APP_DEBUG ? (E_ALL ^ E_STRICT ^ E_NOTICE) : (E_ERROR | E_PARSE)
 );
-//当找不到处理器时，是否使用默认处理器
+
+/**
+ * 当找不到处理器时，是否使用默认处理器（支持自定义常量或环境变量use_defualt_handle）
+ */
 !defined('USE_DEFUALT_HANDLE') && define('USE_DEFUALT_HANDLE', env('use_defualt_handle', false));
-//默认主机，命令行模式时使用
+
+/**
+ * 默认主机，命令行模式时使用（支持定义环境变量default_host）
+ */
 define('DEFAULT_HOST', env('default_host', '127.0.0.1'));
-//默认应用名称
+
+/**
+ * 默认应用名称（支持自定义），如果设置为空（""），则不使用多应用模式
+ */
 !defined('DEFAULT_APP_NAME') && define('DEFAULT_APP_NAME', 'home');
 
 //注册类加载器
 spl_autoload_register('Loader::import');
 
-//配置错误处理
+//配置错误及异常处理
 set_error_handler(array('\Library\ErrorException', 'onError'), APP_DEBUG_LEVEL);
 set_exception_handler(array('\Library\ErrorException', 'onException'));
 
+/**
+ * 系统加载器
+ * 
+ * @package default
+ */
 class Loader {
 
     /**
-     * 初始化应用程序
+     * 加载并运行应用程序对象
      * 
      * @param object $request 外部Request对象（可选）
      * @param object $response 外部Response对象（可选）
@@ -65,7 +144,7 @@ class Loader {
     }
 
     /**
-     * 加载环境变量
+     * 系统环境变量加载
      * 
      * @param string $key 环境变量键名，如果为null则重写设置日志
      * @param string $value 环境变量键值
@@ -88,7 +167,7 @@ class Loader {
     }
 
     /**
-     * 类加载器 
+     * 系统类加载
      * 
      * @param string $path 类路径
      * @return string
@@ -116,7 +195,7 @@ class Loader {
     }
 
     /**
-     * 加载控制器
+     * 控制器加载
      *
      * @param string $name 控制器名称（可以指定模块，以“.”分割：“模块名.控制器”）
      * @param array $parameters 参数列表
@@ -154,7 +233,7 @@ class Loader {
     }
 
     /**
-     * 加载函数库
+     * 函数库加载
      *
      * @param string $func 函数库名
      * @param string|mixed $moudule 当是字符串为模型名称，如果是true，则为当前模型
@@ -189,9 +268,9 @@ class Loader {
     }
 
     /**
-     * 加载配置文件
+     * 配置文件加载
      *
-     * @param string $name 配置文件
+     * @param string|array $name 配置文件名称（不包括扩展名），如果为数组则设置配置选项
      * @param string $key 要获取的配置键值
      * @param string $default 默认配置，当获取配置项目失败时该值发生作用
      * @return mixed

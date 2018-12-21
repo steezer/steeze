@@ -3,6 +3,7 @@ namespace Library;
 
 /**
  * 分页处理类
+ * @package Library
  */
 class Pager{
 	/**
@@ -41,7 +42,8 @@ class Pager{
 	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
 	 * @param array $array 附加的参数（可选）
 	 * @return array 分页配置，包括html和info字段
-	 * @example 分页信息参数范例：
+	 * 
+     * 分页信息参数范例：
 	 * 		[
      *          'total'=> $totalrows,  //记录总数
      *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）

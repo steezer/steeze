@@ -1,7 +1,11 @@
 <?php
 namespace Service\Storage;
 
-// 分布式文件存储类
+/**
+ * 分布式文件存储类
+ * 
+ * @package Storage
+ */
 class Manager {
 
     /**

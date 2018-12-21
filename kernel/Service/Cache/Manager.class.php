@@ -1,8 +1,10 @@
 <?php
-
 namespace Service\Cache;
+
 /**
  * 缓存管理类
+ * 
+ * @package Cache
  */
 class Manager {
 
@@ -78,7 +80,6 @@ class Manager {
      * @param string $key 队列名
      * @return mixed
      */
-    // 
     protected function queue($key) {
         static $_handler = array(
             'file'  =>  array('F','F'),

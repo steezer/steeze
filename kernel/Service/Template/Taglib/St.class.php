@@ -1,12 +1,16 @@
 <?php
 namespace Service\Template\Taglib;
+
 use Service\Template\Manager as TagBase;
 
 /**
- * 【标签开发说明】
- * 标签分为系统标签类和应用标签类，系统标签由系统预定义，应用标签定义在应用里面；
+ * 系统标签类型
+ * 标签开发说明: 标签分为系统标签类和应用标签类，系统标签由系统预定义，应用标签定义在应用里面；
  * 当在模板中使用标签时，系统自动加载标签，当应用标签和系统标签冲突时，优先调用应用标签；
  * 系统标签位于KERNEL_PATH/Service/Template/Taglib/，自定义标签位于APP_PATH/ROUTE_M/Taglib/
+ * 
+ * @package Template
+ * @subpackage Taglib
  */
 class St{
 	

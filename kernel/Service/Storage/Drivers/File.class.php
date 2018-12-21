@@ -1,7 +1,14 @@
 <?php
 namespace Service\Storage\Drivers;
+
 use Service\Storage\Manager as Storage;
-// 本地文件写入存储类
+
+/**
+ * 本地文件写入存储类
+ * 
+ * @package Storage
+ * @subpackage Drivers
+ */
 class File extends Storage{
 
     private $contents=array();

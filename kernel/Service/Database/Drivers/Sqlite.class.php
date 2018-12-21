@@ -5,6 +5,9 @@ use Service\Database\Driver;
 
 /**
  * Sqlite数据库驱动
+ * 
+ * @package Database
+ * @subpackage Drivers
  */
 class Sqlite extends Driver {
 

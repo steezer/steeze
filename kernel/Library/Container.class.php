@@ -1,5 +1,4 @@
 <?php
-
 namespace Library;
 
 use Closure;
@@ -7,6 +6,11 @@ use ReflectionClass;
 use ReflectionParameter;
 use ReflectionFunction;
 
+/**
+ * 系统容器类
+ * 
+ * @package Library
+ */
 class Container{
 
 	protected $instances=[]; //容器中的共享实例
@@ -381,6 +385,16 @@ class Container{
 		$this->instances=[];
 	}
 
+    /**
+	 * 设置容器实例
+	 *
+	 * @param \Library\Container|null $container
+	 * @return static
+	 */
+	public static function setInstance(Container $container=null){
+		return static::$instance=$container;
+	}
+    
 	/**
 	 * 获取容器单例
 	 *
@@ -390,17 +404,7 @@ class Container{
 		if(is_null(static::$instance)){
 			static::$instance=new static();
 		}
-		
 		return static::$instance;
 	}
-
-	/**
-	 * 设置容器实例
-	 *
-	 * @param \Library\Container|null $container
-	 * @return static
-	 */
-	public static function setInstance(Container $container=null){
-		return static::$instance=$container;
-	}
+    
 }

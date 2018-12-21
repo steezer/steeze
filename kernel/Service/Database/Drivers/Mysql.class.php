@@ -5,6 +5,9 @@ use Service\Database\Driver;
 
 /**
  * mysql数据库驱动 
+ * 
+ * @package Database
+ * @subpackage Drivers
  */
 class Mysql extends Driver{
 

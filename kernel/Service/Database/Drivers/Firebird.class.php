@@ -1,11 +1,13 @@
 <?php
-
 namespace Service\Database\Drivers;
 
 use Service\Database\Driver;
 
 /**
  * Firebird数据库驱动 
+ * 
+ * @package Database
+ * @subpackage Drivers
  */
 class Firebird extends Driver{
     protected $selectSql  =     'SELECT %LIMIT% %DISTINCT% %FIELD% FROM %TABLE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%';

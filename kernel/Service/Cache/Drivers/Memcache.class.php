@@ -1,10 +1,13 @@
 <?php
-
 namespace Service\Cache\Drivers;
+
 use Service\Cache\Manager as Cache;
 
 /**
  * Memcache缓存驱动
+ * 
+ * @package Cache
+ * @subpackage Drivers
  */
 class Memcache extends Cache {
 

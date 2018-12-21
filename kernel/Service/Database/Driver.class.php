@@ -1,8 +1,13 @@
 <?php
-
 namespace Service\Database;
+
 use PDO;
 
+/**
+ * 数据库实现基类
+ * 
+ * @package Database
+ */
 abstract class Driver {
     // PDO操作实例
     protected $PDOStatement = null;

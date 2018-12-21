@@ -42,5 +42,8 @@ location / {
 }
 ```
 
-## 开发手册
+## 开发文档
 [点击查看开发文档](http://steeze.cn/docs/startup/index/)
+
+## API手册
+[点击查看API手册](https://api.doc.steeze.cn/)

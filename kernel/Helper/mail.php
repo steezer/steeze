@@ -1,7 +1,20 @@
 <?php
+/**
+ * 邮件发送函数库
+ * 
+ * @package default
+ * @subpackage Helper
+ */
 
-function mail_send_log($mode='SMTP',$b='',$c='',$d=''){
-	// log($mode.':'.$b.$c.$d."\r\n", 'mail_failed_log.txt',1);
+/**
+ * 发送日志记录
+ *
+ * @param string $mode 模式
+ * @param string $message 消息
+ * @param int $type 类型
+ * @return void
+ */
+function mail_send_log($mode='SMTP', $message='', $type){
 }
 
 /**
@@ -15,7 +28,7 @@ function mail_send_log($mode='SMTP',$b='',$c='',$d=''){
  * @param string $sitename 邮件站点名称
  * @return bool
  */
-function mail_send($toemail,$subject,$message,$from='',$mail=array(),$sitename=''){
+function mail_send($toemail, $subject, $message, $from='', $mail=array(), $sitename=''){
 	if($sitename == ''){
 		$siteinfo=getcache('setting', 'setting', 'array', 'web');
 		$sitename=$siteinfo['name'];

@@ -1,11 +1,13 @@
 <?php
-
 namespace Service\Database\Drivers;
 
 use Service\Database\Driver;
 
 /**
- * Mongo数据库驱动
+ * Mongo数据库驱动 
+ * 
+ * @package Database
+ * @subpackage Drivers
  */
 class Mongo extends Driver {
 	

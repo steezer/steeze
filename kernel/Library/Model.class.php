@@ -5,6 +5,7 @@ use ArrayAccess;
 
 /**
  * Model模型类 实现了ORM和ActiveRecords模式
+ * @package Library
  */
 class Model implements ArrayAccess{
 	// 操作状态

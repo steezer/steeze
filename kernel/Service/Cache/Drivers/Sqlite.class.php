@@ -1,9 +1,13 @@
 <?php
 namespace Service\Cache\Drivers;
+
 use Service\Cache\Manager as Cache;
 
 /**
  * Sqlite缓存驱动
+ * 
+ * @package Cache
+ * @subpackage Drivers
  */
 class Sqlite extends Cache {
 

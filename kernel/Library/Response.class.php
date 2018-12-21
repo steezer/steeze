@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * 系统响应类
+ * 
+ * @package Library
+ */
 class Response{
 	private $response=null; //外部Response对象
 	private $isHeaderSend=false; //是否已经发送头部信息

@@ -1,9 +1,14 @@
 <?php
 namespace Service\Template;
+
 use Library\Container;
 use Library\View;
 
-// 模板服务
+/**
+ * 模板服务类
+ * 
+ * @package Template
+ */
 class Manager {
 	private $leftDelim; // 模板标签左边界字符
 	private $rightDelim;

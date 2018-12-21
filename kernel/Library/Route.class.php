@@ -2,6 +2,11 @@
 namespace Library;
 use Loader;
 
+/**
+ * 系统路由类
+ * 
+ * @package Library
+ */
 class Route{
 	static private $middlewares=[]; //中间件数组
 	private $params=[]; //绑定的路由参数

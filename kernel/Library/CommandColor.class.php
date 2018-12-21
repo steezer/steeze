@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * 命令行颜色控制类
+ * 
+ * @package Library
+ */
 class CommandColor {
 	// 前景颜色
 	private $foreground_colors = array(

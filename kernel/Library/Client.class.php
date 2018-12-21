@@ -3,8 +3,9 @@ namespace Library;
 
 /**
  * 用于获取客户端信息
- * @author xiechunping
- **/
+ * 
+ * @package Library
+ */
 class Client{
 	// 获得访客浏览器类型
 	static function getBrowser(){

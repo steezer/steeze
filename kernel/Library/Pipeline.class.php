@@ -2,6 +2,11 @@
 namespace Library;
 use \Closure;
 
+/**
+ * 管道控制类型
+ * 
+ * @package Library
+ */
 class Pipeline{
 	protected $container; // 容器实例
 	protected $passables=[]; // 通过管道传递的对象

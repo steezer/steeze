@@ -1,5 +1,4 @@
 <?php
-
 namespace Service\Database\Drivers;
 
 use Service\Database\Driver;
@@ -7,6 +6,9 @@ use PDO;
 
 /**
  * Sqlsrv数据库驱动
+ * 
+ * @package Database
+ * @subpackage Drivers
  */
 class Sqlsrv extends Driver{
     protected $selectSql  =     'SELECT T1.* FROM (SELECT thinkphp.*, ROW_NUMBER() OVER (%ORDER%) AS ROW_NUMBER FROM (SELECT %DISTINCT% %FIELD% FROM %TABLE%%JOIN%%WHERE%%GROUP%%HAVING% %UNION%) AS thinkphp) AS T1 %LIMIT%%COMMENT%';

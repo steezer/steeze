@@ -1,6 +1,11 @@
 <?php
 namespace Library;
 
+/**
+ * 图像处理类
+ * 
+ * @package Library
+ */
 class Image{
 	private $setting=null;
 	

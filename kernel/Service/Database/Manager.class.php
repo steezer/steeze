@@ -1,9 +1,10 @@
 <?php
-
 namespace Service\Database;
 
 /**
  * 数据库中间层实现类
+ * 
+ * @package Database
  */
 class Manager {
 
