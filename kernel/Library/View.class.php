@@ -146,18 +146,20 @@ final class View{
 				return null;
 			}
 		}
-		// 页面缓存
+		// 防止变量冲突
+        $__file__=$file;
+        $__content__=$data;
+        // 页面缓存
 		ob_start();
 		ob_implicit_flush(0);
-		$_content=$data;
 		// 模板阵列变量分解成为独立变量，如果为数字索引，则加前缀“_”
 		extract($this->tVar, EXTR_OVERWRITE|EXTR_PREFIX_INVALID,'_');
 		$this->tVar=[];
 		// 直接载入PHP模板
         if(empty($_content)){
-            include $file;
+            include $__file__;
         }else{
-            eval('?>' . $_content);
+            eval('?>' . $__content__);
         }
 		// 获取并清空缓存
 		$data=ob_get_clean();
