@@ -133,11 +133,20 @@ class Response{
 	 * 启用Http Chunk分段向浏览器发送相应内容
      * 
 	 * @param string $data 要发送的数据内容，最大长度不得超过2M
-	 * @param bool $isConsole 是否直接写入到控制台
+     * @param string $dataType 数据类型，可以是文件扩展名或类型标志（如：text/html）
+     * @param string|bool $charset 编码类型，默认为空使用系统配置，为false则不输出编码类型
 	 */
-	public function write($data, $isConsole=false){
+	public function write($data, $dataType='', $charset=''){
         if( !$this->isEnd && !is_null($data)){
-            if(!$isConsole && !is_null($this->response)){
+            //发送头信息
+            !$this->isHeaderSend &&
+                $this->clientHeader(
+                    $dataType ? : (is_array($data) || is_object($data) ? 'json' : 'html'), 
+                    $charset
+                );
+                
+            //输出内容
+            if(!is_null($this->response)){
                 $this->response->write(to_string($data));
             }else{
                 echo to_string($data);
@@ -145,6 +154,20 @@ class Response{
         }
 	}
 	
+    /**
+     * 输出数据到客户端并结束
+     *
+     * @param mixed $data 需要输出的数据
+     * @param string $dataType 数据类型，可以是文件扩展名或类型标志（如：text/html）
+     * @param string|bool $charset 编码类型，默认为空使用系统配置，为false则不输出编码类型
+     */
+    public function flush($data, $dataType='', $charset=''){
+        //输出内容
+        $this->write($data, $dataType, $charset);
+        //结束输出
+        $this->end();
+    }
+    
 	/**
 	 * 发送文件到浏览器
      * 
@@ -156,9 +179,11 @@ class Response{
 	 */
 	public function sendfile($filename, $offset = 0, $length = 0){
         if( !$this->isEnd ){
+            //输出文件类型
             $ext=fileext($filename);
             $mimetype=C('mimetype.'.$ext,'application/octet-stream');
-            $this->header('Content-Type', $mimetype);
+            $this->clientHeader($mimetype, false, false);
+            //发送文件
             if(!is_null($this->response)){
                 $this->response->sendfile($filename, $offset,$length);
             }else{
@@ -177,7 +202,14 @@ class Response{
 	 */
 	public function end($data=null,$isAsyn=0){
         if( !$this->isEnd ){
-            !is_null($data) && $this->write($data);
+            //如果不为null则输出内容
+            !is_null($data) && 
+                $this->write($data);
+            
+            //设置输出结束标志
+            $this->setIsEnd(true); 
+            
+            //结束输出
             if(!is_null($this->response)){
                 $this->response->end();
             }else{
@@ -188,33 +220,8 @@ class Response{
                     exit(0);
                 }
             }
-            $this->setIsEnd(true);
         }
 	}
-    
-    /**
-     * 输出数据到客户端
-     *
-     * @param mixed $data 需要输出的数据
-     * @param string $dataType 数据类型，如果为空从系统配置获取
-     * @param string|bool $charset 数据编码，如果为false不输出编码，为空从系统配置获取
-     */
-    public function flush($data, $dataType='', $charset=''){
-        if(!$this->hasSendHeader()){
-			if(empty($dataType)){
-				$type=is_array($data) || is_object($data) ? 'json' : 'html';
-				$dataType=C('mimetype.'.$type, 'text/html');
-			}
-            if($charset!==false){
-                $dataType=$dataType . '; charset=' . ($charset ?: C('charset', 'utf-8'));
-            }
-			$this->header('Content-Type', $dataType); // 网页字符编码
-			$this->header('Cache-control', C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-			$this->header('X-Powered-By', 'steeze/'.STEEZE_VERSION);
-		}
-        //结束输出
-        $this->end($data);
-    }
     
     /**
      * URL重定向
@@ -235,11 +242,7 @@ class Response{
                 $this->status(302);
                 $this->end();
             }else{
-                $contentType=C('mimetype.html','text/html');
-                $charset=C('charset', 'utf-8');
-                $this->header('Content-Type',$contentType . '; charset=' . $charset); // 网页字符编码
-                $this->header('Cache-control',C('HTTP_CACHE_CONTROL', 'private')); // 页面缓存控制
-                $this->header('X-Powered-By','steeze/'.STEEZE_VERSION);
+                $this->clientHeader();
                 $this->header('refresh', $time . ';url=' . $url);
                 $this->end($msg);
             }
@@ -250,6 +253,29 @@ class Response{
             }
             $this->end($str);
         }
+    }
+    
+    /**
+     * 发送头信息
+     *
+     * @param string $dataType 数据类型，可以是文件扩展名或类型标志（如：text/html）
+     * @param string|bool $charset 编码类型，默认为空使用系统配置，为false则不输出编码类型
+     * @param bool $cache 是否输出控制缓存
+     * @return void
+     */
+    private function clientHeader($dataType='', $charset='', $cache=true){
+        if(empty($dataType)){
+            $dataType='text/html';
+        }else if(strpos($dataType, '/')===false){
+            $dataType=C('mimetype.'.$dataType, 'text/html');
+        }
+        if($charset!==false){
+            $dataType=$dataType . '; charset=' . ($charset ?: C('charset', 'utf-8'));
+        }
+        $this->header('Content-Type', $dataType); // 网页字符编码
+        $cache &&   // 页面缓存控制
+            $this->header('Cache-control', C('HTTP_CACHE_CONTROL', 'private'));
+        $this->header('X-Powered-By', 'steeze/'.STEEZE_VERSION); //系统版本标志
     }
 	
 }
