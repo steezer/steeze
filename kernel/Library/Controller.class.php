@@ -8,20 +8,25 @@ namespace Library;
  */
 class Controller{
     
-	private $view=null; //视图对象
+    /**
+     * 视图对象
+     *
+     * @var View
+     */
+	private $view=null;
     
     /**
      * 应用上下文对象
      *
-     * @var \Library\Application
+     * @var Application
      */
     private $context=null;
 	
     /**
      * 设置应用上下文对象（系统自动注入）
      *
-     * @param \Library\Application $context
-     * @return \Library\Controller
+     * @param Application $context
+     * @return Controller
      */
     public function setContext(Application $context){
         $this->context=$context;
@@ -31,7 +36,7 @@ class Controller{
     /**
      * 获取应用上下文对象
      *
-     * @return \Library\Application
+     * @return Application
      */
     public function getContext(){
         return $this->context;
@@ -40,7 +45,7 @@ class Controller{
     /**
      * 渲染输出控制器方法的返回值
      *
-     * @param \Library\Controller $controller
+     * @param Controller $controller
      * @param string $action
      * @param array $param
      * @return mixed
@@ -52,34 +57,38 @@ class Controller{
 	/**
 	 * 模板显示 调用内置的模板引擎显示方法，
 	 *
-	 * @param string $templateFile 指定要调用的模板文件 默认为空则由系统自动定位模板文件
-	 * @param string $charset 输出编码
-	 * @param string $contentType 输出类型
+	 * @param string $file 指定要调用的模板文件 默认为空则由系统自动定位模板文件
+     * @param array $data 模板变量组成的数组
 	 */
-	public function display($templateFile='', $charset='', $contentType=''){
-		$this->view()->display($templateFile, $charset, $contentType);
+	public function display($file='', $data=[]){
+        if(is_array($data)){
+            $this->view()->assign($data);
+        }
+		$this->view()->display($file);
 	}
 
 	/**
 	 * 输出内容文本可以包括Html 并支持内容解析
 	 *
 	 * @param string $content 输出内容
-	 * @param string $charset 模板输出字符集
-	 * @param string $contentType 输出类型
+     * @param array $data 模板变量组成的数组
 	 */
-	public function show($content='', $charset='', $contentType=''){
-		$this->view()->display('', $charset, $contentType, $content);
+	public function show($content='', $data=[]){
+        if(is_array($data)){
+            $this->view()->assign($data);
+        }
+		$this->view()->display('', $content);
 	}
 
 	/**
 	 * 获取输出页面内容 调用内置的模板引擎fetch方法，
 	 *
-	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
-	 * @param string $content 模板输出内容
+	 * @param string $file 指定要调用的模板文件，默认为空 由系统自动定位模板文件
+	 * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
 	 * @return string
 	 */
-	public function fetch($templateFile='', $content=''){
-		return $this->view()->fetch($templateFile, $content);
+	public function fetch($file='', $data=''){
+		return $this->view()->fetch($file, $data);
 	}
 
 	/**
