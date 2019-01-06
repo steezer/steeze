@@ -671,26 +671,24 @@ function trim_script($data){
  * @return string
  */
 function safe_replace($data){
-	if(!is_array($data)){
-		$data=str_replace('%20', '', $data);
-		$data=str_replace('%27', '', $data);
-		$data=str_replace('%2527', '', $data);
-		$data=str_replace('*', '', $data);
-		$data=str_replace('"', '&quot;', $data);
-		$data=str_replace("'", '', $data);
-		$data=str_replace('"', '', $data);
-		$data=str_replace('`', '', $data);
-		$data=str_replace(';', '', $data);
-		$data=str_replace('<', '&lt;', $data);
-		$data=str_replace('>', '&gt;', $data);
-		$data=str_replace("{", '', $data);
-		$data=str_replace('}', '', $data);
-		$data=str_replace('\\', '', $data);
-	}else{
-		foreach($data as $key=>$val){
+	if(is_array($data)){
+        foreach($data as $key=>$val){
 			$data[$key]=safe_replace($val);
 		}
-	}
+	}else if(!empty($data)){
+        return str_replace(
+            [
+                '"', '<', '>',
+                '%20','%27','%2527',
+                '*',"'",'`',';',
+                "{",'}','\\'
+            ], 
+            [
+                '&quot;', '&lt;', '&gt;'
+            ], 
+            $data
+        );
+    }
 	return $data;
 }
 

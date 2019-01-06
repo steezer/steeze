@@ -14,6 +14,19 @@ class Request{
     private $servers=null; //Server信息
     
     /**
+     * 获取输入变量的方法
+     *
+     * @var array
+     */
+    private $inputMethods=[
+        'post', 
+        'get', 
+        'header', 
+        'cookie', 
+        'server'
+    ];
+    
+    /**
      * 上下文应用对象
      *
      * @var \Library\Application
@@ -233,45 +246,6 @@ class Request{
 		}
 		return $posts;
 	}
-    
-    /**
-    * 获取POST/GET输入参数，优先级为: POST> GET
-    *
-    * @param string $key 获取的键名，默认为null，取所有值
-    * @param mixed $default 默认值
-    * @return string|array
-    */
-    public function input($name=null, $default=null){
-        if(is_null($name)){
-            return array_merge(
-                    $this->get(),
-                    $this->post()
-                );
-        }
-        
-        $type='';
-        if(strpos($name,'/')){
-            $keys=explode('/', $name, 2);
-            $name=trim($keys[0]);
-            $type=trim($keys[1]);
-        }
-
-        //获取值
-        $value=$this->post($name);
-        if(is_null($value)){
-            $value=$this->get($name, $default);
-        }
-
-        //值处理函数
-        if($type=='d'){
-            return intval($value);
-        }else if($type=='f'){
-            return floatval($value);
-        }else if(!empty($type) && function_exists($type)){
-            return $type($value);
-        }
-        return $value;
-    }
 	
 	/**
 	 * 获取Http请求携带的COOKIE信息
@@ -318,6 +292,61 @@ class Request{
         }
 		return  $files;
 	}
+    
+    /**
+    * 获取POST/GET输入参数，优先级为: POST> GET
+    *
+    * @param string $key 获取的键名，默认为null，取所有值
+    * @param mixed $default 默认值
+    * @param array $vars 按顺序优先获取的变量，支持post、get、header、cookie和server
+    * @return string|array
+    */
+    public function input($name=null, $default=null, $vars=['post', 'get']){
+        if(is_null($name)){
+            return array_merge(
+                    $this->get(),
+                    $this->post()
+                );
+        }
+        
+        $funcs=[];
+        if(strpos($name,'/')){
+            $keys=explode('/', $name, 2);
+            $name=trim($keys[0]);
+            $funcs=explode('/',trim($keys[1]));
+        }
+
+        $value=null;
+        //获取方法
+        $inputMethods=array_intersect(
+                array_change_key_case((array)$vars, CASE_LOWER), 
+                $this->inputMethods
+            );
+        //顺序获取变量值
+        foreach ($inputMethods as $method) {
+            $value=call_user_func([$this, $method], $name);
+            if($value!==null){
+                break;
+            }
+        }
+        
+        if($value===null){
+            $value=$default;
+        }
+
+        //值处理函数
+        foreach ($funcs as $func) {
+            if($func=='d'){
+                $value=intval($value);
+            }else if($func=='f'){
+                $value=floatval($value);
+            }else if(!empty($func) && function_exists($func)){
+                $value=$func($value);
+            }
+        }
+        
+        return $value;
+    }
 	
 	/**
 	 * 获取原始的POST包体
