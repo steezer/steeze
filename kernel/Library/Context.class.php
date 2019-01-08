@@ -243,7 +243,7 @@ class Context extends Container{
                     $GLOBALS['HTTP_RAW_POST_DATA']=$argvs[2];
                 }else{
                     parse_str($argvs[2], $posts);
-                    if(count($posts)==1 && array_pop($posts)===''){
+                    if(count($posts)==1 && current($posts)===''){
                         unset($posts);
                         $GLOBALS['HTTP_RAW_POST_DATA']=$argvs[2];
                     }else{
