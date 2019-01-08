@@ -141,7 +141,7 @@ class Request{
             if(!is_null($key)){
                 if(is_array($key)){
                     foreach ($key as $k => $v) {
-                        $nky='HTTP_'.strtoupper($k);
+                        $nky='HTTP_'.strtoupper(str_replace('-','_',$k));
                         $_SERVER[$nky]=$v;
                     }
                 }else{
