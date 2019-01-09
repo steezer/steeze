@@ -94,7 +94,7 @@ class Manager {
     			'rw_separate'   =>  '',
     			'master_num'    =>  '',
     			'slave_no'      =>  '',
-    			'debug'         =>  APP_DEBUG,
+    			'debug'         =>  false,
     			'lite'          =>  '',
 	    	];
         if(!empty($config)){
