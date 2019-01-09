@@ -273,8 +273,8 @@ class Model implements ArrayAccess{
 		}elseif(isset($this->_scope[$method])){ // 命名范围的单独调用支持
 			return $this->scope($method, $args[0]);
 		}else{
-			E(__CLASS__ . ':' . $method . L('method not exist'));
-			return;
+			throw new \Exception(__CLASS__ . ':' . $method . L('method not exist'), 401);
+			return null;
 		}
 	}
 
@@ -305,7 +305,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields, true)){
 					if(!empty($this->options['strict'])){
-						E(L('data type invalid') . ':[' . $key . '=>' . $val . ']');
+					    throw new \Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', 501);
 					}
 					unset($data[$key]);
 				}elseif(is_scalar($val)){
@@ -730,7 +730,7 @@ class Model implements ArrayAccess{
 					}
 				}elseif(!is_numeric($key) && '_' != substr($key, 0, 1) && false === strpos($key, '.') && false === strpos($key, '(') && false === strpos($key, '|') && false === strpos($key, '&')){
 					if(!empty($this->options['strict'])){
-						E(L('error query express') . ':[' . $key . '=>' . $val . ']');
+						throw new \Exception(L('error query express') . ':[' . $key . '=>' . $val . ']');
 					}
 					unset($options['where'][$key]);
 				}
@@ -1817,7 +1817,7 @@ class Model implements ArrayAccess{
 		}elseif(is_string($data)){
 			parse_str($data, $data);
 		}elseif(!is_array($data)){
-			E(L('data type invalid'));
+			throw new \Exception(L('data type invalid'));
 		}
 		$this->data=$data;
 		return $this;
@@ -1911,7 +1911,7 @@ class Model implements ArrayAccess{
 				$options=$union;
 			}
 		}else{
-			E(L('data type invalid'));
+			throw new \Exception(L('data type invalid'));
 		}
 		$this->options['union'][]=$options;
 		return $this;

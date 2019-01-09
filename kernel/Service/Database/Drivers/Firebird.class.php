@@ -49,7 +49,7 @@ class Firebird extends Driver{
         $this->debug(true);
         $this->PDOStatement =   $this->_linkID->prepare($str);
         if(false === $this->PDOStatement) {
-            E($this->error());
+            throw new \Exception($this->error());
         }
         foreach ($this->bind as $key => $val) {
             if(is_array($val)){

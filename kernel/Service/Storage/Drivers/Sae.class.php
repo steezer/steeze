@@ -39,7 +39,7 @@ class Sae extends Storage{
         if(!$kv){
            $kv  =   make('\SaeKV');
            if(!$kv->init())
-               E('您没有初始化KVDB，请在SAE管理平台初始化KVDB服务');
+               throw new \Exception('您没有初始化KVDB，请在SAE管理平台初始化KVDB服务');
         }
         return $kv;
     }
@@ -85,7 +85,7 @@ class Sae extends Storage{
             default:
                 $content    =   time().$content;
                 if(!$this->mc->set($filename,$content,MEMCACHE_COMPRESSED,0)){
-                    E(L('_STORAGE_WRITE_ERROR_').':'.$filename);
+                    throw new \Exception(L('_STORAGE_WRITE_ERROR_').':'.$filename);
                 }else{
                     $this->contents[$filename] = $content;
                     return true;

@@ -33,7 +33,7 @@ class Manager {
                 self::$instance[$md5]   =   new $class($options);
             }else{
                 // 类没有定义
-            		E(L('no database driver: {0}',$class).': ' . $class);
+            	throw new \Exception(L('no database driver: {0}',$class).': ' . $class);
             }
         }
         self::$_instance    =   self::$instance[$md5];

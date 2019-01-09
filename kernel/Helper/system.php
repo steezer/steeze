@@ -1334,7 +1334,7 @@ function C($key='', $default=''){
  * @param int|array $code 错误码，也可以传入一个包括code键的数组 
  * @return \Exception
  */
-function E($error, $code=404){
+function e($error, $code=404){
 	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
 	if(!is_object($error)){
 		throw new \Exception(strval($error), $errorCode);

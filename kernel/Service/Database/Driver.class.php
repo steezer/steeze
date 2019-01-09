@@ -120,7 +120,7 @@ abstract class Driver {
                     trace($e->getMessage(),'','ERR');
                     return $this->connect($autoConnection,$linkNum);
                 }elseif($config['debug']){
-                    E($e);
+                    throw new \Exception($e);
                 }
             }
         }
@@ -382,7 +382,7 @@ abstract class Driver {
         // 记录错误日志
         trace($this->error,'','ERR');
         if($this->config['debug']) {// 开启数据库调试模式
-            E($this->error);
+            throw new \Exception($this->error);
         }else{
             return $this->error;
         }
@@ -546,7 +546,7 @@ abstract class Driver {
                 }else{
                     // 查询字段的安全过滤
                     // if(!preg_match('/^[A-Z_\|\&\-.a-z0-9\(\)\,]+$/',trim($key))){
-                    //     E(L('_EXPRESS_ERROR_').':'.$key);
+                    //     throw new \Exception(L('_EXPRESS_ERROR_').':'.$key);
                     // }
                     // 多条件支持
                     $multi  = is_array($val) &&  isset($val['_multi']);
@@ -617,7 +617,7 @@ abstract class Driver {
                     $data = is_string($val[1])? explode(',',$val[1]):$val[1];
                     $whereStr .=  $key.' '.$this->exp[$exp].' '.$this->parseValue($data[0]).' AND '.$this->parseValue($data[1]);
                 }else{
-                    E(L('_EXPRESS_ERROR_').':'.$val[0]);
+                    throw new \Exception(L('_EXPRESS_ERROR_').':'.$val[0]);
                 }
             }else {
                 $count = count($val);

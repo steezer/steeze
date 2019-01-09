@@ -18,7 +18,7 @@ class Redis extends Cache {
      */
     public function __construct($options=array()) {
         if ( !extension_loaded('redis') ) {
-            E(L('_NOT_SUPPORT_').':redis');
+            throw new \Exception(L('_NOT_SUPPORT_').':redis');
         }
         $options = array_merge(array (
         		'host'          => C('redis_host',env('redis_host','127.0.0.1')),

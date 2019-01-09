@@ -42,7 +42,7 @@ final class View{
         if($context instanceof Application){
             $this->context=$context;
         }else{
-            E(L('You should create view in Application context!'));
+            throw new \Exception(L('You should create view in Application context!'));
         }
     }
     

@@ -18,7 +18,7 @@ class Memcache extends Cache {
      */
     function __construct($options=array()) {
         if ( !extension_loaded('memcache') ) {
-            E(L('_NOT_SUPPORT_').':memcache');
+            throw new \Exception(L('_NOT_SUPPORT_').':memcache');
         }
 
         $options = array_merge(array (

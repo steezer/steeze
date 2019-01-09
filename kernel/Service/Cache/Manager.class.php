@@ -35,7 +35,7 @@ class Manager {
         if(class_exists($class))
             $cache = new $class($options);
         else
-            E(L('_CACHE_TYPE_INVALID_').':'.$type);
+            throw new \Exception(L('_CACHE_TYPE_INVALID_').':'.$type);
         return $cache;
     }
 
@@ -109,7 +109,7 @@ class Manager {
         if(method_exists($this->handler, $method)){
            return call_user_func_array(array($this->handler,$method), $args);
         }else{
-            E(__CLASS__.':'.$method.L('_METHOD_NOT_EXIST_'));
+            throw new \Exception(__CLASS__.':'.$method.L('_METHOD_NOT_EXIST_'));
             return;
         }
     }

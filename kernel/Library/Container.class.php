@@ -64,7 +64,7 @@ class Container{
 				return call_user_func_array(array($concrete,$method), $instances);
 			}
 		}catch(\Exception $e){
-			E($e);
+			throw $e;
 		}
 	}
 	
@@ -86,7 +86,7 @@ class Container{
                 if(function_exists($closure)){
                     $reflector=new ReflectionFunction($closure);
                 }else{
-                    E(L('The function {0} you called not existed', $closure));
+                    throw new \Exception(L('The function {0} you called not existed', $closure), 414);
                 }
             }
             if(!is_null($reflector)){
@@ -108,7 +108,7 @@ class Container{
                 }
             }
 		}catch(\Exception $e){
-			E($e);
+			throw $e;
 		}
 	}
 	
@@ -149,7 +149,7 @@ class Container{
 			$instances=$this->resolveDependencies($dependencies);
 			return $reflector->newInstanceArgs($instances);
 		}catch(\Exception $e){
-			E($e);
+			throw $e;
 		}
 	}
 	
@@ -320,7 +320,7 @@ class Container{
 			if($parameter->isOptional()){
 				return $parameter->getDefaultValue();
 			}
-			E($e);
+			throw $e;
 		}
 	}
 	

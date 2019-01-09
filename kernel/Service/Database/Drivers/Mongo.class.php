@@ -25,7 +25,7 @@ class Mongo extends Driver {
 	 */
 	public function __construct($config=''){
 		if ( !class_exists('mongoClient') ) {
-			E(L('_NOT_SUPPORT_').':Mongo');
+			throw new \Exception(L('_NOT_SUPPORT_').':Mongo');
 		}
 		if(!empty($config)) {
 			$this->config           =   array_merge($this->config,$config);
@@ -46,7 +46,7 @@ class Mongo extends Driver {
 			try{
 				$this->linkID[$linkNum] = new \mongoClient( $host,$this->config['params']);
 			}catch (\MongoConnectionException $e){
-				E($e->getmessage());
+				throw new \Exception($e->getmessage());
 			}
 		}
 		return $this->linkID[$linkNum];
@@ -81,7 +81,7 @@ class Mongo extends Driver {
 				$this->_collectionName  = $collection; // 记录当前Collection名称
 			}
 		}catch (\MongoException $e){
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -124,7 +124,7 @@ class Mongo extends Driver {
 			}
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -144,7 +144,7 @@ class Mongo extends Driver {
 		if($result['ok']) {
 			return $result['retval'];
 		}else{
-			E($result['errmsg']);
+			throw new \Exception($result['errmsg']);
 		}
 	}
 	
@@ -205,7 +205,7 @@ class Mongo extends Driver {
 			}
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -228,7 +228,7 @@ class Mongo extends Driver {
 			$this->debug(false);
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -247,7 +247,7 @@ class Mongo extends Driver {
 			$result   =  $this->_collection->find(array(),array($pk=>1))->sort(array($pk=>-1))->limit(1);
 			$this->debug(false);
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 		$data = $result->getNext();
 		return isset($data[$pk])?$data[$pk]+1:1;
@@ -284,7 +284,7 @@ class Mongo extends Driver {
 			$this->debug(false);
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -310,7 +310,7 @@ class Mongo extends Driver {
 			$this->debug(false);
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -335,7 +335,7 @@ class Mongo extends Driver {
 			$this->debug(false);
 			return $result;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -399,7 +399,7 @@ class Mongo extends Driver {
 			$resultSet  =  iterator_to_array($_cursor);
 			return $resultSet;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -439,7 +439,7 @@ class Mongo extends Driver {
 			$this->debug(false);
 			return $count;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -478,7 +478,7 @@ class Mongo extends Driver {
 				
 				return $group;
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 	}
 	
@@ -500,7 +500,7 @@ class Mongo extends Driver {
 			$result   =  $this->_collection->findOne();
 			$this->debug(false);
 		} catch (\MongoCursorException $e) {
-			E($e->getMessage());
+			throw new \Exception($e->getMessage());
 		}
 		if($result) { // 存在数据则分析字段
 			$info =  array();
@@ -676,7 +676,7 @@ class Mongo extends Driver {
 			}else{
 				// 查询字段的安全过滤
 				if(!preg_match('/^[A-Z_\|\&\-.a-z0-9]+$/',trim($key))){
-					E(L('_ERROR_QUERY_').':'.$key);
+					throw new \Exception(L('_ERROR_QUERY_').':'.$key);
 				}
 				$key = trim($key);
 				if(strpos($key,'|')) {

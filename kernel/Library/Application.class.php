@@ -94,8 +94,8 @@ class Application extends Context{
 				//直接返回渲染后的模版视图
 				return $viewer;
 			}else{
-				//返回错误页面
-				E(L('Page not found'),404);
+                //返回错误页面
+                throw new \Exception(L('Page not found'), 404);
 			}
 		};
 	}
