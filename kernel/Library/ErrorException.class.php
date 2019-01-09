@@ -39,7 +39,7 @@ class ErrorException extends \Exception {
     static public function onError($errno, $errstr, $errfile, $errline, $errcontext){
         $info=[
             'type'=>'error',
-            'code'=> $errno,
+            'code'=> ($errno ? $errno : self::DEFAULT_ERROR_CODE),
             'message'=> $errstr,
             'file'=> str_replace(dirname(ROOT_PATH), '', $errfile),
             'line'=> $errline,
@@ -53,9 +53,10 @@ class ErrorException extends \Exception {
      * @param \Exception $e 异常对象
      */
     static public function onException($e){
+        $code=$e->getCode();
 		$info=[
             'type'=>'exception',
-			'code'=> $e->getCode(),
+			'code'=> ($code ? $code : self::DEFAULT_ERROR_CODE),
 			'message'=>$e->getMessage(),
 			'line'=> $e->getLine(),
 			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
@@ -75,7 +76,7 @@ class ErrorException extends \Exception {
     public function onAppError($errno, $errstr, $errfile, $errline, $errcontext){
         $info=[
             'type'=>'error',
-            'code'=> $errno,
+            'code'=> ($errno ? $errno : self::DEFAULT_ERROR_CODE),
             'message'=> $errstr,
             'file'=> str_replace(dirname(ROOT_PATH), '', $errfile),
             'line'=> $errline,
@@ -94,7 +95,7 @@ class ErrorException extends \Exception {
         $code=$e->getCode();
 		$info=[
             'type'=> 'exception',
-			'code'=> $code,
+			'code'=> ($code ? $code : self::DEFAULT_ERROR_CODE),
 			'message'=> $e->getMessage(),
 			'line'=> $e->getLine(),
 			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
@@ -110,9 +111,10 @@ class ErrorException extends \Exception {
      * @param bool $isPrint 是否打印错误
 	 */
 	static public function report(&$info, $isPrint=false){
+        $info['file']=str_replace(dirname(KERNEL_PATH), '', $info['file']);
 		if(C('errorlog')){
 			$data='('.$info['code'].')'.$info['message'];
-			$data.=' in '.str_replace(dirname(KERNEL_PATH), '', $info['file']).'['.$info['line'].']';
+			$data.=' in '.$info['file'].'['.$info['line'].']';
 			fastlog($data, true, $info['type'].'.log');
 		}
         if($isPrint){
