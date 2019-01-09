@@ -136,7 +136,7 @@ class ErrorException extends \Exception {
 			$data.='File: '.$info['file'].'['.$info['line']."]\n";
             $response->end($data);
 		}else if(env('IS_AJAX',false)){ //ajax模式运行
-			$response->end($data);
+			$response->end($info);
 		}else if($tpl=C('tmpl_exception_tpl')){  //web模式运行
 			//直接访问模板
 			$viewer=$this->context->make('\Library\View');

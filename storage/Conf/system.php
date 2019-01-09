@@ -14,7 +14,7 @@ return [
     'default_thumb'=>'', //默认缩略图片
     'db_conn'=>'default', //数据库默认连接配置
     'attachment_stat' => 1, // 附件状态使用情况统计
-    'errorlog' => 0, // 是否保存错误日志到LOGS_PATH/exception.log
+    'errorlog' => 1, // 是否保存错误日志到LOGS_PATH/[exception]|[error].log
     'split_logfile' => true, // 是否分割日志文件，如果为true，超出单个日子文件max_logfile_size大小则自动分割处理
     'max_logfile_size' => 20, // 单个日志文件最大大小（单位：M）
     'max_logfile_num' => 0, // 单类日志文件最大数量，为0则不限数量
