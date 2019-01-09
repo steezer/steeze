@@ -95,7 +95,7 @@ class Application extends Context{
 				return $viewer;
 			}else{
                 //返回错误页面
-                throw new \Exception(L('Page not found'), 404);
+                throw new \Exception(L('Page not found'), -404);
 			}
 		};
 	}

@@ -273,7 +273,7 @@ class Model implements ArrayAccess{
 		}elseif(isset($this->_scope[$method])){ // 命名范围的单独调用支持
 			return $this->scope($method, $args[0]);
 		}else{
-			throw new \Exception(__CLASS__ . ':' . $method . L('method not exist'), 401);
+			throw new \Exception(__CLASS__ . ':' . $method . L('method not exist'), -401);
 			return null;
 		}
 	}
@@ -305,7 +305,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields, true)){
 					if(!empty($this->options['strict'])){
-					    throw new \Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', 501);
+					    throw new \Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', -501);
 					}
 					unset($data[$key]);
 				}elseif(is_scalar($val)){

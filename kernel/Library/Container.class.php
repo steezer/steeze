@@ -86,7 +86,7 @@ class Container{
                 if(function_exists($closure)){
                     $reflector=new ReflectionFunction($closure);
                 }else{
-                    throw new \Exception(L('The function {0} you called not existed', $closure), 414);
+                    throw new \Exception(L('The function {0} you called not existed', $closure), -414);
                 }
             }
             if(!is_null($reflector)){
