@@ -693,33 +693,120 @@ function safe_replace($data){
 }
 
 /**
- * 获取远程文件
+ * 获取远程文件（自动支持GET/POST方法）
  *
- * @param string $url 文件地址
- * @param string $data POST请求时为数组
- * @param array $headers 设置请求头信息
- * @param string $savepath 文件保存路径，如果为空则返回获取的文件内容
- * @return string|int|null
+ * @param string $url 文件地址或配置信息
+ * @param array|string|int $data 数组为POST参数，字符串为保存路径，整数为请求超时
+ * @param array|string|int $headers 数组为设置请求头信息，字符串为保存路径，整数为请求超时
+ * @param string|int $savepath 字符串为文件保存路径，整数为请求超时
+ * @param int $timeout 请求超时（单位：秒），默认5秒
+ * @return string|int|null 如果设置了保存路径，则返回获取的字节大小，否则返回获取的内容
+ * 
+ * 使用说明<br/>
+ * 1.本函数主要用于获取远程获取文件，如果是HTTP请求使用http_request函数。<br/>
+ * 2.本函数如果不设置文件保持路径，会将文件内容返回<br/>
+ * 3.本函数支持大文件下载，但要注意设置请求超时
  */
-function get_remote_file($url, $data=null, $headers=null, $savepath=null){
-	if(trim($url) == ''){
-		return null;
-	}
+function get_remote_file($url, $data=null, $headers=null, $savepath=null, $timeout=5){
 	if(is_string($data)){
 		$savepath=$data;
-	}
+        $data=null;
+	}else if(is_int($data)){
+        $timeout=$data;
+        $data=null;
+    }
 	if(is_string($headers)){
 		$savepath=$headers;
+        $headers=null;
+	}else if(is_int($headers)){
+        $timeout=$headers;
+        $headers=null;
+    }
+    if(is_int($savepath)){
+        $timeout=$savepath;
+        $savepath=null;
+    }
+    
+    $config=[
+        'url'=> $url, 
+        'data'=> $data,
+        'headers'=> $headers,
+        'timeout'=> $timeout
+    ];
+    
+    if(is_string($savepath)){
+        $pathname=dirname($savepath);
+	    !is_dir($pathname) && mkdir($pathname, 0777, true);
+        $fp=fopen($savepath, 'w+');
+        $config['output']=$fp;
+        $result=http_request($config);
+        fclose($fp);
+        return $result;
+    }else{
+        return http_request($config);
+    }
+}
+
+/**
+ * HTTP请求
+ *
+ * @param array|string $config 参数配置或url
+ * @param array|string $data POST参数（第1个参数为url时有效）
+ * @param array $headers 请求头参数（第1个参数为url时有效）
+ * @return string|int|null 如果参数设置了output选项，则返回获取的字节大小，否则返回获取的内容
+ * 
+ * 使用范例<br/>
+ * 1、POST请求并输出返回值<br/>
+ * <pre>
+ * $result=http_request([
+ *  'url'=>'http://steeze.com/message', //请求地址
+ *  'data'=>['name'=>'test'], //POST参数（可以为字符串或数组）
+ *  'headers'=>['TOKEN'=>'123'], //HEADER参数
+ *  'method'=>'POST', //请求方法（默认：GET）
+ *  'timeout'=>5, //超时（单位：秒）
+ * ]);
+ * echo $result;
+ * </pre>
+ * 
+ * 2、GET请求下载文件<br/>
+ * <pre>
+ * $fp=fopen('logo.png', 'w');
+ * $result=http_request([
+ *  'url'=>'https://steeze.cn/img/logonav.png', //下载文件地址
+ *  'output'=> $fp, //POST参数（可以为字符串或资源类型）
+ * ]);
+ * var_dump($result); //输出获取到的内容字节数
+ * fclose($fp);
+ * </pre>
+ */
+function http_request($config, $data=null, $headers=null){
+    if(!is_array($config)){
+        $config=[
+            'url'=> $config, 
+            'data'=> $data, 
+            'headers'=> $headers
+        ];
+    }
+    $url=isset($config['url']) ? trim($config['url']) : null;
+    $data=isset($config['data']) ? $config['data'] : $data;
+    $headers=isset($config['headers']) ? $config['headers'] : $headers;
+    $method=isset($config['method']) ? $config['method'] : 'GET';
+    $timeout=isset($config['timeout']) ? $config['timeout'] : 5;
+    $output=isset($config['output']) ? $config['output'] : null;
+    
+	if(empty($url)){
+		return null;
 	}
-	
+    
 	$ch=curl_init();
-	$timeout=5;
-	
-	if(stripos($url, 's://') !== 'false'){
+    
+    //证书校验
+	if(stripos($url, 's://') !== false){
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // 从证书中检查SSL加密算法是否存在
 	}
-	
+    
+    //设置请求头
 	curl_setopt($ch, CURLOPT_URL, $url);
 	if(is_array($headers)){
 		foreach($headers as $k=> $v){
@@ -729,26 +816,41 @@ function get_remote_file($url, $data=null, $headers=null, $savepath=null){
 		}
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 	}
-	if(is_array($data)){
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-		curl_setopt($ch, CURLOPT_POST, 1);
+    
+    //POST数据
+	if(!empty($data)){
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-	}
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	}else{
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+    }
+    
+    //其它选项
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-	$content=curl_exec($ch);
+    if(is_resource($output)){
+        curl_setopt($ch, CURLOPT_FILE, $output);
+    }
+    
+	$result=curl_exec($ch);
 	$httpCode=curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $httpSize=curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
 	curl_close($ch);
 	
 	if($httpCode != 200){
 		return null;
 	}
-	if(empty($savepath)){
-		return $content;
-	}
-	$pathname=dirname($savepath);
-	!is_dir($pathname) && mkdir($pathname, 0777, true);
-	return file_put_contents($savepath, $content);
+    
+    if(is_string($output)){
+        $pathname=dirname($output);
+	    !is_dir($pathname) && mkdir($pathname, 0777, true);
+        return file_put_contents($output, $result);
+    }else if(is_resource($output)){
+        return $httpSize;
+    }
+    
+    return $result;
 }
 
 /**
