@@ -1569,7 +1569,7 @@ class Model implements ArrayAccess{
 			$parse=array_map(array(
 					$this->db,
 					'escapeString'
-			), $parse);
+			), (array)$parse);
 			$sql=vsprintf($sql, $parse);
 		}else{
 			$sql=$this->escapeTable($sql);
@@ -1815,7 +1815,9 @@ class Model implements ArrayAccess{
 		if(is_object($data)){
 			$data=get_object_vars($data);
 		}elseif(is_string($data)){
-			parse_str($data, $data);
+            $param=[];
+			parse_str($data, $param);
+            $data=$param;
 		}elseif(!is_array($data)){
 			throw new \Exception(L('data type invalid'));
 		}
@@ -1996,7 +1998,7 @@ class Model implements ArrayAccess{
 		}
 		
 		if(is_array($options) && !empty($options)){
-			$this->options=array_merge($this->options, array_change_key_case($options));
+			$this->options=array_merge($this->options, array_change_key_case((array)$options));
 		}
 		return $this;
 	}
@@ -2018,7 +2020,7 @@ class Model implements ArrayAccess{
 			$parse=array_map(array(
 					$this->db,
 					'escapeString'
-			), $parse);
+			), (array)$parse);
 			$where=vsprintf($where, $parse);
 		}elseif(is_object($where)){
 			$where=get_object_vars($where);

@@ -889,13 +889,14 @@ function session($name='', $value=''){
 			if(is_file($path)){
                 // 配置驱动
 				$hander=make('Service\\Session\\Driver\\' . $class);
-				session_set_save_handler(
-                    array(&$hander,'open'), 
-                    array(&$hander,'close'), 
-                    array(&$hander,'read'), 
-                    array(&$hander,'write'), 
-                    array(&$hander,'destroy'), 
-                    array(&$hander,'gc')
+                call_user_func(
+                    'session_set_save_handler',
+                    [&$hander,'open'], 
+                    [&$hander,'close'], 
+                    [&$hander,'read'], 
+                    [&$hander,'write'], 
+                    [&$hander,'destroy'], 
+                    [&$hander,'gc']
                 );
 			}
 		}
@@ -1260,7 +1261,7 @@ function M($name='', $conn=''){
 		// "^@xxx"或"^aaa@xxx"则使用xxx为连接名;"^"或"^aaa"则连接名使用系统配置
 		$conn=count($conns) > 1 ? $conns[1] : '';
 	}
-	$guid=(is_array($conn) ? implode('', $conn) : $conn) . $tablePrefix . $name;
+	$guid=(is_array($conn) ? implode('', (array)$conn) : $conn) . $tablePrefix . $name;
 	if(!isset($_model[$guid])){
 		$_model[$guid]=new Library\Model($name, $tablePrefix, $conn);
 	}
@@ -1299,12 +1300,15 @@ function U($url='', $vars='', $domain=false, $type=-1){
 	$domain=is_bool($vars) ? $vars : (is_bool($domain) ? $domain : false);
 	
 	// 解析参数
-	if(is_string($vars)){ // aaa=1&bbb=2 转换成数组
-		parse_str($vars, $vars);
+	if(is_string($vars)){ // 转换成数组
+        $params=[];
+		parse_str($vars, $params);
+        $vars=$params;
 	}elseif(!is_array($vars)){
 		$vars=array();
 	}
 	if(isset($info['query'])){ // 解析地址里面参数 合并到vars
+        $params=[];
 		parse_str($info['query'], $params);
 		$vars=array_merge($params, $vars);
 	}
