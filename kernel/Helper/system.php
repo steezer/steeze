@@ -568,6 +568,7 @@ function string2array($data){
 	if($data == ''){
 		return array();
 	}
+    $array=[];
 	@eval("\$array = $data;");
 	return $array;
 }
