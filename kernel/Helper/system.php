@@ -10,13 +10,15 @@
  * 快速日志记录（支持日志分割及文件增量清理）
  *
  * @param mixed $content 日志内容
- * @param int $isAppend 是否附加内容
+ * @param string|int|bool $tag 如果为字符串，则是日志标签；否则为是否附加日志
  * @param string $file 日志文件名
  * @return int 写入日志字节数
  */
-function fastlog($content, $isAppend=true, $file='system.log'){
+function fastlog($content, $tag=true, $file='system.log'){
+    $isAppend=!is_string($tag) ? (bool)$tag : true;
+    $title=is_string($tag) ? $tag.' ' : '';
     $datetime=date('Y-m-d H:i:s');
-	$content='[' . $datetime . '] ' . dump($content, true);
+	$content='[' . $datetime . '] '.$title.dump($content, true);
     $filename=LOGS_PATH . $file;
 	$dirname=dirname($filename);
 	!is_dir($dirname) && mkdir($dirname,0755,true);
