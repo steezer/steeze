@@ -109,7 +109,7 @@ class Route{
 		$default=isset($configs['default']) ? $configs['default'] : [];
 		unset($configs['default']);
 		//通过主机名获取路由配置
-		$routes = self::getRoutesByHost($host, $configs);
+		$routes = $this->getRoutesByHost($host, $configs);
 		if(is_null($routes)){
 			$routes=$default;
 		}
@@ -142,7 +142,7 @@ class Route{
 	 * @param array &$configs 所有路由配置
 	 * @return 匹配的路由配置
 	 */
-	private static function getRoutesByHost($host,&$configs){
+	private function getRoutesByHost($host, &$configs){
 		static $cacheHosts=[]; //主机模块缓存
 		static $cacheRoutes=[]; //主机路由缓存
 		
