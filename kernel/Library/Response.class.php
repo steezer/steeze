@@ -213,7 +213,7 @@ class Response{
             if(!is_null($this->response)){
                 $this->response->end();
             }else{
-                if($isAsyn){
+                if(C('is_async_request', $isAsyn)){
                     function_exists('fastcgi_finish_request') &&
                         fastcgi_finish_request();
                 }else if(env('PHP_SAPI')!='cli'){
