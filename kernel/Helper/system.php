@@ -378,9 +378,16 @@ function base64($data, $type='ENCODE', $filter=null, $strip=0){
  * @return string 处理后的数据
  */
 function sys_auth($str, $operation='ENCODE', $key='', $expiry=0){
+    if($key==''){
+        $key=C('auth_key');
+    }
+    //如果steeze扩展存在，则使用扩展函数
+    if(function_exists('steeze_sys_auth')){
+        return steeze_sys_auth($str, $operation, $key, $expiry);
+    }
 	$operation=strtoupper($operation);
 	$key_length=4;
-	$key=md5($key != '' ? $key : C('auth_key'));
+	$key=md5($key);
 	$fixedkey=md5($key);
 	$egiskeys=md5(substr($fixedkey, 16, 16));
 	$runtokey=$key_length ? ($operation == 'ENCODE' ? substr(md5(microtime(true)), -$key_length) : substr($str, 0, $key_length)) : '';
@@ -413,7 +420,15 @@ function sys_auth($str, $operation='ENCODE', $key='', $expiry=0){
  * @return string 处理后的数据
  */
 function sys_crypt($str, $type=1, $key=''){
-	$keys=md5($key !== '' ? $key : C('auth_key'));
+    if($key===''){
+        $key=C('auth_key');
+    }
+    //如果steeze扩展存在，则使用扩展函数
+    if(function_exists('steeze_sys_crypt')){
+        $operation=$type ? 'encode' : 'decode';
+        return steeze_sys_crypt($str, $operation, $key);
+    }
+	$keys=md5($key);
 	$str=$type ? (string)$str : base64($str, 'decode', 1);
 	$strLen=strlen($str);
 	$result='';
