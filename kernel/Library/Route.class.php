@@ -244,6 +244,88 @@ class Route{
 		$sHost='*'.strstr($host,'.');
 		return isset($cacheRoutes[$host]) ? $cacheRoutes[$host] : (isset($cacheRoutes[$sHost]) ? $cacheRoutes[$sHost] : null);
 	}
+    
+    /**
+     * 根据匹配模式从路径中获取变量
+     *
+     * @param string $path 路径
+     * @param string $pattern 匹配模式
+     * @param bool $isVar 处理器中是否包含变量
+     * @param string &$handle 处理器
+     * @return array|false 成功返回变量的键值，失败返回false
+     */
+    private function getVars($path, $pattern, $isVar, &$handle){
+        $index=0;
+        $start=0;
+        $end=0;
+        $prev='';
+        $key='';
+        $vepos=0;
+        while($index>-1){
+            $start=strpos($pattern, '{', $index);
+            if($index){
+                $next=$start===false ? substr($pattern, $index) : 
+                        substr($pattern, $index, $start-$index);
+
+                $value='';
+                if($prev===''){
+                    $vspos=0;
+                    if($next!==''){
+                        $vepos=strpos($path, $next);
+                        $value=substr($path, 0, $vepos);
+                    }else{
+                        $value=$path;
+                    }
+                }else{
+                    if(($vspos=strpos($path, $prev, $vepos))!==false){
+                        $vspos+=strlen($prev);
+                        if($next!==''){
+                            $vepos=strpos($path, $next, $vspos);
+                            $value=substr($path, $vspos, $vepos-$vspos);
+                        }else{
+                            $value=substr($path, $vspos);
+                        }
+                    }
+                }
+                if($key===''){
+                    return false;
+                }
+                
+                $isOptional=substr($key,-1)=='?';
+                if(!$isOptional && $value===''){
+                    return false;
+                }
+                $kvnts=explode('|', ($isOptional ? substr($key,0,-1) : $key));
+                $kvName=$kvnts[0];
+                $kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
+                if($kvType=='d'){  // 变量类型检查
+                    if(is_numeric($value)){
+                        $this->params[$kvName]=$value;
+                    }else{
+                        return false;
+                    }
+                }else if($value!==''){ //此处兼容首页参数
+                    $this->params[$kvName]=$value;
+                }
+                if($isVar){ // 路由控制器变量处理
+                    $handle=str_replace('{'.$kvName.'}', $value, $handle);
+                }
+            }
+            if($start!==false){
+                $prev=substr($pattern, $index, $start-$index);
+                if(($end=strpos($pattern, '}', $start))!==false){
+                    $key=substr($pattern, $start+1, $end-$start-1);
+                    $index=$end+1;
+                }else{
+                    $index=-1;
+                }
+            }else{
+                $index=-1;
+            }
+        }
+        
+        return true;
+    }
 	
 	/*
 	 * 获取路由处理器
@@ -293,26 +375,11 @@ class Route{
 						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
 						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
 						 * */
-						if(strpos($kv, '{')!==false){ // 变量匹配检查
-							$kval=trim($kv,'{} ');
-							$isOptional=substr($kval,-1)=='?';
-							$kvnts=explode('|', ($isOptional ? substr($kval,0,-1) : $kval));
-							$kvName=$kvnts[0];
-							$kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
-							if($kvType=='d'){  // 变量类型检查
-								if(is_numeric($urlArrs[$ki])){
-									$this->params[$kvName]=$urlArrs[$ki];
-								}else{
-									break;
-								}
-							}else if($urlArrs[$ki]!==''){ //此处兼容首页参数
-								$this->params[$kvName]=$urlArrs[$ki];
-							}
-							if($isVar){ // 路由控制器变量处理
-								$handle=str_replace('{'.$kvName.'}',$urlArrs[$ki],$handle);
-							}
-						}else{
-							break;
+						if(
+                            strpos($kv, '{')===false ||
+                            !$this->getVars($urlArrs[$ki], $kv, $isVar, $handle)
+                        ){ // 变量匹配检查
+                            break;
 						}
 					}
 					$mCount--;

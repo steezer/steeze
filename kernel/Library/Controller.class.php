@@ -331,7 +331,7 @@ class Controller{
 	 */
 	private function view(){
 		if(is_null($this->view)){
-            $this->view=$this->context->make('\Library\View');
+            $this->view=make('\Library\View', $this->context);
 		}
 		return $this->view;
 	}
