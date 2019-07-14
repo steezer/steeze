@@ -272,6 +272,9 @@ class Route{
                     $vspos=0;
                     if($next!==''){
                         $vepos=strpos($path, $next);
+                        if($vepos===false){
+                            return false;
+                        }
                         $value=substr($path, 0, $vepos);
                     }else{
                         $value=$path;
@@ -281,20 +284,26 @@ class Route{
                         $vspos+=strlen($prev);
                         if($next!==''){
                             $vepos=strpos($path, $next, $vspos);
+                            if($vepos===false){
+                                return false;
+                            }
                             $value=substr($path, $vspos, $vepos-$vspos);
                         }else{
                             $value=substr($path, $vspos);
                         }
                     }
                 }
+
                 if($key===''){
                     return false;
                 }
-                
+
                 $isOptional=substr($key,-1)=='?';
                 if(!$isOptional && $value===''){
                     return false;
                 }
+
+
                 $kvnts=explode('|', ($isOptional ? substr($key,0,-1) : $key));
                 $kvName=$kvnts[0];
                 $kvType=isset($kvnts[1]) ? $kvnts[1] : 's';
@@ -310,6 +319,8 @@ class Route{
                 if($isVar){ // 路由控制器变量处理
                     $handle=str_replace('{'.$kvName.'}', $value, $handle);
                 }
+
+
             }
             if($start!==false){
                 $prev=substr($pattern, $index, $start-$index);
@@ -326,6 +337,7 @@ class Route{
         
         return true;
     }
+
 	
 	/*
 	 * 获取路由处理器
@@ -372,9 +384,9 @@ class Route{
 				foreach($kArrs as $ki=> $kv){
 					if(isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])){
 						/**
-						 * 注意：以“/”分割的路由路径中，最多只能包含1个变量，不能是多变量或者变量与常量混合
-						 * 例如只能是“/index/{c}”，不能是“/index/{c}{a}” 或 “/index/show_{c}”
-						 * */
+						 * 注意：以“/”分割的路由路径中，可以包含以特殊字符分割的多个变量，
+						 * 例如可以是“/index/{c}”、“/index/show-{a}-{b}”、单不能是“/index/show-{c}{b}”
+                         */
 						if(
                             strpos($kv, '{')===false ||
                             !$this->getVars($urlArrs[$ki], $kv, $isVar, $handle)
