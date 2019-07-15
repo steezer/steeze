@@ -280,7 +280,7 @@ class Loader {
         static $globalConfigs = []; //全局缓存
 		
         // 应用名称
-        $appName = env('ROUTE_M', '/');
+        $appName = env('ROUTE_M', env('BIND_MODULE', '/'));
         if($appName===null || $appName===''){
             $appName='/';
         }
