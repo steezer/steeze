@@ -12,7 +12,7 @@
 ## 开始使用
 ### 1. 安装
 ```
-git clone https://github.com/springwind2006/steeze.git
+git clone https://github.com/steezer/steeze.git
 ```
 ### 2. Public 目录
 安装完成之后，需要将Web服务器的根目录指向public目录。该目录下的index.php文件将作为所有进入应用程序的 HTTP 请求的前端控制器。
