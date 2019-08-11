@@ -1837,7 +1837,7 @@ class Model implements ArrayAccess{
 		if(is_array($table)){
 			$this->options['table']=$table;
 		}elseif(!empty($table)){
-			if(strpos($table, $prefix)!==0 && preg_match('/^[a-z]\w+$/i', $table)){
+			if(($prefix==='' || strpos($table, $prefix)!==0) && preg_match('/^[a-z]\w+$/i', $table)){
 				$this->options['table']=$prefix.$table;
 			}else{
 				$this->options['table']=$this->escapeTable($table);
