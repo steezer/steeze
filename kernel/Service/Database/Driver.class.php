@@ -447,7 +447,7 @@ abstract class Driver {
      * value分析
      * @access protected
      * @param mixed $value
-     * @return string
+     * @return mixed
      */
     protected function parseValue($value) {
         if(is_string($value)) {
@@ -610,7 +610,7 @@ abstract class Driver {
                         if(is_string($val[1])) {
                              $val[1] =  explode(',',$val[1]);
                         }
-                        $zone      =   implode(',',$this->parseValue($val[1]));
+                        $zone      =   implode(',',(array)$this->parseValue($val[1]));
                         $whereStr .= $key.' '.$this->exp[$exp].' ('.$zone.')';
                     }
                 }elseif(preg_match('/^(notbetween|not between|between)$/',$exp)){ // BETWEEN运算
