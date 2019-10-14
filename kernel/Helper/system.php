@@ -159,26 +159,30 @@ function timeformat($tm){
  * 从指定目录根据知道路径读取文件列表（只检索当前目录）
  *
  * @param string $dir 需要获取的目录
- * @param string $type 过滤文件类型
+ * @param string $type 过滤文件类型，多种类型用"|"隔开，如：jpg|png
  * @return array
  */
 function filelist($dir='.', $type='*'){
-	$farr=[];
-	if($handle=opendir($dir)){
-		while(false !== ($file=readdir($handle))){
-			if($file != '.' && $file != '..'){
-				if($type != '*'){
-					if(preg_match("/{$type}\s*$/i", $file) && is_file($file)){
-						$farr[]=$file;
-					}
-				}else{
-					$farr[]=$file;
-				}
-			}
-		}
-		closedir($handle);
-	}
-	return $farr;
+    $farr=[];
+    $types=$type!='*' ? explode('|', $type) : [];
+    if($handle=opendir($dir)){
+        while(false !== ($file=readdir($handle))){
+            if($file != '.' && $file != '..'){
+                if($type != '*'){
+                    if(
+                        ($pos=strrpos($file, '.')) && 
+                        in_array(substr($file, $pos+1), $types)
+                    ){
+                        $farr[]=$file;
+                    }
+                }else{
+                    $farr[]=$file;
+                }
+            }
+        }
+        closedir($handle);
+    }
+    return $farr;
 }
 
 /**
