@@ -1,6 +1,6 @@
 <?php
 namespace Service\Cache\Drivers;
-
+use Exception;
 use Service\Cache\Manager as Cache;
 
 /**
@@ -18,7 +18,7 @@ class Sqlite extends Cache {
      */
     public function __construct($options=array()) {
         if ( !extension_loaded('sqlite') ) {
-            throw new \Exception(L('_NOT_SUPPORT_').':sqlite');
+            throw new Exception(L('_NOT_SUPPORT_').':sqlite');
         }
         
         $options = array_merge(array (

@@ -1,5 +1,6 @@
 <?php
 namespace Service\Storage\Drivers;
+use Exception;
 
 use Service\Storage\Manager as Storage;
 
@@ -43,7 +44,7 @@ class File extends Storage{
             mkdir($dir,0777,true);
         }
         if(false === file_put_contents($filename,$content)){
-            throw new \Exception(L('_STORAGE_WRITE_ERROR_').':'.$filename);
+            throw new Exception(L('_STORAGE_WRITE_ERROR_').':'.$filename);
         }else{
             $this->contents[$filename]=$content;
             return true;

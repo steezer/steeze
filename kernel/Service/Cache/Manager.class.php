@@ -1,5 +1,6 @@
 <?php
 namespace Service\Cache;
+use Exception;
 
 /**
  * 缓存管理类
@@ -31,11 +32,16 @@ class Manager {
      */
     public function connect($type='',$options=array()) {
         if(empty($type))  $type = C('data_cache_type');
-        $class  =   strpos($type,'\\')? $type : 'Service\\Cache\\Drivers\\'.ucwords(strtolower($type));            
-        if(class_exists($class))
+        if(defined('INI_STEEZE')){
+            $class  =   strpos($type,'\\')? $type : 'Service\\Cache\\Drivers\\'.ucwords(strtolower($type));      
+        }else{
+            $class  =   ucwords(strtolower($type)).'CacheDriver';
+        }
+        if(class_exists($class)){
             $cache = new $class($options);
-        else
-            throw new \Exception(L('_CACHE_TYPE_INVALID_').':'.$type);
+        }else{
+            throw new Exception(L('_CACHE_TYPE_INVALID_').':'.$type);
+        }
         return $cache;
     }
 
@@ -109,7 +115,7 @@ class Manager {
         if(method_exists($this->handler, $method)){
            return call_user_func_array(array($this->handler,$method), $args);
         }else{
-            throw new \Exception(__CLASS__.':'.$method.L('_METHOD_NOT_EXIST_'));
+            throw new Exception(__CLASS__.':'.$method.L('_METHOD_NOT_EXIST_'));
             return;
         }
     }
