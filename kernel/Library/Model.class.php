@@ -1,7 +1,8 @@
 <?php
 namespace Library;
-use Service\Database\Manager as Db;
+use Service\Database\Manager as DatabaseService;
 use ArrayAccess;
+use Exception;
 
 /**
  * Model模型类 实现了ORM和ActiveRecords模式
@@ -89,11 +90,13 @@ class Model implements ArrayAccess{
 			if(!empty($databases)){
 				if(false === strpos($connection, '/')){
 					$connName=empty($connection) ? C('db_conn','default') : $connection;
-					$connection=$databases[(isset($databases[$connName]) ? $connName:'default')];
+                    $conn=isset($databases[$connName]) ? $connName:'default';
+					$connection=$databases[$conn];
 				}else{
 					$connName=C('db_conn','default');
+                    $conn=isset($databases[$connName]) ? $connName:'default';
 					$connection=array_merge(
-							$databases[(isset($databases[$connName]) ? $connName:'default')],
+							$databases[$conn],
 							DB::parseDsn($connection)
 						);
 				}
@@ -109,9 +112,12 @@ class Model implements ArrayAccess{
 			$this->tablePrefix=is_array($connection) && isset($connection['prefix']) ? $connection['prefix'] : '';
 		}
 		
-		//同步数据库表名前缀
+		//同步数据库表名前缀及数据库名称
 		if(is_array($connection)){
 			$connection['prefix']=$this->tablePrefix;
+            if(empty($this->dbName) && isset($connection['name'])){
+                $this->dbName=$connection['name'];
+            }
 		}
 
 		// 数据库初始化操作
@@ -132,7 +138,7 @@ class Model implements ArrayAccess{
 		if(empty($this->fields)){
 			// 如果数据表字段没有定义则自动获取
 			if(C('db_fields_cache')){
-				$db=$this->dbName ?: C('db_name');
+				$db=$this->dbName ? $this->dbName : C('db_name');
 				$fields=F('_fields/' . strtolower($db . '.' . $this->tablePrefix . $this->name));
 				if($fields){
 					$this->fields=$fields;
@@ -190,7 +196,7 @@ class Model implements ArrayAccess{
 		// 2008-3-7 增加缓存开关控制
 		if(C('db_fields_cache')){
 			// 永久缓存数据表信息
-			$db   =  $this->dbName?:C('db_name');
+			$db   =  $this->dbName ? $this->dbName : C('db_name');
 			F('_fields/'.strtolower($db.'.'.$this->tablePrefix.$this->name),$this->fields);
 		}
 	}
@@ -273,7 +279,7 @@ class Model implements ArrayAccess{
 		}elseif(isset($this->_scope[$method])){ // 命名范围的单独调用支持
 			return $this->scope($method, $args[0]);
 		}else{
-			throw new \Exception(__CLASS__ . ':' . $method . L('method not exist'), -401);
+			throw new Exception(__CLASS__ . ':' . $method . L('method not exist'), -401);
 			return null;
 		}
 	}
@@ -305,7 +311,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields, true)){
 					if(!empty($this->options['strict'])){
-					    throw new \Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', -501);
+					    throw new Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', -501);
 					}
 					unset($data[$key]);
 				}elseif(is_scalar($val)){
@@ -422,7 +428,8 @@ class Model implements ArrayAccess{
 		// 分析表达式
 		$options=$this->_parseOptions($options);
 		// 写入数据到数据库
-		if(false === $result=$this->db->selectInsert($fields ?: $options['field'], $table ?: $this->getTableName(), $options)){
+        $result=$this->db->selectInsert($fields ? $fields : $options['field'], $table ? $table : $this->getTableName(), $options);
+		if(false === $result){
 			// 数据库插入操作失败
 			$this->error=L('operation wrong');
 			return false;
@@ -730,7 +737,7 @@ class Model implements ArrayAccess{
 					}
 				}elseif(!is_numeric($key) && '_' != substr($key, 0, 1) && false === strpos($key, '.') && false === strpos($key, '(') && false === strpos($key, '|') && false === strpos($key, '&')){
 					if(!empty($this->options['strict'])){
-						throw new \Exception(L('error query express') . ':[' . $key . '=>' . $val . ']');
+						throw new Exception(L('error query express') . ':[' . $key . '=>' . $val . ']');
 					}
 					unset($options['where'][$key]);
 				}
@@ -1105,7 +1112,7 @@ class Model implements ArrayAccess{
 		}
 		
 		// 状态
-		$type=$type ?: (!empty($data[$this->getPk()]) ? self::MODEL_UPDATE : self::MODEL_INSERT);
+		$type=$type ? $type : (!empty($data[$this->getPk()]) ? self::MODEL_UPDATE : self::MODEL_INSERT);
 		
 		// 检查字段映射
 		if(!empty($this->_map)){
@@ -1543,14 +1550,20 @@ class Model implements ArrayAccess{
 			$sql=strtr($sql, $filters);
 			
 			if(strpos($sql, '__')!==false){
-				$prefix=$this->tablePrefix;
-				$sql=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", function ($match) use ($prefix){
-					return $prefix . strtolower($match[1]);
-				}, $sql);
+				$sql=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", array($this, '_escapeTableCallBack'), $sql);
 			}
 		}
 		return $sql;
 	}
+    
+    /**
+     * 为表添加前缀回调函数
+     *
+     * @param array $match
+     */
+    protected function _escapeTableCallBack($match){
+        return $this->tablePrefix . strtolower($match[1]);
+    }
 
 	/**
 	 * 解析SQL语句
@@ -1594,7 +1607,7 @@ class Model implements ArrayAccess{
 		
 		if(!isset($this->_db[$linkNum]) || $force){
 			// 创建一个新的实例
-			$this->_db[$linkNum]=Db::getInstance($config);
+			$this->_db[$linkNum]=DatabaseService::getInstance($config);
 		}elseif(NULL === $config){
 			$this->_db[$linkNum]->close(); // 关闭数据库连接
 			unset($this->_db[$linkNum]);
@@ -1621,7 +1634,14 @@ class Model implements ArrayAccess{
 	 * @return string
 	 */
 	public function getModelName(){
-		if(empty($this->name) && is_subclass_of($this, '\Library\Model')){
+		if(
+            empty($this->name) && 
+            (
+                defined('INI_STEEZE') ? 
+                    is_subclass_of($this, '\Library\Model') : 
+                    is_subclass_of($this, 'Model') 
+            )
+        ){
 			$len=strlen(C('DEFAULT_M_LAYER'));
 			$name=$len ? substr(get_class($this), 0, -$len) : get_class($this);
 			if($pos=strrpos($name, '\\')){ // 有命名空间
@@ -1815,11 +1835,11 @@ class Model implements ArrayAccess{
 		if(is_object($data)){
 			$data=get_object_vars($data);
 		}elseif(is_string($data)){
-            $param=[];
+            $param=array();
 			parse_str($data, $param);
             $data=$param;
 		}elseif(!is_array($data)){
-			throw new \Exception(L('data type invalid'));
+			throw new Exception(L('data type invalid'));
 		}
 		$this->data=$data;
 		return $this;
@@ -1913,7 +1933,7 @@ class Model implements ArrayAccess{
 				$options=$union;
 			}
 		}else{
-			throw new \Exception(L('data type invalid'));
+			throw new Exception(L('data type invalid'));
 		}
 		$this->options['union'][]=$options;
 		return $this;
@@ -1954,7 +1974,7 @@ class Model implements ArrayAccess{
 	public function field($field,$except=false){
 		if(true === $field){ // 获取全部字段
 			$fields=$this->getDbFields();
-			$field=$fields ?: '*';
+			$field=$fields ? $fields : '*';
 		}elseif($except){ // 字段排除
 			if(is_string($field)){
 				$field=explode(',', $field);

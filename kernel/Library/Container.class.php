@@ -5,6 +5,7 @@ use Closure;
 use ReflectionClass;
 use ReflectionParameter;
 use ReflectionFunction;
+use Exception;
 
 /**
  * 系统容器类
@@ -13,15 +14,15 @@ use ReflectionFunction;
  */
 class Container{
 
-	protected $instances=[]; //容器中的共享实例
-	protected $aliases=[]; //容器的别名
-	protected $extenders=[]; //扩展闭包服务
-	protected $with=[]; //参数栈
+	protected $instances=array(); //容器中的共享实例
+	protected $aliases=array(); //容器的别名
+	protected $extenders=array(); //扩展闭包服务
+	protected $with=array(); //参数栈
     
     /**
      * 当前容器实例对象
      *
-     * @var \Library\Container
+     * @var Container
      */
     protected static $instance; //当前全局可用的容器
     
@@ -32,7 +33,7 @@ class Container{
 	 * @param array $parameters 方法参数
 	 * @return mixed
 	 */
-    public function invoke($name, array $parameters=[]){
+    public function invoke($name, array $parameters=array()){
         if(is_array($name)){
             return $this->invokeMethod($name[0], $name[1], $parameters);
         }else{
@@ -48,9 +49,9 @@ class Container{
 	 * @param array $parameters 方法参数
 	 * @return mixed
      * 
-     * @throws \Exception
+     * @throws Exception
 	 */
-	public function invokeMethod($concrete, $method, array $parameters=[]){
+	public function invokeMethod($concrete, $method, array $parameters=array()){
 		if(!is_object($concrete)){
 			$concrete=$this->resolve($concrete, $parameters);
 		}
@@ -63,7 +64,7 @@ class Container{
 				array_pop($this->with);
 				return call_user_func_array(array($concrete,$method), $instances);
 			}
-		}catch(\Exception $e){
+		}catch(Exception $e){
 			throw $e;
 		}
 	}
@@ -75,26 +76,32 @@ class Container{
 	 * @param array $parameters 方法参数
 	 * @return mixed
      * 
-     * @throws \Exception
+     * @throws Exception
 	 */
-	public function invokeFunc($closure, array $parameters=[]){
+	public function invokeFunc($closure, array $parameters=array()){
 		try{
             $reflector=null;
-			if($closure instanceof Closure){
-                $reflector=new ReflectionFunction($closure->bindTo($this));
-            }else if(is_string($closure)){
+			if(
+                version_compare(PHP_VERSION, '5.3', '<') || 
+                is_string($closure)
+            ){
                 if(function_exists($closure)){
                     $reflector=new ReflectionFunction($closure);
                 }else{
-                    throw new \Exception(L('The function {0} you called not existed', $closure), -414);
+                    throw new Exception(L('The function {0} you called not existed', $closure), -414);
                 }
+            }else if($closure instanceof Closure){
+                $reflector=new ReflectionFunction($closure->bindTo($this));
             }
             if(!is_null($reflector)){
                 $this->with[]=$parameters;
                 $dependencies=$reflector->getParameters();
                 $instances=$this->resolveDependencies($dependencies);
                 array_pop($this->with);
-                if($reflector->isClosure()){
+                if(
+                    method_exists($reflector, 'isClosure') && 
+                    $reflector->isClosure()
+                ){
                     // 匿名函数的调用
                     // 支持注入Closure的参数，同时在Closure函数中可以调用容器对象的公共方法
                     return call_user_func_array(Closure::bind(
@@ -107,7 +114,7 @@ class Container{
                     return $reflector->invokeArgs($instances);
                 }
             }
-		}catch(\Exception $e){
+		}catch(Exception $e){
 			throw $e;
 		}
 	}
@@ -120,7 +127,7 @@ class Container{
 	 * @param bool $isCache 是否需要存储，默认为true
 	 * @return mixed
 	 */
-	public function make($concrete, $parameters=[], $isCache=true){
+	public function make($concrete, $parameters=array(), $isCache=true){
 		return $this->resolve($concrete, $parameters,$isCache);
 	}
 	
@@ -130,7 +137,7 @@ class Container{
 	 * @param string $concrete
 	 * @return mixed
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function build($concrete){
 		try{
@@ -148,7 +155,7 @@ class Container{
 			$dependencies=$constructor->getParameters();
 			$instances=$this->resolveDependencies($dependencies);
 			return $reflector->newInstanceArgs($instances);
-		}catch(\Exception $e){
+		}catch(Exception $e){
 			throw $e;
 		}
 	}
@@ -161,7 +168,7 @@ class Container{
 	 * @param bool $isCache
 	 * @return mixed
 	 */
-	protected function resolve($concrete, $parameters=[], $isCache=true){
+	protected function resolve($concrete, $parameters=array(), $isCache=true){
 		$concrete=$this->getAlias($concrete);
 		/**
 		 * 如果类型的一个实例是目前管理作为一个单例,我们就返回一个现有的实例,
@@ -202,7 +209,7 @@ class Container{
 	 * @return array
 	 */
 	protected function resolveDependencies(array $dependencies){
-		$results=[];
+		$results=array();
 		
 		foreach($dependencies as $dependency){
 			$depClass=$dependency->getClass();
@@ -217,7 +224,9 @@ class Container{
 						$this->forgetInstance($depClass->name);
 						$pk=$depObject->getPk();
                         $where[$pk]=$depDefault;
-						if(is_subclass_of($depObject,'\Library\Model')){
+						if(
+                            is_subclass_of($depObject, defined('INI_STEEZE') ? '\Library\Model' : 'Model')
+                        ){
 							//自定义模型需要表名和路由变量名称相同
 							!strcasecmp($depObject->getTableName(false), $name) && 
 								$depObject->where($where)->find();
@@ -270,7 +279,8 @@ class Container{
 	 * @return mixed
 	 */
 	protected function getParameterOverride($dependency){
-		return $this->getLastParameterOverride()[$dependency->name];
+        $parameters=$this->getLastParameterOverride();
+		return $parameters[$dependency->name];
 	}
 
 	/**
@@ -279,7 +289,7 @@ class Container{
 	 * @return array
 	 */
 	protected function getLastParameterOverride(){
-		return count($this->with) ? end($this->with) : [];
+		return count($this->with) ? end($this->with) : array();
 	}
 
 	/**
@@ -288,7 +298,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected function resolvePrimitive(ReflectionParameter $parameter){
 		return $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
@@ -300,7 +310,7 @@ class Container{
 	 * @param ReflectionParameter $parameter
 	 * @return mixed
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected function resolveClass(ReflectionParameter $parameter){
 		try{
@@ -316,7 +326,7 @@ class Container{
 		 * 如果我们不能解析类实例，我们将检查这个值是否是可选的，
 		 * 如果它是，我们将返回可选参数值作为依赖项的值，类似默认值
 		 * */
-		catch(\Exception $e){
+		catch(Exception $e){
 			if($parameter->isOptional()){
 				return $parameter->getDefaultValue();
 			}
@@ -337,7 +347,7 @@ class Container{
 			return $this->extenders[$concrete];
 		}
 		
-		return [];
+		return array();
 	}
 
 	/**
@@ -382,7 +392,7 @@ class Container{
 	 * @return void
 	 */
 	public function forgetInstances(){
-		$this->instances=[];
+		$this->instances=array();
 	}
 
     /**
@@ -392,7 +402,7 @@ class Container{
 	 * @return static
 	 */
 	public static function setInstance(Container $container=null){
-		return static::$instance=$container;
+		return self::$instance=$container;
 	}
     
 	/**
@@ -401,10 +411,10 @@ class Container{
 	 * @return static
 	 */
 	public static function getInstance(){
-		if(is_null(static::$instance)){
-			static::$instance=new static();
+		if(is_null(self::$instance)){
+			self::$instance=new Container();
 		}
-		return static::$instance;
+		return self::$instance;
 	}
     
 }

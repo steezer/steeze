@@ -2,6 +2,8 @@
 namespace Service\Database;
 
 use PDO;
+use PDOException;
+use Exception;
 
 /**
  * 数据库实现基类
@@ -115,12 +117,12 @@ abstract class Driver {
 				if($config['type']=='mysql'){
 					$this->linkID[$linkNum]->exec('SET sql_mode=\'\'');
 				}
-			}catch (\PDOException $e) {
+			}catch (PDOException $e) {
                 if($autoConnection){
                     trace($e->getMessage(),'','ERR');
                     return $this->connect($autoConnection,$linkNum);
                 }elseif($config['debug']){
-                    throw new \Exception($e);
+                    throw new Exception($e);
                 }
             }
         }
@@ -142,6 +144,16 @@ abstract class Driver {
     public function free() {
         $this->PDOStatement = null;
     }
+    
+    /**
+     * 过滤字符串并在两边加入引号
+     *
+     * @param string $val
+     * @return string
+     */
+    public function addQuot($val){
+        return '\''.$this->escapeString($val).'\''; 
+    }
 
     /**
      * 执行查询 返回数据集
@@ -155,8 +167,10 @@ abstract class Driver {
         if ( !$this->_linkID ) return false;
         $this->queryStr     =   $str;
         if(!empty($this->bind)){
-            $that   =   $this;
-            $this->queryStr =   strtr($this->queryStr,array_map(function($val) use($that){ return '\''.$that->escapeString($val).'\''; },$this->bind));
+            $this->queryStr = strtr(
+                    $this->queryStr,
+                    array_map(array($this, 'addQuot'), $this->bind)
+                );
         }
         if($fetchSql){
             return $this->queryStr;
@@ -184,7 +198,7 @@ abstract class Driver {
         // 长时间连接断开后自动重连
         try{
         		$result =   $this->PDOStatement->execute();
-        }catch (\PDOException $e){
+        }catch (PDOException $e){
         		if($e->getCode()=='HY000' && stripos($e->getMessage(), 'MySQL server has gone away')){
         			$this->free();
         			$this->close();
@@ -215,8 +229,13 @@ abstract class Driver {
         if ( !$this->_linkID ) return false;
         $this->queryStr = $str;
         if(!empty($this->bind)){
-            $that   =   $this;
-            $this->queryStr =   strtr($this->queryStr,array_map(function($val) use($that){ return '\''.$that->escapeString($val).'\''; },$this->bind));
+            $this->queryStr = strtr(
+                $this->queryStr, 
+                array_map(
+                    array($this, 'addQuot'),
+                    $this->bind
+                )
+            );
         }
         if($fetchSql){
             return $this->queryStr;
@@ -243,7 +262,7 @@ abstract class Driver {
         // 长时间连接断开后自动重连
 		try{
 			$result=$this->PDOStatement->execute();
-		}catch(\PDOException $e){
+		}catch(PDOException $e){
             $this->error();
 			if($e->getCode() == 'HY000' && stripos($e->getMessage(), 'MySQL server has gone away')){
 				$this->free();
@@ -327,7 +346,7 @@ abstract class Driver {
 			$result =   $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
 			$this->numRows = count( $result );
 			return $result;
-		}catch(\Exception $e){
+		}catch(Exception $e){
 			$this->numRows = $this->PDOStatement->rowCount();
             if($str&&preg_match("/^\s*(INSERT\s+INTO|REPLACE\s+INTO)\s+/i", $str)) {
                 $this->lastInsID = $this->_linkID->lastInsertId();
@@ -382,7 +401,7 @@ abstract class Driver {
         // 记录错误日志
         trace($this->error,'','ERR');
         if($this->config['debug']) {// 开启数据库调试模式
-            throw new \Exception($this->error);
+            throw new Exception($this->error);
         }else{
             return $this->error;
         }
@@ -502,10 +521,11 @@ abstract class Driver {
         if(is_array($tables)) {// 支持别名定义
             $array   =  array();
             foreach ($tables as $table=>$alias){
-                if(!is_numeric($table))
+                if(!is_numeric($table)){
                     $array[] =  $this->parseKey($table).' '.$this->parseKey($alias);
-                else
+                }else{
                     $array[] =  $this->parseKey($alias);
+                }
             }
             $tables  =  $array;
         }elseif(is_string($tables)){
@@ -546,7 +566,7 @@ abstract class Driver {
                 }else{
                     // 查询字段的安全过滤
                     // if(!preg_match('/^[A-Z_\|\&\-.a-z0-9\(\)\,]+$/',trim($key))){
-                    //     throw new \Exception(L('_EXPRESS_ERROR_').':'.$key);
+                    //     throw new Exception(L('_EXPRESS_ERROR_').':'.$key);
                     // }
                     // 多条件支持
                     $multi  = is_array($val) &&  isset($val['_multi']);
@@ -617,7 +637,7 @@ abstract class Driver {
                     $data = is_string($val[1])? explode(',',$val[1]):$val[1];
                     $whereStr .=  $key.' '.$this->exp[$exp].' '.$this->parseValue($data[0]).' AND '.$this->parseValue($data[1]);
                 }else{
-                    throw new \Exception(L('_EXPRESS_ERROR_').':'.$val[0]);
+                    throw new Exception(L('_EXPRESS_ERROR_').':'.$val[0]);
                 }
             }else {
                 $count = count($val);

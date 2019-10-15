@@ -3,6 +3,7 @@ namespace Service\Template;
 
 use Library\Container;
 use Library\View;
+use Exception;
 
 /**
  * 模板服务类
@@ -10,14 +11,16 @@ use Library\View;
  * @package Template
  */
 class Manager {
+    
 	private $leftDelim; // 模板标签左边界字符
 	private $rightDelim;
 	private static $_instance=null;
+    private $stack=array(); //数据临时栈
 	
 	// 单例模式
 	public static function instance(){
 		if(is_null(self::$_instance)){
-			self::$_instance=new static();
+			self::$_instance=new Manager();
 		}
 		return self::$_instance;
 	}
@@ -42,7 +45,7 @@ class Manager {
 	 */
 	public function compile($tplfile,$compiledtplfile){
 		if(!is_file($tplfile)){
-			throw new \Exception(L('template {0} is not exists',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
+			throw new Exception(L('template {0} is not exists',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
 		}
 		$content=file_get_contents($tplfile);
 		$filepath=dirname($compiledtplfile) . DS;
@@ -146,9 +149,13 @@ class Manager {
 		$str=preg_replace_callback('/{[\({](.+?)[\)}]}/s', array($this,'parseExpression'), $str); // parse expression like "{(a=10?1:0)}" or "{{a=10?1:0}}"
 		// 解析表达式转义字符
 		$str=str_replace(array('\\{','\\}'), array('{','}'), $str);
-		
-		$str='<?php defined(\'INI_STEEZE\') or exit(\'No permission resources.\'); ?>' . $str;
-		
+
+		if(defined('INI_STWMS')){
+            $str='<?php defined(\'INI_STWMS\') or exit(\'No permission resources.\'); ?>' . $str;
+        }else{
+            $str='<?php defined(\'INI_STEEZE\') or exit(\'No permission resources.\'); ?>' . $str;
+        }
+	
 		return preg_replace('/^\s*$/m','',$str);
 	}
 
@@ -159,7 +166,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseAssign($matches){
-		$datas=$this->parseAttrs($matches[1]); // 获取属性
+		$datas=self::parseAttrs($matches[1]); // 获取属性
 		if(isset($datas['name']) && isset($datas['value'])){
 			return '<?php $'.$this->parseDoVar($datas['name']).'='.var_export($datas['value'],true).';?>';
 		}
@@ -175,7 +182,7 @@ class Manager {
 		$ld=$this->leftDelim;
 		$rd=$this->rightDelim;
 		if(preg_match('/' . $ld . 'layout\s+(.+?)\s*\/?' . $rd . '/is', $str, $matches)){
-			$datas=$this->parseAttrs($matches[1]); // 获取属性
+			$datas=self::parseAttrs($matches[1]); // 获取属性
 			unset($matches);
 			if(isset($datas['name'])){
 				$r=View::resolvePath($datas['name']);
@@ -183,11 +190,11 @@ class Manager {
 				if(is_file($layout)){
 					$content=file_get_contents($layout);
 					$content=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $content);
-					$sections=[];
+					$sections=array();
 					//获取所有节内容
 					if(preg_match_all('/' . $ld . 'slice\s+(.+?)\s*' . $rd . '(.*?)' . $ld . '\/slice' . $rd . '/is', $str, $matches)){
 						foreach ($matches[1] as $index => $value){
-							$names=$this->parseAttrs($value);
+							$names=self::parseAttrs($value);
 							if(isset($names['name'])){
 								if(stripos($matches[2][$index], $ld . 'assign ') !== false)
 								{  //解析节点内的assign标签
@@ -209,19 +216,31 @@ class Manager {
 					unset($matches);
 					
 					//替换所有节
-					return preg_replace_callback(
+                    array_push($this->stack, $sections);
+					$content=preg_replace_callback(
 							'/' . $ld . 'slice\s+(.+?)\s*\/?' . $rd . '/is',
-							function($matches) use($sections){
-								$data=$this->parseAttrs($matches[1]);
-								return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
-							},
+							array($this, 'parseLayoutSlice'),
 							$content
 						);
+                    array_pop($this->stack);
+                    return $content;
 				}
 			}
 		}
 		return preg_replace('/' . $ld . 'layout.*?\/?' . $rd . '/is' , '' , $str);
 	}
+    
+    /**
+	 * 解析slice标签
+	 *
+	 * @param array $matches
+	 * @return string
+	 */
+    public function parseLayoutSlice($matches){
+        $sections=end($this->stack);
+        $data=self::parseAttrs($matches[1]);
+		return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
+    }
 	
 	/**
 	 * 解析import标签
@@ -230,7 +249,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseImport($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		$files=explode(',', isset($arrs['file']) ? $arrs['file'] : $matches[1]);
 		$types=explode(',', isset($arrs['type']) ? $arrs['type'] : '');
 		$bases=explode(',', isset($arrs['base']) ? $arrs['base'] : '');
@@ -238,7 +257,7 @@ class Manager {
 		$defaults=explode(',', isset($arrs['default']) ? $arrs['default'] : 'default');
 		
 		unset($arrs['file'],$arrs['type'],$arrs['base'],$arrs['check'],$arrs['default']);
-		$tag_attrs=[];
+		$tag_attrs=array();
 		foreach($arrs as $k=>$v){
 			$tag_attrs[$k] = $k . '="' . $v . '"';
 		}
@@ -277,7 +296,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseInclude($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		$res='';
 		if(isset($arrs['file'])){
 			$files=explode(',', $arrs['file']);
@@ -298,7 +317,7 @@ class Manager {
 	 * @param array $matches 匹配集合
 	 */
 	public function parseAction($matches){
-		$datas=$this->parseAttrs($matches[1]); // 获取属性
+		$datas=self::parseAttrs($matches[1]); // 获取属性
 		$str='';
 		$return=isset($datas['return']) && trim($datas['return']) ? str_replace('$', '', trim($datas['return'])) : '';
 		if(isset($datas['name'])){
@@ -339,7 +358,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseIf($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
 		$condition=$this->changeDotArray($condition);
 		return '<?php if(' . $condition . ') { ?>';
@@ -352,7 +371,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseElseif($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
 		$condition=$this->changeDotArray($condition);
 		return '<?php }elseif(' . $condition . ') { ?>';
@@ -364,7 +383,7 @@ class Manager {
 	 * @param array $matches
 	 */
 	public function parseFor($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		if(!isset($arrs['start']) || !isset($arrs['end'])){
 			return '';
 		}
@@ -383,7 +402,7 @@ class Manager {
 	 * @param array $matches
 	 */
 	public function parseForeach($matches){
-		$arrs=$this->parseAttrs($matches[1]);
+		$arrs=self::parseAttrs($matches[1]);
 		if(empty($arrs)){
 			if(preg_match('/(\S+)\s+(\S+)\s+(\S+)?/', $matches[1], $match)){
 				$arrs['name']=$match[1];
@@ -465,40 +484,50 @@ class Manager {
 	 * @param string $datas 参数
 	 */
 	public function parseTagLib($matches){
-		static $tagCaches=[];
+		static $tagCaches=array();
 		$tag=ucfirst(strtolower($matches[1]));
 		$method='parse'.ucfirst(strtolower($matches[2]));
 		$container=Container::getInstance();
 		
 		if(!isset($tagCaches[$tag])){
-			//先尝试从应用查找标签类
-			if(env('ROUTE_M',false)!==false){
-				try{
-					$tagPath=str_replace('\\\\','\\','\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
-					$tagCaches[$tag]=$container->make($tagPath);
-				}catch (\Exception $e){
-                    
+            if(defined('INI_STEEZE')){
+                //先尝试从应用查找标签类
+                if(env('ROUTE_M',false)!==false){
+                    try{
+                        $tagPath=str_replace('\\\\','\\','\\App\\'.ucfirst(env('ROUTE_M')).'\\Taglib\\'.$tag);
+                        $tagCaches[$tag]=$container->make($tagPath);
+                    }catch (Exception $e){
+                        
+                    }
                 }
-			}
+                
+                //再从系统中查找标签类
+                if(!isset($tagCaches[$tag])){
+                    try{
+                        $tagCaches[$tag]=$container->make('\\Service\\Template\\Taglib\\'.$tag);
+                    }catch (Exception $e){
+                        $tagCaches[$tag]=false;
+                    }
+                }
+            }else{
+                $tagPath=$tag.'Taglib';
+                $tagCaches[$tag]=$container->make($tagPath);
+            }
 			
-			//再从系统中查找标签类
-			if(!isset($tagCaches[$tag])){
-				try{
-					$tagCaches[$tag]=$container->make('\\Service\\Template\\Taglib\\'.$tag);
-				}catch (\Exception $e){
-					$tagCaches[$tag]=false;
-				}
-			}
 		}
 		
 		if(
 			isset($tagCaches[$tag]) && is_object($tagCaches[$tag]) && 
 			is_callable(array($tagCaches[$tag], $method))
 		){
-			return $container->invokeMethod($tagCaches[$tag], $method,[
-						'attrs'=>$this->parseAttrs($matches[3]),
+			return $container->invokeMethod(
+                    $tagCaches[$tag], 
+                    $method,
+                    array(
+						'attrs'=>self::parseAttrs($matches[3]),
 						'html'=>(isset($matches[4]) ? $matches[4] : ''),
-					]);
+					)
+                );
 		}else{
 			return $matches[0];
 		}
@@ -575,7 +604,7 @@ class Manager {
 	 * @param string $str 包含键和属性的字符串
 	 * @return multitype: 键和属性对应的数组
 	 */
-	private function parseAttrs($str){
+	public static function parseAttrs($str){
 		$isDq=strpos($str, '\"') !== false;
 		$isSq=strpos($str, '\\\'') !== false;
 		$spat='/(\w+)=\'([^\']+)\'/';
@@ -594,8 +623,8 @@ class Manager {
 		
 		!preg_match_all($spat, $str, $matches) && preg_match_all($dpat, $str, $matches);
 		!empty($matches[0]) && array_shift($matches);
-		$isDq && $this->replace($rDtag, '\"', $matches);
-		$isSq && $this->replace($rStag, '\\\'', $matches);
+		$isDq && self::replace($rDtag, '\"', $matches);
+		$isSq && self::replace($rStag, '\\\'', $matches);
 		foreach($matches[0] as $k=>$v){
 			$matches[0][$k]=strtolower($v);
 		}
@@ -610,10 +639,10 @@ class Manager {
 	 * @param void $str 原字符串
 	 * @return mixed 替换后的字符串
 	 */
-	private function replace($search,$replace,&$str){
+	public static function replace($search,$replace,&$str){
 		if(is_array($str)){
 			foreach($str as $k=>$v){
-				$str[$k]=$this->replace($search, $replace, $v);
+				$str[$k]=self::replace($search, $replace, $v);
 			}
 		}else if(is_string($str)){
 			$str=str_replace($search, $replace, $str);

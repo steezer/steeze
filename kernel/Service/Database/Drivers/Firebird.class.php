@@ -2,6 +2,7 @@
 namespace Service\Database\Drivers;
 
 use Service\Database\Driver;
+use Exception;
 
 /**
  * Firebird数据库驱动 
@@ -19,7 +20,7 @@ class Firebird extends Driver{
      * @return string
      */
     protected function parseDsn($config){
-       $dsn  =   'firebird:dbname='.$config['hostname'].'/'.($config['hostport']?:3050).':'.$config['database'];
+       $dsn  =   'firebird:dbname='.$config['hostname'].'/'.($config['hostport']?$config['hostport']:3050).':'.$config['database'];
        return $dsn;
     }
     
@@ -35,8 +36,10 @@ class Firebird extends Driver{
         if ( !$this->_linkID ) return false;
         $this->queryStr = $str;
         if(!empty($this->bind)){
-            $that   =   $this;
-            $this->queryStr =   strtr($this->queryStr,array_map(function($val) use($that){ return '\''.$that->escapeString($val).'\''; },$this->bind));
+            $this->queryStr =   strtr(
+                    $this->queryStr,
+                    array_map(array($this, 'addQuot'), $this->bind)
+                );
         }
         if($fetchSql){
             return $this->queryStr;
@@ -49,7 +52,7 @@ class Firebird extends Driver{
         $this->debug(true);
         $this->PDOStatement =   $this->_linkID->prepare($str);
         if(false === $this->PDOStatement) {
-            throw new \Exception($this->error());
+            throw new Exception($this->error());
         }
         foreach ($this->bind as $key => $val) {
             if(is_array($val)){

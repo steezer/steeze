@@ -1,5 +1,6 @@
 <?php
 namespace Service\Database;
+use Exception;
 
 /**
  * 数据库中间层实现类
@@ -28,12 +29,16 @@ class Manager {
             //兼任sqlite3和sqlite2
             if('sqlite3' == $options['type'] || 'sqlite2' == $options['type']) $options['type']   =   'sqlite';
             
-            $class = 'Service\\Database\\Drivers\\'.ucwords(strtolower($options['type']));
+            if(defined('INI_STEEZE')){
+                $class = 'Service\\Database\\Drivers\\'.ucwords(strtolower($options['type']));
+            }else{
+                $class = ucwords(strtolower($options['type'])).'DbDriver';
+            }
             if(class_exists($class)){
                 self::$instance[$md5]   =   new $class($options);
             }else{
                 // 类没有定义
-            	throw new \Exception(L('no database driver: {0}',$class).': ' . $class);
+            	throw new Exception(L('no database driver: {0}',$class).': ' . $class);
             }
         }
         self::$_instance    =   self::$instance[$md5];
@@ -49,19 +54,19 @@ class Manager {
      * @return array
      */
     static public function parseDsn($dsnStr) {
-	    	if( empty($dsnStr) ){return [];}
+	    	if( empty($dsnStr) ){return array();}
 	    	$info = parse_url($dsnStr);
 	    	if(!$info) {
-	    		return [];
+	    		return array();
 	    	}
-	    	$converts=[
-	    		'scheme'=>'type',
+	    	$converts=array(
+                'scheme'=>'type',
     			'pass'=>'pwd',
     			'path'=>'name',
     			'fragment'=>'charset',
 	    		'query'=>'params',
-	    	];
-	    	$dsn=[];
+            );
+	    	$dsn=array();
 	    	foreach($info as $k=> $v){
 	    		$dsn[(isset($converts[$k]) ? $converts[$k] : $k)] = ($k=='path' ? trim($v,'/') : $v);
 	    	}
@@ -80,7 +85,7 @@ class Manager {
      * @return array
      */
     static private function parseConfig($config){
-	    	$default = [
+	    	$default = array(
     			'type'          =>  'mysql',
     			'username'      =>  'root',
     			'password'      =>  '',
@@ -96,7 +101,7 @@ class Manager {
     			'slave_no'      =>  '',
     			'debug'         =>  false,
     			'lite'          =>  '',
-	    	];
+	    	);
         if(!empty($config)){
            $config =   is_string($config) ? self::parseDsn($config) : array_change_key_case($config);
            //将字符串参数转换为数组
@@ -106,23 +111,23 @@ class Manager {
 	           		parse_str(trim($config['params']),$config['params']);
 	           	}
            }
-           return [
-            		'type'          =>  (isset($config['type']) ? $config['type'] : $default['type']),
-            		'username'      =>  (isset($config['user']) ? $config['user'] : $default['username']),
-            		'password'      =>  (isset($config['pwd']) ? $config['pwd'] : $default['password']),
-            		'hostname'      =>  (isset($config['host']) ? $config['host'] : $default['hostname']),
-            		'hostport'      =>  (isset($config['port']) ? $config['port'] : $default['hostport']),
-            		'database'      =>  (isset($config['name']) ? $config['name'] : $default['database']),
-            		'dsn'           =>  isset($config['dsn']) ? $config['dsn'] : $default['dsn'],
-            		'params'        =>  isset($config['params']) ? $config['params'] : $default['params'],
-            		'charset'       =>  (isset($config['charset']) ? $config['charset'] : $default['charset']),
-            		'deploy'        =>  isset($config['deploy_type']) ? $config['deploy_type'] : $default['deploy'],
-            		'rw_separate'   =>  isset($config['rw_separate']) ? $config['rw_separate'] : $default['rw_separate'],
-            		'master_num'    =>  isset($config['master_num']) ? $config['master_num'] : $default['master_num'],
-            		'slave_no'      =>  isset($config['slave_no']) ? $config['slave_no'] : $default['slave_no'],
-            		'debug'         =>  isset($config['debug']) ? $config['debug'] : $default['debug'],
-            		'lite'          =>  isset($config['lite']) ? $config['lite'] : $default['lite'],
-            ];
+           return array(
+                'type'          =>  (isset($config['type']) ? $config['type'] : $default['type']),
+                'username'      =>  (isset($config['user']) ? $config['user'] : $default['username']),
+                'password'      =>  (isset($config['pwd']) ? $config['pwd'] : $default['password']),
+                'hostname'      =>  (isset($config['host']) ? $config['host'] : $default['hostname']),
+                'hostport'      =>  (isset($config['port']) ? $config['port'] : $default['hostport']),
+                'database'      =>  (isset($config['name']) ? $config['name'] : $default['database']),
+                'dsn'           =>  isset($config['dsn']) ? $config['dsn'] : $default['dsn'],
+                'params'        =>  isset($config['params']) ? $config['params'] : $default['params'],
+                'charset'       =>  (isset($config['charset']) ? $config['charset'] : $default['charset']),
+                'deploy'        =>  isset($config['deploy_type']) ? $config['deploy_type'] : $default['deploy'],
+                'rw_separate'   =>  isset($config['rw_separate']) ? $config['rw_separate'] : $default['rw_separate'],
+                'master_num'    =>  isset($config['master_num']) ? $config['master_num'] : $default['master_num'],
+                'slave_no'      =>  isset($config['slave_no']) ? $config['slave_no'] : $default['slave_no'],
+                'debug'         =>  isset($config['debug']) ? $config['debug'] : $default['debug'],
+                'lite'          =>  isset($config['lite']) ? $config['lite'] : $default['lite'],
+           );
         }else{
         		return $default;
         }

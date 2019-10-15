@@ -2,6 +2,7 @@
 namespace Service\Database\Drivers;
 
 use Service\Database\Driver;
+use PDO;
 
 /**
  * mysql数据库驱动 
@@ -27,7 +28,7 @@ class Mysql extends Driver{
 
         if(!empty($config['charset'])){
             //为兼容各版本PHP,用两种方式设置编码
-            $this->options[\PDO::MYSQL_ATTR_INIT_COMMAND]    =   'SET NAMES '.$config['charset'];
+            $this->options[PDO::MYSQL_ATTR_INIT_COMMAND]    =   'SET NAMES '.$config['charset'];
             $dsn  .= ';charset='.$config['charset'];
         }
         return $dsn;
@@ -51,7 +52,7 @@ class Mysql extends Driver{
         $info   =   array();
         if($result) {
             foreach ($result as $key => $val) {
-				if(\PDO::CASE_LOWER != $this->_linkID->getAttribute(\PDO::ATTR_CASE)){
+				if(PDO::CASE_LOWER != $this->_linkID->getAttribute(PDO::ATTR_CASE)){
 					$val = array_change_key_case ( $val ,  CASE_LOWER );
 				}
                 $info[$val['field']] = array(

@@ -40,7 +40,7 @@ class Sqlite extends Driver {
 	            		$notnull=(isset($val['null']) ? ($val['null'] === '') : ($val['notnull']=='1')) ;
 	            		$info[$name] = array(
 	            			'name'    => $name,
-	                    'type'    => $val['type'],
+	                        'type'    => $val['type'],
 	            			'notnull' => (bool) $notnull, // not null is empty, null is yes
 	            			'default' => $default,
 	            			'primary' => $primary,

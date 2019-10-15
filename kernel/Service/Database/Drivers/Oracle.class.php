@@ -40,8 +40,13 @@ class Oracle extends Driver{
         if ( !$this->_linkID ) return false;
         $this->queryStr = $str;
         if(!empty($this->bind)){
-            $that   =   $this;
-            $this->queryStr =   strtr($this->queryStr,array_map(function($val) use($that){ return '\''.$that->escapeString($val).'\''; },$this->bind));
+            $this->queryStr =  strtr(
+                    $this->queryStr,
+                    array_map(
+                        array($this, 'addQuot'),
+                        $this->bind
+                    )
+                );
         }
         if($fetchSql){
             return $this->queryStr;
@@ -54,7 +59,7 @@ class Oracle extends Driver{
         //释放前次的查询结果
         if ( !empty($this->PDOStatement) ) $this->free();
         $this->executeTimes++;
-        N('db_write',1); // 兼容代码        
+        // N('db_write',1); // 兼容代码        
         // 记录开始执行时间
         $this->debug(true);
         $this->PDOStatement	=	$this->_linkID->prepare($str);
