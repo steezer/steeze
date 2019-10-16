@@ -38,13 +38,13 @@ class AppException extends Exception {
      * @param array $errcontext 错误的上下文的符号表数组
      */
     static public function onError($errno, $errstr, $errfile, $errline, $errcontext){
-        $info=[
+        $info=array(
             'type'=>'error',
             'code'=> ($errno ? $errno : self::DEFAULT_ERROR_CODE),
             'message'=> $errstr,
             'file'=> str_replace(dirname(ROOT_PATH), '', $errfile),
             'line'=> $errline,
-        ];
+        );
         self::report($info, true);
     }
     
@@ -55,13 +55,13 @@ class AppException extends Exception {
      */
     static public function onException($e){
         $code=$e->getCode();
-		$info=[
+		$info=array(
             'type'=>'exception',
 			'code'=> ($code ? $code : self::DEFAULT_ERROR_CODE),
 			'message'=>$e->getMessage(),
 			'line'=> $e->getLine(),
 			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
-		];
+		);
         self::report($info, true);
     }
     
@@ -75,14 +75,14 @@ class AppException extends Exception {
      * @param array $errcontext 错误的上下文的符号表数组
      */
     public function onAppError($errno, $errstr, $errfile, $errline, $errcontext){
-        $info=[
+        $info=array(
             'type'=>'error',
             'code'=> ($errno ? $errno : self::DEFAULT_ERROR_CODE),
             'message'=> $errstr,
             'file'=> str_replace(dirname(ROOT_PATH), '', $errfile),
             'line'=> $errline,
             'url'=> $this->context->getRequest()->server('REQUEST_URI'),
-        ];
+        );
         self::report($info);
         $this->export($info, $errcontext);
     }
@@ -94,14 +94,14 @@ class AppException extends Exception {
      */
     public function onAppException($e){
         $code=$e->getCode();
-		$info=[
+		$info=array(
             'type'=> 'exception',
 			'code'=> ($code ? $code : self::DEFAULT_ERROR_CODE),
 			'message'=> $e->getMessage(),
 			'line'=> $e->getLine(),
 			'file'=> str_replace(dirname(ROOT_PATH), '', $e->getFile()),
             'url'=> $this->context->getRequest()->server('REQUEST_URI'),
-		];
+		);
         self::report($info);
         $this->export($info, $e);
     }

@@ -1,6 +1,7 @@
 <?php
 namespace Library;
 use Closure;
+use Exception;
 
 /**
  * 管道控制类型
@@ -12,6 +13,7 @@ class Pipeline{
 	protected $passables=array(); // 通过管道传递的对象
 	protected $pipes=array(); // 类管道的数组
 	protected $method='handle'; // 每个管道上被调用的方法
+    private $callStacks=array(); // 调用栈
 
 	/**
 	 * 创建管道实例
@@ -54,23 +56,8 @@ class Pipeline{
 		$this->method=$method;
 		return $this;
 	}
-
-	/**
-	 * 在管道中运行最后的回调函数
-	 *
-	 * @param Closure $destination
-	 * @return mixed
-	 */
-	public function then($destination){
-		$pipeline=array_reduce(
-					array_reverse($this->pipes),
-					$this->carry(),
-					$this->prepareDestination($destination)
-				);
-		return call_user_func_array($pipeline, $this->passables);
-	}
-
-	/**
+    
+    /**
 	 * 解析完整的管道字符串以获取名称和参数
 	 *
 	 * @param string $pipe
@@ -98,16 +85,19 @@ class Pipeline{
 	}
 
 	/**
-	 * 将回调函数进行封装.
+	 * 在管道中运行最后的回调函数
 	 *
 	 * @param Closure $destination
-	 * @return Closure
+	 * @return mixed
 	 */
-	protected function prepareDestination($destination){
-		return function () use ($destination){
-			$passables=func_get_args();
-			return call_user_func_array($destination, $passables);
-		};
+	public function then($destination){
+        //将第一个调用入栈
+		$pipeline=array_reduce(
+					array_reverse($this->pipes),
+					array($this, 'carry'),
+                    $destination
+				);
+		return call_user_func_array($pipeline, $this->passables);
 	}
 
 	/**
@@ -115,43 +105,50 @@ class Pipeline{
 	 *
 	 * @return Closure
 	 */
-	protected function carry(){
-		return function ($stack, $pipe){
-			return function () use ($stack, $pipe){
-				$passables=func_get_args();
-				$slice=$this->getSlice();
-                $callable=$slice($stack, $pipe);
-                return call_user_func_array($callable, $passables);
-			};
-		};
+	protected function carry($stack, $pipe){
+        //中间件入栈
+        $this->callStacks[]=array($stack, $pipe);
+        return array($this, 'pipe');
 	}
-	
-	/**
-	 * 获取一个表示应用程序切片的闭包
-	 *
-	 * @return Closure
-	 */
-	private function getSlice(){
-		return function ($stack,$pipe){
-			return function () use ($stack, $pipe){
-				$passables=func_get_args();
-				if(is_callable($pipe)){
-					// 直接调用管道回调函数
-					return call_user_func_array($pipe,array_merge([$stack],$passables));
-				}elseif(!is_object($pipe)){
-					// 解析命名的字符串通道，并构建
-					list($name, $parameters)=$this->parsePipeString($pipe);
-					$pipe=$this->getContainer()->make($name);
-					$parameters=array_merge([$stack], $passables, $parameters);
-				}else{
-					$parameters=array_merge([$stack], $passables);
-				}
-				return call_user_func_array(
-						(method_exists($pipe, $this->method) ? array($pipe,$this->method) : $pipe),
-						$parameters
-					);
-			};
-		};
-	}
+    
+    /**
+     * 可被调用的中间件
+     */
+    public function pipe(){
+        //中间件出栈
+        $stacks=array_pop($this->callStacks);
+        if($stacks==null){
+            throw new Exception('No pipe for call.');
+        }
+        $stack=$stacks[0];
+        $pipe=$stacks[1];
+        $passables=func_get_args();
+        return $this->runPipe($stack, $pipe, $passables);
+    }
+    
+    /**
+     * 调用中间件
+     *
+     * @param Closure $stack
+     * @param mixed $pipe
+     * @param array $passables
+     */
+    private function runPipe($stack, $pipe, $passables){
+        if(is_callable($pipe)){
+            // 直接调用管道回调函数
+            return call_user_func_array($pipe,array_merge([$stack],$passables));
+        }elseif(!is_object($pipe)){
+            // 解析命名的字符串通道，并构建
+            list($name, $parameters)=$this->parsePipeString($pipe);
+            $pipe=$this->getContainer()->make($name);
+            $parameters=array_merge([$stack], $passables, $parameters);
+        }else{
+            $parameters=array_merge([$stack], $passables);
+        }
+        return call_user_func_array(
+                (method_exists($pipe, $this->method) ? array($pipe, $this->method) : $pipe),
+                $parameters
+            );
+    }
 
 }

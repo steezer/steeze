@@ -398,7 +398,7 @@ class Container{
     /**
 	 * 设置容器实例
 	 *
-	 * @param \Library\Container|null $container
+	 * @param Container|null $container
 	 * @return static
 	 */
 	public static function setInstance(Container $container=null){

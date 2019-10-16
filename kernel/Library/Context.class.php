@@ -1,6 +1,6 @@
 <?php
 namespace Library;
-use Loader;
+use Loader as load;
 
 /**
  * 系统上下文类
@@ -10,7 +10,7 @@ use Loader;
 class Context extends Container{
     
     private $config=array(); //系统配置
-    private $isInit=false; //是否已经初始化
+    protected $isInit=false; //是否已经初始化
     
     /**
      * 内置Controller对象
@@ -113,7 +113,7 @@ class Context extends Container{
      *
      * @param array $config 启动配置参数
      */
-    protected function init($config){
+    protected function init($config=array()){
         if(!$this->isInit || $this->config!=$config){
             //保存配置
             $this->config=$config;
@@ -134,6 +134,14 @@ class Context extends Container{
 
             //系统配置
             $this->appConfig();
+            
+            //初始化处理器
+            $isClosure=is_callable($route->getDisposer());
+            $route_c=env('ROUTE_C',false);
+            if(!$isClosure && $route_c){
+                $controller=load::controller($route_c, $route->getParam(), $this);
+                $route->setDisposer($controller);
+            }
             
             //设置初始化状态
             $this->isInit=true;
@@ -314,20 +322,20 @@ class Context extends Container{
         }
 
 		//设置应用环境
-		Loader::env('PHP_SAPI', $this->request->server('php_sapi'));
+		load::env('PHP_SAPI', $this->request->server('php_sapi'));
 		//请求时间
-		Loader::env('NOW_TIME', $this->request->server('request_time', time()));
+		load::env('NOW_TIME', $this->request->server('request_time', time()));
 		//检查是否微信登录
         $userAgent=$this->request->header('user-agent');
-		Loader::env('WECHAT_ACCESS',$userAgent!==null && strpos($userAgent,'MicroMessenger')!==false);
+		load::env('WECHAT_ACCESS',$userAgent!==null && strpos($userAgent,'MicroMessenger')!==false);
 		//设置session
-        Loader::env('SESSION_ID', $this->request->header('session_id'));
+        load::env('SESSION_ID', $this->request->header('session_id'));
         
 		//当前请求方法判断
 		$method=strtoupper($this->request->server('request_method','GET'));
-		Loader::env('REQUEST_METHOD', $method);
-		Loader::env('IS_GET', $method == 'GET' ? true : false);
-		Loader::env('IS_POST', $method == 'POST' ? true : false);
+		load::env('REQUEST_METHOD', $method);
+		load::env('IS_GET', $method == 'GET' ? true : false);
+		load::env('IS_POST', $method == 'POST' ? true : false);
 		
 		//系统唯一入口定义，兼任windows系统和cli模式
 		$host=$this->request->server('server_host');
@@ -335,18 +343,18 @@ class Context extends Container{
         $entry=$this->request->server('system_entry');
         $protocol=$this->request->server('request_scheme', ($port == 443 ? 'https' : 'http')).'://';
         
-		Loader::env('SYSTEM_ENTRY', $entry);
-		Loader::env('SITE_PROTOCOL', $protocol);
-		Loader::env('SITE_PORT', $port);
+		load::env('SYSTEM_ENTRY', $entry);
+		load::env('SITE_PROTOCOL', $protocol);
+		load::env('SITE_PORT', $port);
 		
 		//设置访问域名
-        Loader::env('SITE_HOST',$host);
-		Loader::env('SITE_URL', $protocol . $host . ($port==80 || $port==443 ? '' : ':'.$port)); // 网站首页地址
-		Loader::env('ROOT_URL', rtrim(str_replace('\\','/',dirname($entry)),'/').'/'); //系统根目录路径
+        load::env('SITE_HOST',$host);
+		load::env('SITE_URL', $protocol . $host . ($port==80 || $port==443 ? '' : ':'.$port)); // 网站首页地址
+		load::env('ROOT_URL', rtrim(str_replace('\\','/',dirname($entry)),'/').'/'); //系统根目录路径
 		
-        !env('ASSETS_URL') && Loader::env('ASSETS_URL', env('ROOT_URL') . 'assets/'); //静态文件路径
-		!env('UPLOAD_URL') && Loader::env('UPLOAD_URL', env('ASSETS_URL') . 'ufs/'); //上传图片访问路径
-		!env('SYS_VENDOR_URL') && Loader::env('SYS_VENDOR_URL', env('ASSETS_URL') . 'assets/vendor/'); //外部资源扩展路径
+        !env('ASSETS_URL') && load::env('ASSETS_URL', env('ROOT_URL') . 'assets/'); //静态文件路径
+		!env('UPLOAD_URL') && load::env('UPLOAD_URL', env('ASSETS_URL') . 'ufs/'); //上传图片访问路径
+		!env('SYS_VENDOR_URL') && load::env('SYS_VENDOR_URL', env('ASSETS_URL') . 'assets/vendor/'); //外部资源扩展路径
 	}
 	
 	/**
@@ -355,7 +363,7 @@ class Context extends Container{
 	private function appConfig(){
 		// 定义是否为ajax请求
         $xRequestedWith=$this->request->header('x-requested-with');
-		Loader::env('IS_AJAX', (
+		load::env('IS_AJAX', (
                 (
                     isset($xRequestedWith) && 
                     strtolower($xRequestedWith) == 'xmlhttprequest'

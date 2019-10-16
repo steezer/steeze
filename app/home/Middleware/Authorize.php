@@ -2,7 +2,10 @@
 namespace App\Home\Middleware;
 
 class Authorize{
-	public function handle(\Closure $next,$request,$response){
-		return $next($request,$response);
+	public function handle($next, $request, $response){
+        fastlog('Authorize start');
+        $result=call_user_func($next, $request, $response);
+        fastlog('Authorize end');
+        return $result;
 	}
 }

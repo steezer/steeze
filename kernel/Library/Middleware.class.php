@@ -32,7 +32,7 @@ class Middleware{
      * @param Response $response 应用Response对象
      * @return Closure
      */
-	public function handle(Closure $next, $request, $response){
+	public function handle($next, $request, $response){
         return call_user_func_array($next, array(&$request, &$response));
 	}
     
