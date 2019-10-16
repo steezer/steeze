@@ -1,6 +1,6 @@
 <?php
 namespace Library;
-use \Closure;
+use Closure;
 
 /**
  * 管道控制类型
@@ -9,15 +9,14 @@ use \Closure;
  */
 class Pipeline{
 	protected $container; // 容器实例
-	protected $passables=[]; // 通过管道传递的对象
-	protected $pipes=[]; // 类管道的数组
+	protected $passables=array(); // 通过管道传递的对象
+	protected $pipes=array(); // 类管道的数组
 	protected $method='handle'; // 每个管道上被调用的方法
 
 	/**
 	 * 创建管道实例
 	 *
-	 * @param \Library\Container|null $container
-	 * @return void
+	 * @param Container|null $container
 	 */
 	public function __construct(Container $container=null){
 		$this->container=$container;
@@ -59,10 +58,10 @@ class Pipeline{
 	/**
 	 * 在管道中运行最后的回调函数
 	 *
-	 * @param \Closure $destination
+	 * @param Closure $destination
 	 * @return mixed
 	 */
-	public function then(Closure $destination){
+	public function then($destination){
 		$pipeline=array_reduce(
 					array_reverse($this->pipes),
 					$this->carry(),
@@ -78,18 +77,18 @@ class Pipeline{
 	 * @return array
 	 */
 	protected function parsePipeString($pipe){
-		list($name, $parameters)=array_pad(explode(':', $pipe, 2), 2, []);
+		list($name, $parameters)=array_pad(explode(':', $pipe, 2), 2, array());
 		if(is_string($parameters)){
 			$parameters=explode(',', $parameters);
 		}
-		return [$name,$parameters];
+		return array($name, $parameters);
 	}
 
 	/**
 	 * 获取容器实例
 	 *
-	 * @return \Library\Container
-	 * @throws \RuntimeException
+	 * @return Container
+	 * @throws Exception
 	 */
 	protected function getContainer(){
 		if(!$this->container){
@@ -101,10 +100,10 @@ class Pipeline{
 	/**
 	 * 将回调函数进行封装.
 	 *
-	 * @param \Closure $destination
-	 * @return \Closure
+	 * @param Closure $destination
+	 * @return Closure
 	 */
-	protected function prepareDestination(Closure $destination){
+	protected function prepareDestination($destination){
 		return function () use ($destination){
 			$passables=func_get_args();
 			return call_user_func_array($destination, $passables);
@@ -114,11 +113,11 @@ class Pipeline{
 	/**
 	 * 迭代回调函数
 	 *
-	 * @return \Closure
+	 * @return Closure
 	 */
 	protected function carry(){
-		return function ($stack,$pipe){
-			return function () use ($stack,$pipe){
+		return function ($stack, $pipe){
+			return function () use ($stack, $pipe){
 				$passables=func_get_args();
 				$slice=$this->getSlice();
                 $callable=$slice($stack, $pipe);
@@ -130,11 +129,11 @@ class Pipeline{
 	/**
 	 * 获取一个表示应用程序切片的闭包
 	 *
-	 * @return \Closure
+	 * @return Closure
 	 */
 	private function getSlice(){
 		return function ($stack,$pipe){
-			return function () use ($stack,$pipe){
+			return function () use ($stack, $pipe){
 				$passables=func_get_args();
 				if(is_callable($pipe)){
 					// 直接调用管道回调函数

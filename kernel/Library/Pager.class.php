@@ -53,7 +53,7 @@ class Pager{
 	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
 	 * 		]
 	 */
-	function getPager($config, $setPages=10, $urlRule='', $array=[]){
+	function getPager($config, $setPages=10, $urlRule='', $array=array()){
 		$defaults=['type' => 'page','size' => 15,'count'=>1];
 		$addUrl='';
 		$configs=array_merge($defaults, $config);
@@ -103,8 +103,6 @@ class Pager{
 				$more=1;
 			}
 			
-			$result=[];
-			
 			$page_previous=$this->config['previous'];
 			$page_next=$this->config['next'];
 			$page_no=$this->config['no'];
@@ -153,35 +151,6 @@ class Pager{
 			}
 		}
 		return array_merge($configs,['html'=>$html,'info'=>$info]);
-	}
-	
-	/**
-	 * 生成分页html标签
-	 *
-	 * @param string $tagName 标签名称
-	 * @param array $arr 标签属性数组
-	 * @param string $text 标签文本
-	 * @param string $openFunc 标签点击事件函数
-	 * @return string 标签字符串
-	 */
-	private function pageTag($tagName,$arr,$text='',$openFunc=''){
-		$attr=array();
-		$attr[]='<' . $tagName;
-		
-		if(!empty($openFunc) && strtolower($tagName) == 'a' && isset($arr['href'])){
-			if(isset($arr['onclick'])){
-				$arr['onclick']+=';' + str_replace('?', $arr['href'], $openFunc);
-			}else{
-				$arr['onclick']=str_replace('?', $arr['href'], $openFunc);
-			}
-			$arr['href']='javascript:';
-		}
-		
-		foreach($arr as $ky=>$vl){
-			$attr[]=$ky . '="' . $vl . '"';
-		}
-		$attr[]=empty($text) ? '/>' : ('>' . $text . '</' . $tagName . '>');
-		return implode(' ', $attr);
 	}
 	
 	/**

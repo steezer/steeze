@@ -65,6 +65,11 @@ define('CACHE_PATH', STORAGE_PATH . 'Cache' . DS);
 define('LOGS_PATH', STORAGE_PATH . 'Logs' . DS);
 
 /**
+ * 数据目录（权限为可读写）
+ */
+define('DATA_PATH', STORAGE_PATH . 'Data' . DS);
+
+/**
  * 入口文件根目录路径（支持自定义）
  */
 !defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS);
@@ -121,8 +126,8 @@ define('DEFAULT_HOST', env('default_host', '127.0.0.1'));
 spl_autoload_register('Loader::import');
 
 //配置错误及异常处理
-set_error_handler(array('\Library\ErrorException', 'onError'), APP_DEBUG_LEVEL);
-set_exception_handler(array('\Library\ErrorException', 'onException'));
+set_error_handler(array('\Library\AppException', 'onError'), APP_DEBUG_LEVEL);
+set_exception_handler(array('\Library\AppException', 'onException'));
 
 /**
  * 系统加载器

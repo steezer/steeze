@@ -9,27 +9,27 @@ use Loader;
  */
 class Context extends Container{
     
-    private $config=[]; //系统配置
+    private $config=array(); //系统配置
     private $isInit=false; //是否已经初始化
     
     /**
      * 内置Controller对象
      *
-     * @var \Library\Controller
+     * @var Controller
      */
     private $controller=null;
 	
     /**
      * Request对象
      *
-     * @var \Library\Request
+     * @var Request
      */
     protected $request=null; 
     
     /**
      * Response对象
      *
-     * @var \Library\Response
+     * @var Response
      */
 	protected $response=null;
     
@@ -53,18 +53,18 @@ class Context extends Container{
      * @param array $args 参数数组
      * @return mixed
      */
-    public function __call($name, $args=[]){
+    public function __call($name, $args=array()){
         if(is_null($this->controller)){
             $this->controller=$this->make('\Library\Controller');
             $this->controller->setContext($this);
         }
-        return call_user_func_array([&$this->controller, $name], $args);
+        return call_user_func_array(array(&$this->controller, $name), $args);
     }
     
     /**
      * 获取Request对象
      *
-     * @return \Library\Request
+     * @return Request
      */
     public function getRequest(){
         return $this->request;
@@ -73,7 +73,7 @@ class Context extends Container{
     /**
      * 获取Response对象
      *
-     * @return \Library\Response
+     * @returnResponse
      */
     public function getResponse(){
         return $this->response;
@@ -98,7 +98,7 @@ class Context extends Container{
         if($isSet){
             //设置错误处理函数
             error_reporting(APP_DEBUG_LEVEL);
-            $handle=$this->make('\Library\ErrorException');
+            $handle=$this->make('\Library\AppException');
             $handle->setContext($this);
             set_error_handler(array($handle, 'onAppError'), APP_DEBUG_LEVEL);
             set_exception_handler(array($handle, 'onAppException'));
@@ -155,7 +155,7 @@ class Context extends Container{
         ){
             $header=array_change_key_case($config['header'], CASE_LOWER);
         }else{
-            $header=[];
+            $header=array();
         }
         
         //设置配置POST信息
@@ -164,13 +164,13 @@ class Context extends Container{
         $cookie=&$this->request->cookie();
         $server=&$this->request->server();
         if($get===null){
-            $get=[];
+            $get=array();
         }
         if($post===null){
-            $post=[];
+            $post=array();
         }
         if($cookie===null){
-            $cookie=[];
+            $cookie=array();
         }
         
         //配置的变量初始化到全局变量

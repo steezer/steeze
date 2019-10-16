@@ -1,11 +1,12 @@
 <?php
 namespace Library;
+use Exception;
 
 /**
  * 错误异常处理类
  * @package Library
  */
-class ErrorException extends \Exception {
+class AppException extends Exception {
 	
 	//默认错误代码
 	const DEFAULT_ERROR_CODE = -101;
@@ -13,14 +14,14 @@ class ErrorException extends \Exception {
     /**
      * 上下文对象
      *
-     * @var \Library\Application
+     * @var Application
      */
     private $context=null;
     
     /**
      * 设置上下文应用对象
      *
-     * @param \Library\Application &$context
+     * @param Application &$context
      * @return void
      */
     public function setContext(&$context){
@@ -126,7 +127,7 @@ class ErrorException extends \Exception {
 	
 	/*
 	 * 错误输出
-	 * @param \Exception|\Error $e 错误对象
+	 * @param Exception|Error $e 错误对象
 	 * @param array $params 传递的参数
 	 * @param bool $isReturn 是否返回渲染后的异常模板，否则直接输出
 	 * @return string|void
