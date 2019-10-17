@@ -390,8 +390,15 @@ class Route
         }
         return null;
     }
-
-    private function dealWithhandle($handle, &$querys)
+    
+    /**
+     * 处理路由控制器
+     *
+     * @param 路由控制器 $handle
+     * @param 客户端变量 $querys
+     * @return mixed
+     */
+    private function dealWithhandle($handle, $querys)
     {
         if (is_string($handle)) {
             //设置中间件
