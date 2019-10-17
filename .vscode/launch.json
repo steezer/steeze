@@ -1,0 +1,45 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for XDebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9071
+        },
+        {
+            "name": "Client for XDebug",
+            "type": "php",
+            "request": "launch",
+            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "program": "${workspaceFolder}/public/index.php",
+            //参数：['带参数的URL地址','POST参数名称']
+            "args": ["http://api.steeze.cn/user/lists","name=spring&year=23","TOKEN=121"],  
+            "cwd": "${workspaceFolder}",
+            "port": 9071
+        },
+        {
+            "name": "Swoole for XDebug",
+            "type": "php",
+            "request": "launch",
+            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "program": "${workspaceFolder}/app/console/swoole.php",
+            //参数：['带参数的URL地址','POST参数名称']
+            "args": ["http://api.steeze.cn/user/lists","name=spring&year=23","TOKEN=121"],  
+            "cwd": "${workspaceFolder}",
+            "port": 9071
+        },
+        {
+            "name": "Launch currently open script",
+            "type": "php",
+            "request": "launch",
+            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "program": "${file}",
+            "cwd": "${fileDirname}",
+            "port": 9071
+        }
+    ]
+}
