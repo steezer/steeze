@@ -125,7 +125,7 @@ class Pager
                     $html .= str_replace('[no]', 1, $page_current);
                 } else {
                     $html .= str_replace('[url]', $this->pageUrl($configs['page'] - 1, $urlRule, $array), $page_previous);
-                    $html .= str_replace(['[url]', '[no]'], [$this->pageUrl(1, $urlRule, $array), 1], $page_first);
+                    $html .= str_replace(array('[url]', '[no]'), array($this->pageUrl(1, $urlRule, $array), 1), $page_first);
 
                     if ($configs['page'] > 6 && $more) {
                         $html .= $page_dot;
@@ -135,7 +135,7 @@ class Pager
 
             for ($i = $from; $i <= $to; $i++) {
                 if ($i != $configs['page']) {
-                    $html .= str_replace(['[url]', '[no]'], [$this->pageUrl($i, $urlRule, $array), $i], $page_no);
+                    $html .= str_replace(array('[url]', '[no]'), array($this->pageUrl($i, $urlRule, $array), $i), $page_no);
                 } else {
                     $html .= str_replace('[no]', $i, $page_current);
                 }
@@ -145,15 +145,15 @@ class Pager
                 if ($configs['page'] < $pages - 5 && $more) {
                     $html .= $page_dot;
                 }
-                $html .= str_replace(['[url]', '[no]'], [$this->pageUrl($pages, $urlRule, $array), $pages], $page_last);
-                $html .= str_replace(['[url]', '[no]'], [$this->pageUrl($configs['page'] + 1, $urlRule, $array), $configs['page'] + 1], $page_next);
+                $html .= str_replace(array('[url]', '[no]'), array($this->pageUrl($pages, $urlRule, $array), $pages), $page_last);
+                $html .= str_replace(array('[url]', '[no]'), array($this->pageUrl($configs['page'] + 1, $urlRule, $array), $configs['page'] + 1), $page_next);
             } elseif ($configs['page'] == $pages) {
                 $html .= str_replace('[no]', $pages, $page_current);
             } else {
-                $html .= str_replace(['[url]', '[no]'], [$this->pageUrl($pages, $urlRule, $array), $pages], $page_last);
+                $html .= str_replace(array('[url]', '[no]'), array($this->pageUrl($pages, $urlRule, $array), $pages), $page_last);
             }
         }
-        return array_merge($configs, ['html' => $html, 'info' => $info]);
+        return array_merge($configs, array('html' => $html, 'info' => $info));
     }
 
     /**
