@@ -1,0 +1,6 @@
+.*
+!.vscode
+!.gitignore
+/public/assets/ufs/
+/storage/Cache/
+/storage/Logs/

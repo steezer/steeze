@@ -13,7 +13,7 @@ class User extends Controller{
 	
 	// 模型参数直接绑定路由
 	public function info(UserModel $user){
-        return $user;
+        return env(null);
 	}
 	
 	// 模型查询
