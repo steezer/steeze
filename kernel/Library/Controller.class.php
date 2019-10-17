@@ -50,7 +50,7 @@ class Controller{
      * @param array $param
      * @return mixed
      */
-	public function render($controller, $action, array $param=[]){
+	public function render($controller, $action, array $param=array()){
 		return $this->view()->render($controller, $action, $param);
 	}
 
@@ -60,7 +60,7 @@ class Controller{
 	 * @param string $file 指定要调用的模板文件 默认为空则由系统自动定位模板文件
      * @param array $data 模板变量组成的数组
 	 */
-	public function display($file='', $data=[]){
+	public function display($file='', $data=array()){
         if(is_array($data)){
             $this->view()->assign($data);
         }
@@ -73,7 +73,7 @@ class Controller{
 	 * @param string $content 输出内容
      * @param array $data 模板变量组成的数组
 	 */
-	public function show($content='', $data=[]){
+	public function show($content='', $data=array()){
         if(is_array($data)){
             $this->view()->assign($data);
         }
@@ -260,7 +260,7 @@ class Controller{
 	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
 	 * 		]
 	 */
-    public function getPager($config=[], $setPages=10, $urlRule='', $array=[]){
+    public function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
         $this->view()->getPager($config, $setPages, $urlRule, $array);
     }
     
@@ -270,7 +270,7 @@ class Controller{
      * @param string $name 中间件名称
      * @param array $excepts 排除的方法
      */
-	protected function middleware($name, $excepts=[]){
+	protected function middleware($name, $excepts=array()){
 		Route::setMiddleware($name, $excepts);
 	}
 
