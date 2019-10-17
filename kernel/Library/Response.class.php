@@ -151,7 +151,7 @@ class Response
             //发送头信息
             !$this->isHeaderSend &&
                 $this->clientHeader(
-                    $dataType ?: (is_array($data) || is_object($data) ? 'json' : 'html'),
+                    $dataType ? $dataType : (is_array($data) || is_object($data) ? 'json' : 'html'),
                     $charset
                 );
 
@@ -285,7 +285,7 @@ class Response
             $dataType = C('mimetype.' . $dataType, 'text/html');
         }
         if ($charset !== false) {
-            $dataType = $dataType . '; charset=' . ($charset ?: C('charset', 'utf-8'));
+            $dataType = $dataType . '; charset=' . ($charset ? $charset : C('charset', 'utf-8'));
         }
         $this->header('Content-Type', $dataType); // 网页字符编码
         $cache &&   // 页面缓存控制

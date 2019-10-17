@@ -106,7 +106,12 @@ function dump($var, $isReturn=false){
             }
         }
     }
-    $return=is_object($var) ? get_class($var) : (is_string($var) ? $var : var_export($var, true));
+    
+    $return=is_string($var) ? $var : 
+                (
+                    is_object($var) ? get_class($var).'[object]' : 
+                    var_export($var, true)
+                );
     if(!$isReturn){
         echo $return . "\n";
     }else{

@@ -316,7 +316,7 @@ class Container{
 		try{
 			$classname=$parameter->getClass()->name;
             //如果此类属于容器本身，则注入容器对象
-            if(is_a($this, $classname)){
+            if($this instanceof $classname){
                 return $this;
             }
 			return $this->make($classname);

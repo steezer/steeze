@@ -426,7 +426,7 @@ class Request
             $mobile_browser++;
         } elseif ($agent) {
             $mobile_ua = substr($agent, 0, 4);
-            $mobile_agents = [
+            $mobile_agents = array(
                 'w3c ', 'acs-', 'alav', 'alca', 'amoi', 'audi', 'avan', 'benq', 'bird', 'blac',
                 'blaz', 'brew', 'cell', 'cldc', 'cmd-', 'dang', 'doco', 'eric', 'hipt', 'inno',
                 'ipaq', 'java', 'jigs', 'kddi', 'keji', 'leno', 'lg-c', 'lg-d', 'lg-g', 'lge-',
@@ -436,7 +436,7 @@ class Request
                 'sie-', 'siem', 'smal', 'smar', 'sony', 'sph-', 'symb', 't-mo', 'teli', 'tim-',
                 'tosh', 'tsm-', 'upg1', 'upsi', 'vk-v', 'voda', 'wap-', 'wapa', 'wapi', 'wapp',
                 'wapr', 'webc', 'winw', 'winw', 'xda', 'xda-'
-            ];
+            );
             if (in_array($mobile_ua, $mobile_agents)) {
                 $mobile_browser++;
             } elseif (strpos(strtolower($all_http), 'operamini') !== false) {
