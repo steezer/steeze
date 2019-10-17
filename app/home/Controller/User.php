@@ -12,7 +12,7 @@ use Library\Model;
 class User extends Controller{
 	
 	// 模型参数直接绑定路由
-	public function info(UserModel $user){
+	public function info(UserModel $user, $id){
         return $user;
 	}
 	

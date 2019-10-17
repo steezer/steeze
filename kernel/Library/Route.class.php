@@ -250,11 +250,9 @@ class Route
      *
      * @param string $path 路径
      * @param string $pattern 匹配模式
-     * @param bool $isVar 处理器中是否包含变量
-     * @param string &$handle 处理器
      * @return array|false 成功返回变量的键值，失败返回false
      */
-    private function getVars($path, $pattern, $isVar, &$handle)
+    private function getVars($path, $pattern)
     {
         $index = 0;
         $start = 0;
@@ -316,9 +314,7 @@ class Route
                 } else if ($value !== '') { //此处兼容首页参数
                     $this->params[$kvName] = $value;
                 }
-                if ($isVar) { // 路由控制器变量处理
-                    $handle = str_replace('{' . $kvName . '}', $value, $handle);
-                }
+                
             }
             if ($start !== false) {
                 $prev = substr($pattern, $index, $start - $index);
@@ -346,20 +342,15 @@ class Route
 	 */
     private function getHandle($path, $route, $handle)
     {
+        //处理动态参数
+        $querys=explode('#', $route, 2);
+        $route=array_shift($querys);
+        
         //请求方法匹配
         $routes = explode(':', $route, 2);
         $route = trim(array_pop($routes));
         $method = count($routes) ? strtoupper(array_pop($routes)) : 'ANY';
         $route = '/' . trim($route, '/');
-
-        $middlewares = array();
-        if (is_string($handle)) {
-            $handles = explode('>', $handle, 2);
-            $handle = trim(array_pop($handles));
-            if (!empty($handles)) {
-                $middlewares = array_merge($middlewares, explode('&', array_pop($handles)));
-            }
-        }
         $routeLen = substr_count($route, '/');
         $urlLen = substr_count($path, '/');
         $optCount = substr_count($route, '?');
@@ -370,15 +361,12 @@ class Route
             ($routeLen == $urlLen || $urlLen + $optCount == $routeLen)
         ) {
             if (!strcasecmp($route, $path)) {
-                $this->setMiddleware($middlewares);
                 //如果url完全匹配（不区分大小写），直接返回
-                return $handle;
+                return $this->dealWithhandle($handle, $querys);
             } else {
                 //否则进行变量类型查找
                 $kArrs = explode('/', $route);
                 $urlArrs = explode('/', $path);
-
-                $isVar = is_string($handle) && strpos($handle, '}') !== false;
                 $mCount = count($kArrs);
                 foreach ($kArrs as $ki => $kv) {
                     if (isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])) {
@@ -388,7 +376,7 @@ class Route
                          */
                         if (
                             strpos($kv, '{') === false ||
-                            !$this->getVars($urlArrs[$ki], $kv, $isVar, $handle)
+                            !$this->getVars($urlArrs[$ki], $kv)
                         ) { // 变量匹配检查
                             break;
                         }
@@ -396,12 +384,45 @@ class Route
                     $mCount--;
                 }
                 if (!$mCount) {
-                    $this->setMiddleware($middlewares);
-                    return $handle;
+                    return $this->dealWithhandle($handle, $querys);
                 }
             }
         }
         return null;
+    }
+
+    private function dealWithhandle($handle, &$querys)
+    {
+        if (is_string($handle)) {
+            //设置中间件
+            if (strpos($handle, '>') !== false) {
+                $handles = explode('>', $handle, 2);
+                $handle = trim(array_pop($handles));
+                if (!empty($handles)) {
+                    $this->setMiddleware(explode('&', array_pop($handles)));
+                }
+            }
+            
+            //从客户端获取路由变量
+            if(!empty($querys)){
+                $array=explode('&', $querys[0]);
+                foreach ($array as $value) {
+                    $kv=explode('=', $value);
+                    $keyName=$kv[0];
+                    $varName=$kv[1];
+                    $varValue=$this->request->input($keyName);
+                    if($varValue!==null){
+                        $this->getVars($varValue, $varName);
+                    }
+                }
+            }
+            
+            //将路由变量更新到处理器
+            foreach ($this->params as $key => $value) {
+                $handle=str_replace('{'.$key.'}', $value, $handle);
+            }
+        }
+        return $handle;
     }
 
     /*

@@ -337,7 +337,7 @@ class Request
         );
         //顺序获取变量值
         foreach ($inputMethods as $method) {
-            $value = call_user_func([$this, $method], $name);
+            $value = call_user_func(array($this, $method), $name);
             if ($value !== null) {
                 break;
             }

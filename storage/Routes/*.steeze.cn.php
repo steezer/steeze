@@ -13,7 +13,7 @@ return [
         return get_class($container);  //输出： Library\Application
     },
     
-    '/info/{user|d}' => function(Model $user){
+    '/info/{user|d?}' => function(Model $user){
         $this->assign('user', $user);
         $this->display('/User/info');
     },
@@ -42,6 +42,6 @@ return [
     '/member/index/hello'=> 'Member/Index/hello',
     'auth&convert' => [
         '/{c}/{a}'=>'{c}/{a}',
-        '/{c}/{a}/{user|d}'=>'{c}/{a}',
+        '/{c}/{a}/{user|d}#a={id|d?}'=>'{c}/{a}',
     ]
 ];
