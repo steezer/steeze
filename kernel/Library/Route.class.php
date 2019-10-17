@@ -366,7 +366,8 @@ class Route
 
         //无参数或有参数的路径匹配
         if (
-            ($method == 'ANY' || $method == env('REQUEST_METHOD')) && ($routeLen == $urlLen || $urlLen + $optCount == $routeLen)
+            ($method == 'ANY' || $method == env('REQUEST_METHOD')) && 
+            ($routeLen == $urlLen || $urlLen + $optCount == $routeLen)
         ) {
             if (!strcasecmp($route, $path)) {
                 $this->setMiddleware($middlewares);
@@ -383,7 +384,7 @@ class Route
                     if (isset($urlArrs[$ki]) && strcasecmp($kv, $urlArrs[$ki])) {
                         /**
                          * 注意：以“/”分割的路由路径中，可以包含以特殊字符分割的多个变量，
-                         * 例如可以是“/index/{c}”、“/index/show-{a}-{b}”、单不能是“/index/show-{c}{b}”
+                         * 例如可以是“/index/{c}”、“/index/show-{a}-{b}”，不能是“/index/show-{c}{b}”
                          */
                         if (
                             strpos($kv, '{') === false ||
