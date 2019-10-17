@@ -17,9 +17,8 @@ class User extends Controller{
 	}
 	
 	// 模型查询
-	public function lists(Request $request, UserModel $user){
+	public function lists(Request $request, UserModel $user, $page=1){
         //获取GET参数
-        $page=$request->get('page',1);
         $where['gender']=1;
         return $user->where($where)
                 ->page($page, 3)

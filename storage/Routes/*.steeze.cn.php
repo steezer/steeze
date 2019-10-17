@@ -41,7 +41,7 @@ return [
     '/hello'=> 'Index/hello',
     '/member/index/hello'=> 'Member/Index/hello',
     'auth&convert' => [
-        '/{c}/{a}'=>'{c}/{a}',
+        '/{c}/{a}#page={page|d}'=>'{c}/{a}',
         '/{c}/{a}/{user|d}#a={id|d?}'=>'{c}/{a}',
     ]
 ];
