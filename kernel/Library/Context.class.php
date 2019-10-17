@@ -303,10 +303,19 @@ class Context extends Container{
         //客户端请求主机名称（域名）
         $server['server_host']=$host!='' ? $host : DEFAULT_HOST;
         
-        //例如：将"/index.php/user/list"格式地址处理为"/user/list"
-		if(stripos($path, $server['system_entry'])===0){
-			$path=substr($path, strlen($server['system_entry']));
-		}
+        //处理包含入口的原始访问路径
+        if(($entryPos=stripos($path, $server['system_entry']))!==false){
+            if($entryPos===0){
+                //例如：将"/index.php/user/list"格式地址处理为"/user/list"
+                $path=substr($path, strlen($server['system_entry']));
+            }else if(
+                $entryPos==($pathLen=strlen($path)-strlen($server['system_entry']))
+            ){
+                //例如：将"/test/index.php"格式地址处理为"/test"
+                $path=substr($path, 0, $pathLen);
+            }
+        }
+		
         //请求路径（必须以"/"开头，以非"/"结尾）
 		$server['request_path']='/'.trim($path,'/');
     }
