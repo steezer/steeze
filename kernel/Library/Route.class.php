@@ -263,7 +263,7 @@ class Route
         while ($index > -1) {
             $start = strpos($pattern, '{', $index);
             if ($index) {
-                $next = $start === false ? substr($pattern, $index) : substr($pattern, $index, $start - $index);
+                $next = strval($start === false ? substr($pattern, $index) : substr($pattern, $index, $start - $index));
 
                 $value = '';
                 if ($prev === '') {
