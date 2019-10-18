@@ -2032,7 +2032,12 @@ class Model implements ArrayAccess{
 	 * @return Model
 	 */
 	public function where($where,$parse=null){
-		if(!is_null($parse) && is_string($where)){
+        if(is_numeric($where)){
+            $pk=$this->getPk();
+            $val=$where;
+            $where=array();
+            $where[$pk]=$val;
+        }elseif(!is_null($parse) && is_string($where)){
 			if(!is_array($parse)){
 				$parse=func_get_args();
 				array_shift($parse);
