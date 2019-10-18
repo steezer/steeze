@@ -1043,10 +1043,10 @@ class Model implements ArrayAccess{
 				$key1=array_shift($field);
 				$key2=array_shift($field);
 				$cols=array();
-				$count=count($_field);
+				$isArray=count($_field)>2 || $_field[1]=='*';
 				foreach($resultSet as $result){
 					$name=$result[$key1];
-					if(2 == $count){
+					if(!$isArray){
 						$cols[$name]=$result[$key2];
 					}else{
 						$cols[$name]=is_string($sepa) ? implode($sepa, array_slice($result, 1)) : $result;
