@@ -1835,7 +1835,7 @@ class Model implements ArrayAccess{
         ){
             $returnTables=array();
             $prefixLength=strlen($this->tablePrefix);
-            foreach($tables as $key=> $val){
+            foreach($tables as &$val){
                 if(strpos($val, $this->tablePrefix)===0){
                     $returnTables[]=substr($val, $prefixLength);
                 }
