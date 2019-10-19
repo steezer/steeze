@@ -1819,6 +1819,31 @@ class Model implements ArrayAccess{
 		}
 		return false;
 	}
+    
+    /**
+     * 获取当前数据库表
+     *
+     * @param boolean $usePrefix 是否使用表前缀，如果使用只返回具有当前表前缀的表名称
+     * @return array
+     */
+    public function getDbTables($usePrefix=true){
+        $tables=$this->db->getTables();
+        if(
+            $usePrefix && 
+            !is_null($this->tablePrefix) && 
+            $this->tablePrefix!==''
+        ){
+            $returnTables=array();
+            $prefixLength=strlen($this->tablePrefix);
+            foreach($tables as $key=> $val){
+                if(strpos($val, $this->tablePrefix)===0){
+                    $returnTables[]=substr($val, $prefixLength);
+                }
+            }
+            return $returnTables;
+        }
+        return $tables;
+    }
 	
 
 	/**
