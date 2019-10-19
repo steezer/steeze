@@ -7,6 +7,20 @@ use Exception;
 /**
  * Model模型类 实现了ORM和ActiveRecords模式
  * @package Library
+ * @method Model strict(boolean $isUse=false) 用于设置数据写入和查询是否严格检查是否存在字段。默认情况下不合法数据字段自动删除，如果设置了严格检查则会抛出异常
+ * @method Model order(string|array $opt) 对操作的结果排序
+ * @method Model alias(string $name) 用于设置当前数据表的别名，便于使用其他的连贯操作例如join方法
+ * @method Model having(string $opt) 配合group方法完成从分组的结果中筛选
+ * @method Model group(string $opt) 结合合计函数，根据一个或多个列对结果集进行分组，多个字段以","分割
+ * @method Model lock(boolean $isUse=false) 用于数据库的锁机制
+ * @method Model distinct(boolean $isUse=false) 用于返回唯一不同的值
+ * @method Model auto(array $rules) 自动表单处理，填充因子定义格式：array('field','填充内容','填充条件','附加规则',[额外参数])
+ * @method Model filter(callable $func) 安全过滤函数，对写入的数据进行过滤
+ * @method Model validate(array $rules) 使用当前校验规则进行数据校验
+ * @method Model result(callable|string $opt) 对返回的数据进行处理，可传入回调函数，也可以传入"json"或"xml"字符串（返回json或xml格式）
+ * @method Model token(boolean $isClose=false) 用于临时关闭令牌验证
+ * @method Model index(string $field) 对查询数据集进行按照字段索引，如果$field参数是以","分割的字符串，则以前一个字段值为索引，后一个字段值为值
+ * @method Model force(string|array $index) 索引分析，可在操作链中指定需要强制使用的索引
  */
 class Model implements ArrayAccess{
 	// 操作状态
