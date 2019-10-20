@@ -21,6 +21,8 @@ use Exception;
  * @method Model token(boolean $isClose=false) 用于临时关闭令牌验证
  * @method Model index(string $field) 对查询数据集进行按照字段索引，如果$field参数是以","分割的字符串，则以前一个字段值为索引，后一个字段值为值
  * @method Model force(string|array $index) 索引分析，可在操作链中指定需要强制使用的索引
+ * @method mixed getBy[field](string $value) 根据[field]字段的值$value，获取一条记录
+ * @method mixed getFieldBy[field](string $value, string $fdName) 根据[field]字段的值$value，获取字段名称为$fdName的值
  */
 class Model implements ArrayAccess{
 	// 操作状态
