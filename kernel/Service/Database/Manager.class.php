@@ -32,7 +32,7 @@ class Manager {
             if(defined('INI_STEEZE')){
                 $class = 'Service\\Database\\Drivers\\'.ucwords(strtolower($options['type']));
             }else{
-                $class = ucwords(strtolower($options['type'])).'DbDriver';
+                $class = ucwords(strtolower($options['type'])).'DatabaseDriver';
             }
             if(class_exists($class)){
                 self::$instance[$md5]   =   new $class($options);
