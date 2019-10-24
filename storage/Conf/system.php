@@ -17,7 +17,7 @@ return [
     'errorlog' => 1, // 是否保存错误日志到LOGS_PATH/[exception]|[error].log
     'split_logfile' => true, // 是否分割日志文件，如果为true，超出单个日子文件max_logfile_size大小则自动分割处理
     'max_logfile_size' => 20, // 单个日志文件最大大小（单位：M）
-    'max_logfile_num' => 0, // 单类日志文件最大数量，为0则不限数量
+    'max_logfile_num' => 50, // 单类日志文件最大数量，为0则不限数量
     'show_system_trace' => false, //是否显示系统trace记录
     'trace_max_record' => 100, //最大trace记录数量
 

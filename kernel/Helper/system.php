@@ -18,29 +18,21 @@ function fastlog($content, $tag=true, $file='system.log'){
     $isAppend=!is_string($tag) ? (bool)$tag : true;
     $title=is_string($tag) ? $tag.' ' : '';
     $datetime=date('Y-m-d H:i:s');
-	$content='[' . $datetime . '] '.$title.dump($content, true);
+    $content='[' . $datetime . '] '.$title.dump($content, true);
     $filename=LOGS_PATH . $file;
-	$dirname=dirname($filename);
-	!is_dir($dirname) && mkdir($dirname,0755,true);
+    $dirname=dirname($filename);
+    !is_dir($dirname) && mkdir($dirname,0755,true);
     
     //处理日志分割及删除
     if(C('split_logfile', true)){
         $maxSize=max(C('max_logfile_size', 20), 0.01) * 1048576; //最小值为：10kb
-        $maxNum=C('max_logfile_num', 5);
+        $maxNum=min(C('max_logfile_num', 5), 999); //最多999个日志
         
-        $files=glob($filename.'*', GLOB_NOSORT);
+        $files=glob($filename.'*');
         $total=count($files);
         if($total>0){
+            
             //自动清理先前的日志文件
-            
-            //文件名排序
-            usort($files, function($a, $b) use($filename){
-                $an=intval(str_replace($filename, '', $a));
-                $bn=intval(str_replace($filename, '', $b));
-                return $an > $bn ? 1 : -1;
-            });
-            
-            //删除先前的文件
             if($maxNum>0 && $total > $maxNum){
                 foreach ($files as $k=> &$value) {
                     if($k>= $total-$maxNum){
@@ -54,7 +46,7 @@ function fastlog($content, $tag=true, $file='system.log'){
             $lastFile=array_pop($files);
             if(filesize($lastFile) >= $maxSize){
                 $num=intval(substr($lastFile, strlen($filename)))+1;
-                $filename=$filename.$num;
+                $filename=$filename.str_pad($num, 3, '0', STR_PAD_LEFT);
             }else{
                 $filename=$lastFile;
             }
@@ -62,7 +54,7 @@ function fastlog($content, $tag=true, $file='system.log'){
     }
     
     //日志写入
-	return file_put_contents($filename, $content . "\n", ($isAppend ? FILE_APPEND : 0));
+    return file_put_contents($filename, $content . "\n", ($isAppend ? FILE_APPEND : 0));
 }
 
 /**
@@ -496,6 +488,8 @@ function template($template='index', $dir='', $style='', $module='', $isCompile=
 	return $compiledtplfile;
 }
 
+
+
 // //////////////////////////////////////////////////////////////
 /**
  * ***********************字符串处理函数**********************
@@ -509,8 +503,9 @@ function template($template='index', $dir='', $style='', $module='', $isCompile=
  * @return string
  */
 function to_string($data, $option=null){
-    $isModel=is_object($data) && is_a($data,'\Library\Model');
-    if($isModel || is_array($data) || is_object($data)){
+    $isObject=false;
+    if(is_array($data) || ($isObject=is_object($data))){
+        $isModel=$isObject && is_a($data,'\Library\Model');
         //命令行模式下输出格式化的JSON
         $jsonOption=is_null($option) ? (env('PHP_SAPI','cli')!='cli' ? JSON_UNESCAPED_UNICODE:
                     (JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)) : $option;
@@ -519,7 +514,7 @@ function to_string($data, $option=null){
                 $jsonOption
             );
     }
-    return $data;
+    return strval($data);
 }
 
 /**
@@ -627,7 +622,7 @@ function array2string($data, $isSlashes=true){
  */
 function array2html($data){
 	if(is_array($data)){
-		$str='[';
+		$str='array(';
 		foreach($data as $key=>$val){
 			if(is_string($key)){
 				$key='\'' . $key . '\'';
@@ -649,7 +644,7 @@ function array2html($data){
 				}
 			}
 		}
-		return $str . ']';
+		return $str . ')';
 	}
 	return false;
 }
@@ -704,15 +699,15 @@ function safe_replace($data){
 		}
 	}else if(!empty($data)){
         return str_replace(
-            [
+            array(
                 '"', '<', '>',
                 '%20','%27','%2527',
                 '*',"'",'`',';',
                 "{",'}','\\'
-            ], 
-            [
+            ), 
+            array(
                 '&quot;', '&lt;', '&gt;'
-            ], 
+            ), 
             $data
         );
     }
@@ -802,12 +797,12 @@ function get_remote_file($url, $data=null, $headers=null, $savepath=null, $timeo
         $savepath=null;
     }
     
-    $config=[
+    $config=array(
         'url'=> $url, 
         'data'=> $data,
         'headers'=> $headers,
         'timeout'=> $timeout
-    ];
+    );
     
     if(is_string($savepath)){
         $pathname=dirname($savepath);
@@ -833,34 +828,34 @@ function get_remote_file($url, $data=null, $headers=null, $savepath=null, $timeo
  * 使用范例<br/>
  * 1、POST请求并输出返回值<br/>
  * <pre>
- * $result=http_request([
+ * $result=http_request(array(
  *  'url'=>'http://steeze.com/message', //请求地址
- *  'data'=>['name'=>'test'], //POST参数（可以为字符串或数组）
- *  'headers'=>['TOKEN'=>'123'], //HEADER参数
+ *  'data'=>array('name'=>'test'), //POST参数（可以为字符串或数组）
+ *  'headers'=>array('TOKEN'=>'123'), //HEADER参数
  *  'method'=>'POST', //请求方法（默认：GET）
  *  'timeout'=>5, //超时（单位：秒）
- * ]);
+ * ));
  * echo $result;
  * </pre>
  * 
  * 2、GET请求下载文件<br/>
  * <pre>
  * $fp=fopen('logo.png', 'w');
- * $result=http_request([
+ * $result=http_request(array(
  *  'url'=>'https://steeze.cn/img/logonav.png', //下载文件地址
  *  'output'=> $fp, //POST参数（可以为字符串或资源类型）
- * ]);
+ * ));
  * var_dump($result); //输出获取到的内容字节数
  * fclose($fp);
  * </pre>
  */
 function http_request($config, $data=null, $headers=null){
     if(!is_array($config)){
-        $config=[
+        $config=array(
             'url'=> $config, 
             'data'=> $data, 
             'headers'=> $headers
-        ];
+        );
     }
     $url=isset($config['url']) ? trim($config['url']) : null;
     $data=isset($config['data']) ? $config['data'] : $data;
@@ -1515,7 +1510,7 @@ function C($key='', $default=''){
  * @param int|array $code 错误码，也可以传入一个包括code键的数组 
  * @return \Exception
  */
-function e($error, $code=404){
+function E($error, $code=404){
 	$errorCode=intval(is_array($code) && isset($code['code']) ? $code['code'] : $code);
 	if(!is_object($error)){
 		throw new \Exception(strval($error), $errorCode);
@@ -1536,10 +1531,10 @@ function e($error, $code=404){
  * @param array $datas 参数变量数组
  * @return string 转换后的语言
  */
-function L($message, $datas=[]){
+function L($message, $datas=array()){
 	static $langs=null;
 	if(is_null($langs)){
-		$langs=[];
+		$langs=array();
 		$lang=DS . 'Lang' . DS . C('lang', 'zh-cn') . '.php';
 		if(is_file(KERNEL_PATH . $lang)){
 			$langs=array_merge($langs, include_once (KERNEL_PATH . $lang));
