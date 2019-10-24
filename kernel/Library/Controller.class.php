@@ -267,11 +267,11 @@ class Controller{
     /**
      * 设置中间件
      *
-     * @param string $name 中间件名称
-     * @param array $excepts 排除的方法
+     * @return array
+     * 此函数由系统框架调用
      */
-	protected function middleware($name, $excepts=array()){
-		Route::setMiddleware($name, $excepts);
+	public static function middleware(){
+		return array();
 	}
 
     /**

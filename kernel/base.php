@@ -203,11 +203,11 @@ class Loader {
      * 控制器加载
      *
      * @param string $name 控制器名称（可以指定模块，以“.”分割：“模块名.控制器”）
-     * @param array $parameters 参数列表
+     * @param array|false $parameters 参数列表， 如果为false则不实例化控制器，直接返回控制器类名
      * @param \Library\Container $container 使用的容器对象
      * @return \Library\Controller
      */
-    public static function controller($name, array $parameters = [], $container = null){
+    public static function controller($name, $parameters = null, $container = null){
         if ($pos = strpos($name, '.', 1)) {
             $m = substr($name, 0, $pos);
             $c = substr($name, $pos + 1);
@@ -225,11 +225,14 @@ class Loader {
         $c = implode('\\', $ces);
 
         $concrete = str_replace('\\\\', '\\', 'App\\' . ucfirst(strtolower($m)) . '\\Controller\\' . $c);
+        if($parameters===false){
+            return $concrete;
+        }
         if (is_null($container)) {
             $container = \Library\Container::getInstance();
         }
         try {
-            $controller = $container->make($concrete, $parameters);
+            $controller = $container->make($concrete, (array)$parameters);
             $controller->setContext($container);
             return $controller;
         } catch (\Exception $e) {

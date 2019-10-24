@@ -10,6 +10,11 @@ use Library\Model;
  * 客户端浏览器请求方式参见测试文件：/tests/testRoute.php
  */
 class User extends Controller{
+    
+    // 中间件设置
+    public static function middleware(){
+        return 'auth';
+    }
 	
 	// 模型参数直接绑定路由
 	public function info(UserModel $user, $id){

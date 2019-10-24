@@ -4,6 +4,7 @@ namespace Library;
 
 use Closure;
 use Exception;
+use Loader as load;
 
 /**
  * 上下文应用程序类
@@ -74,11 +75,18 @@ class Application extends Context
     public function run(Request $request, Response $response = null)
     {
         //获取路由参数
-        $params = $request->getRoute()->getParam();
-        $disposer = $request->getRoute()->getDisposer();
+        $route=$request->getRoute();
+        $params = $route->getParam();
+        $disposer = $route->getDisposer();
         $route_m = env('ROUTE_M', '');
         $route_c = env('ROUTE_C', false);
         $route_a = env('ROUTE_A', false);
+        
+        //生成控制器的路由处理器
+        if($route_c && is_null($disposer)){
+            $disposer=load::controller($route_c, $route->getParam(), $this);
+            $route->setDisposer($disposer);
+        }
 
         if ($disposer instanceof Closure) {
             //直接运行回调函数

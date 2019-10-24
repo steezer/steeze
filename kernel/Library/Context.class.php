@@ -139,8 +139,9 @@ class Context extends Container{
             $isClosure=is_callable($route->getDisposer());
             $route_c=env('ROUTE_C',false);
             if(!$isClosure && $route_c){
-                $controller=load::controller($route_c, $route->getParam(), $this);
-                $route->setDisposer($controller);
+                $controller=load::controller($route_c, false);
+                $middleWares=call_user_func(array($controller, 'middleware'));
+                $this->setMiddleware($middleWares);
             }
             
             //设置初始化状态
@@ -381,5 +382,45 @@ class Context extends Container{
                 $this->request->input(C('VAR_AJAX_SUBMIT', 'ajax'), false)
         ) ? true : false);
 	}
+    
+    /**
+     * 设置路由中间件
+     *
+     * @param array $middleWares
+     */
+    private function setMiddleware($middleWares){
+        if(!empty($middleWares)){
+            if(is_array($middleWares)){
+                // 支持数组方式设置
+                if(is_array($middleWares[0])){
+                    // 例如：array( array('init', 'code'), array('auth', 'login,test') )
+                    foreach ($middleWares as $middleWare) {
+                        $this->setMiddleware($middleWare);
+                    }
+                }else{
+                    // 例如：array('init>auth', 'login,code')
+                    $names=explode('>', $middleWares[0]);
+                    $methods=isset($middleWares[1]) ? 
+                                (is_string($middleWares[1]) ? explode(',', $middleWares[1]) : $middleWares[1]) : 
+                                array();
+                    foreach($names as $name){
+                        Route::setMiddleware($name, $methods);
+                    }
+                }
+            }else{
+                // 例如：init>auth:test,test
+                $names=explode('>', $middleWares);
+                foreach($names as $name){
+                    if(strpos($name, ':')){
+                        $cname=explode(':', $name);
+                        $methods=explode(',', $cname[1]);
+                        Route::setMiddleware($cname[0], $methods);
+                    }else{
+                        Route::setMiddleware($name);
+                    }
+                }
+            }
+        }
+    }
     
 }
