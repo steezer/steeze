@@ -56,12 +56,12 @@ class Application extends Context
         $route_a = env('ROUTE_A', false);
 
         //输出数据到浏览器
-        $this->response->flush(
-            (new Pipeline($this))
-                ->send($this->request, $this->response)
+        $pipLine=new Pipeline($this);
+        $result=$pipLine->send($this->request, $this->response)
                 ->through($route->getMiddleware(!$isClosure && $route_a ? $route_a : null))
-                ->then(array($this, 'run'))
-        );
+                ->then(array($this, 'run'));
+                
+        $this->response->flush($result);
     }
 
     /**

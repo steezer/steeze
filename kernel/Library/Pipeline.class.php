@@ -18,7 +18,7 @@ class Pipeline{
     /**
      * 创建管道实例
      *
-     * @param Container|null $container
+     * @param Container | null $container
      */
     public function __construct(Container $container=null){
         $this->container=$container;
