@@ -140,7 +140,9 @@ class Context extends Container{
             $route_c=env('ROUTE_C',false);
             if(!$isClosure && $route_c){
                 $controller=load::controller($route_c, false);
+                // 获取常量定义的中间件
                 $this->setMiddleware($controller::MIDDLEWARE);
+                // 获取静态方法定义的中间件
                 $middleWares=call_user_func(array($controller, 'middleware'));
                 $this->setMiddleware($middleWares);
             }
