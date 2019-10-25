@@ -160,8 +160,8 @@ function timeformat($tm){
  * @return array
  */
 function filelist($dir='.', $type='*'){
-    $farr=[];
-    $types=$type!='*' ? explode('|', $type) : [];
+    $farr=array();
+    $types=$type!='*' ? explode('|', $type) : array();
     if($handle=opendir($dir)){
         while(false !== ($file=readdir($handle))){
             if($file != '.' && $file != '..'){

@@ -140,6 +140,7 @@ class Context extends Container{
             $route_c=env('ROUTE_C',false);
             if(!$isClosure && $route_c){
                 $controller=load::controller($route_c, false);
+                $this->setMiddleware($controller::MIDDLEWARE);
                 $middleWares=call_user_func(array($controller, 'middleware'));
                 $this->setMiddleware($middleWares);
             }

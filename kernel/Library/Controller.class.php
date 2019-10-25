@@ -9,6 +9,11 @@ namespace Library;
 class Controller{
     
     /**
+     * 定义中间件
+     */
+    const MIDDLEWARE=null;
+    
+    /**
      * 视图对象
      *
      * @var View
@@ -21,6 +26,16 @@ class Controller{
      * @var Application
      */
     private $context=null;
+    
+    /**
+     * 设置中间件
+     *
+     * @return array
+     * 此函数由系统框架调用
+     */
+	public static function middleware(){
+		return array();
+	}
 	
     /**
      * 设置应用上下文对象（系统自动注入）
@@ -263,16 +278,6 @@ class Controller{
     public function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
         $this->view()->getPager($config, $setPages, $urlRule, $array);
     }
-    
-    /**
-     * 设置中间件
-     *
-     * @return array
-     * 此函数由系统框架调用
-     */
-	public static function middleware(){
-		return array();
-	}
 
     /**
 	 * 跳转操作 支持错误导向和正确跳转 调用模板显示 

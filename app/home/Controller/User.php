@@ -11,10 +11,8 @@ use Library\Model;
  */
 class User extends Controller{
     
-    // 中间件设置
-    public static function middleware(){
-        return 'auth';
-    }
+    // 定义中间件
+    const MIDDLEWARE='auth';
 	
 	// 模型参数直接绑定路由
 	public function info(UserModel $user, $id){
