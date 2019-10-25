@@ -6,6 +6,13 @@ namespace Library;
  * 系统请求类型
  * 
  * @package Library
+ * @method bool isGet() 判断客户端请求方式是否为GET
+ * @method bool isPost() 判断客户端请求方式是否为POST
+ * @method bool isDelete() 判断客户端请求方式是否为DELETE
+ * @method bool isPut() 判断客户端请求方式是否为PUT
+ * @method bool isAjax() 判断客户端请求是否使用ajax
+ * @method bool isWechat() 判断客户端是否使用微信客户端
+ * @method bool isMobile() 判断客户端是否使用手机浏览器
  */
 class Request
 {
