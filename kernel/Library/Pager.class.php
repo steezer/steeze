@@ -12,13 +12,13 @@ class Pager
      * 分页配置
      */
     private $config = array(
-        'previous' => '<li><a href="[url]">上一页</a></li>',
-        'next' => '<li><a href="[url]">下一页</a></li>',
-        'no' => '<li><a href="[url]">[no]</a></li>',
-        'current' => '<li class="disabled"><span>[no]</span></li>',
-        'dot' => '<li class="disabled"><span>..</span></li>',
-        'first' => '<li><a href="[url]">[no]</a></li>',
-        'last' => '<li><a href="[url]">[no]</a></li>',
+        'previous' => '<a href="[url]">上一页</a>',
+        'next' => '<a href="[url]">下一页</a>',
+        'no' => '<a href="[url]">[no]</a>',
+        'current' => '<span class="disabled">[no]</span>',
+        'dot' => '<span class="disabled">..</span>',
+        'first' => '<a href="[url]">[no]</a>',
+        'last' => '<a href="[url]">[no]</a>',
         'info' => '显示[total]条记录中的[start]-[end]条',
         'none' => '没有记录信息！',
         'only' => '共[total]条记录',
