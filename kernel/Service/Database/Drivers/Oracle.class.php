@@ -12,7 +12,7 @@ use Service\Database\Driver;
 class Oracle extends Driver{
 
     private     $table        = '';
-    protected   $selectSql    = 'SELECT * FROM (SELECT thinkphp.*, rownum AS numrow FROM (SELECT  %DISTINCT% %FIELD% FROM %TABLE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%) thinkphp ) %LIMIT%%COMMENT%';
+    protected   $selectSql    = 'SELECT * FROM (SELECT STEEZE.*, rownum AS numrow FROM (SELECT  %DISTINCT% %FIELD% FROM %TABLE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%) STEEZE ) %LIMIT%%COMMENT%';
 
     /**
      * 解析pdo连接的dsn信息
