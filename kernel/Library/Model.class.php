@@ -681,18 +681,6 @@ class Model implements ArrayAccess{
 					'_read_data'
 			), $resultSet);
 			$this->_after_select($resultSet, $options);
-			if(isset($options['index'])){ // 对数据集进行索引
-				$index=explode(',', $options['index']);
-				foreach($resultSet as $result){
-					$_key=$result[$index[0]];
-					if(isset($index[1]) && isset($result[$index[1]])){
-						$cols[$_key]=$result[$index[1]];
-					}else{
-						$cols[$_key]=$result;
-					}
-				}
-				$resultSet=$cols;
-			}
 		}
 		
 		if(isset($cache)){
@@ -874,9 +862,7 @@ class Model implements ArrayAccess{
 		// 读取数据后的处理
 		$data=$this->_read_data($resultSet[0]);
 		$this->_after_find($data, $options);
-		if(!empty($this->options['result'])){
-			return $this->returnResult($data, $this->options['result']);
-		}
+        
 		$this->data=$data;
 		if(isset($cache)){
 			S($key, $data, $cache);
@@ -886,21 +872,6 @@ class Model implements ArrayAccess{
 
 	// 查询成功的回调方法
 	protected function _after_find(&$result,$options){
-	}
-
-	protected function returnResult($data,$type=''){
-		if($type){
-			if(is_callable($type)){
-				return call_user_func($type, $data);
-			}
-			switch(strtolower($type)){
-				case 'json':
-					return json_encode($data);
-				case 'xml':
-					return xml_encode($data);
-			}
-		}
-		return $data;
 	}
 
 	/**

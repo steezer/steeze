@@ -11,7 +11,11 @@ use Exception;
  * @package Database
  */
 abstract class Driver {
-    // PDO操作实例
+    /**
+     * PDO操作实例
+     *
+     * @var \PDOStatement
+     */
     protected $PDOStatement = null;
     // 当前操作所属的模型名
     protected $model      = '_steeze_';
@@ -162,7 +166,7 @@ abstract class Driver {
      * @param boolean $fetchSql  不执行只是获取SQL
      * @return mixed
      */
-    public function query($str,$fetchSql=false) {
+    public function query($str,$fetchSql=false, &$options=array()) {
         $this->initConnect(false);
         if ( !$this->_linkID ) return false;
         $this->queryStr     =   $str;
@@ -203,7 +207,7 @@ abstract class Driver {
         			$this->free();
         			$this->close();
         			unset($this->linkID[$this->_linkNum]);
-        			return $this->query($str,$fetchSql);
+        			return $this->query($str,$fetchSql, $options);
         		}
         }
         
@@ -213,7 +217,7 @@ abstract class Driver {
             $this->error();
             return false;
         } else {
-            return $this->getResult($str);
+            return $this->getResult($str, $options);
         }
     }
 
@@ -340,20 +344,84 @@ abstract class Driver {
      * @access private
      * @return array
      */
-    private function getResult($str='') {
+    private function getResult($sql='', &$options=array()) {
         //返回数据集
 		try{
-			$result =   $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
-			$this->numRows = count( $result );
-			return $result;
+            $isIndex=isset($options['index']);
+            $isResult=isset($options['result']);
+            $param=array();
+            
+            // 解析数组格式参数传递，如：array($this, 'result', 1);
+            if(
+                $isResult && 
+                is_array($options['result']) && 
+                count($options['result'])>2
+            ){
+                $param=array_splice($options['result'], 2);
+            }
+            
+            // 如果无索引和结果处理全部获取后返回
+            if(!$isIndex && !$isResult){
+                $result = $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
+            }else{
+                $result=array();
+                while(($row=$this->PDOStatement->fetch(PDO::FETCH_ASSOC))!==false){
+                    // 处理结果集
+                    if($isResult){
+                        $row=$this->setResult($row, $options['result'], $param);
+                        if($row===true){
+                            continue;
+                        }elseif ($row===false) {
+                            break;
+                        }
+                    }
+                    // 处理索引
+                    if($isIndex){
+                        $index=explode(',', $options['index']);
+                        $_key=$row[$index[0]];
+                        if(isset($index[1]) && isset($row[$index[1]])){
+                            $result[$_key]=$row[$index[1]];
+                        }else{
+                            $result[$_key]=$row;
+                        }
+                    }else{
+                        $result[]=$row;
+                    }
+                }
+            }
+            $this->numRows = count( $result );
+            return $result;
 		}catch(Exception $e){
 			$this->numRows = $this->PDOStatement->rowCount();
-            if($str&&preg_match("/^\s*(INSERT\s+INTO|REPLACE\s+INTO)\s+/i", $str)) {
+            if($sql&&preg_match("/^\s*(INSERT\s+INTO|REPLACE\s+INTO)\s+/i", $sql)) {
                 $this->lastInsID = $this->_linkID->lastInsertId();
             }
             return $this->numRows;
 		}
     }
+    
+    /**
+     * 设置处理结果
+     *
+     * @param array $data
+     * @param mixed $type
+     * @param array $param
+     */
+    protected function setResult($data, $type=null, $param=array()){
+		if(!empty($type)){
+			if(is_callable($type)){
+                array_unshift($param, $data);
+				return call_user_func_array($type, $param);
+			}
+			switch(strtolower($type)){
+				case 'json':
+					return json_encode($data);
+				case 'xml':
+					return xml_encode($data);
+			}
+		}
+		return $data;
+	}
 
     /**
      * 获得查询次数
@@ -998,7 +1066,7 @@ abstract class Driver {
         $this->model  =   $options['model'];
         $this->parseBind(!empty($options['bind'])?$options['bind']:array());
         $sql    = $this->buildSelectSql($options);
-        $result   = $this->query($sql,!empty($options['fetch_sql']) ? true : false);
+        $result   = $this->query($sql,!empty($options['fetch_sql']) ? true : false, $options);
         return $result;
     }
 
