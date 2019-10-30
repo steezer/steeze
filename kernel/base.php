@@ -20,9 +20,14 @@ function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/G
 define('STEEZE_VERSION', '1.3.1');
 
 /**
- * @ignore 系统初始化标志
+ * 系统初始化标志
  */
 define('INI_STEEZE', true);
+
+/**
+ * 使用命名空间
+ */
+define('USE_NAMESPACE', true);
 
 /**
  * 系统开始时间值
