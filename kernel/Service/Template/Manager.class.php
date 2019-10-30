@@ -137,7 +137,7 @@ class Manager {
 		$str=preg_replace('/{(.+?)\-\-}/', '<?php \\1--; ?>', $str);
 		
         // 资源文件输出
-        $str=preg_replace('/{@([^{}\']*)}/', '<?php echo assets(\'\\1\'); ?>', $str);
+        $str=preg_replace('/{(#[^{}\']*)}/', '<?php echo assets(\'\\1\'); ?>', $str);
         
 		// 函数调用解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{:?(([\$@]?[a-zA-Z_][a-zA-Z0-9_:]*)\(([^{}]*)\))}/', array($this,'parseFunc'), $str); // parse function or var function call like {date('Y-m-d',$r['addtime'])}
