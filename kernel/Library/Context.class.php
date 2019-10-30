@@ -375,14 +375,16 @@ class Context extends Container{
 	 */
 	private function appConfig(){
 		// 定义是否为ajax请求
+        $isAjax=$this->request->input(C('VAR_AJAX_SUBMIT', 'ajax'), false);
         $xRequestedWith=$this->request->header('x-requested-with');
 		load::env('IS_AJAX', (
-                (
-                    isset($xRequestedWith) && 
-                    strtolower($xRequestedWith) == 'xmlhttprequest'
-                ) || 
-                $this->request->server('php_sapi')=='cli' ||
-                $this->request->input(C('VAR_AJAX_SUBMIT', 'ajax'), false)
+                $isAjax!==false ? $isAjax : (
+                    (
+                        isset($xRequestedWith) && 
+                        strtolower($xRequestedWith) == 'xmlhttprequest'
+                    ) || 
+                    $this->request->server('php_sapi')=='cli'
+                )
         ) ? true : false);
 	}
     
