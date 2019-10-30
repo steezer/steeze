@@ -236,6 +236,12 @@ final class View
         $depr = defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
         $template = rtrim(str_replace(':', $depr, $template), $depr . '@');
         $style = '';
+                
+        // 不使用命名控件使用小写目录
+        if(!USE_NAMESPACE){
+            $c=strtolower($c);
+        }
+        
         if ($pos = strpos($template, '@')) {
             $sm = explode(':', substr($template, $pos + 1), 2);
             $template = substr($template, 0, $pos);
