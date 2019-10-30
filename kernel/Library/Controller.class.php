@@ -79,7 +79,8 @@ class Controller{
         if(is_array($data)){
             $this->view()->assign($data);
         }
-		$this->view()->display($file);
+        env('IS_AJAX') ? $this->success($this->view()->get()) : 
+                $this->view()->display($file);
 	}
 
 	/**
