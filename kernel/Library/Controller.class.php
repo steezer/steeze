@@ -73,27 +73,73 @@ class Controller{
 	 * 模板显示 调用内置的模板引擎显示方法，
 	 *
 	 * @param string $file 指定要调用的模板文件 默认为空则由系统自动定位模板文件
-     * @param array $data 模板变量组成的数组
+     * @param array|int $data 如果是否数组则为模板变量，如果为整数则赋值给$option参数
+	 * @param int $option 返回数据的后续处理选项
+     * @return bool 如果模板文件不存在，返回false， 否则返回true
+     * 
+     * $option参数值说明：
+     *   0: 未结束请求，服务端可以继续输出；
+     *   1: 结束请求，服务端停止输出，后续代码中运行；
+     *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function display($file='', $data=array()){
+	public function display($file='', $data=null, $option=1){
         if(is_array($data)){
             $this->view()->assign($data);
+        }elseif(is_int($data)){
+            $option=$data;
         }
-        env('IS_AJAX') ? $this->success($this->view()->get()) : 
-                $this->view()->display($file);
+        $ajax=env('IS_AJAX');
+        $type=!$ajax ? 'html' : '';
+        if(!$ajax || $ajax!=1){
+            $data=$this->view()->fetch($file);
+            if(is_null($data)){
+                return false;
+            }
+        }else{
+            $data=$this->view()->get();
+        }
+        $this->ajaxReturn(
+                ($ajax ? array(
+                    'code'=>0,
+                    'message'=>L('success'),
+                    'data'=>$data
+                ): $data), $type, $option
+            );
+        return true;
 	}
 
 	/**
 	 * 输出内容文本可以包括Html 并支持内容解析
 	 *
 	 * @param string $content 输出内容
-     * @param array $data 模板变量组成的数组
+     * @param array $data 如果是否数组则为模板变量，如果为整数则赋值给$option参数
+     * @param int $option 返回数据的后续处理选项
+     * 
+     * $option参数值说明：
+     *   0: 未结束请求，服务端可以继续输出；
+     *   1: 结束请求，服务端停止输出，后续代码中运行；
+     *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function show($content='', $data=array()){
+	public function show($content='', $data=null, $option=1){
         if(is_array($data)){
             $this->view()->assign($data);
+        }elseif(is_int($data)){
+            $option=$data;
         }
-		$this->view()->display('', $content);
+        $ajax=env('IS_AJAX');
+        $type=!$ajax ? 'html' : '';
+        if(!$ajax || $ajax!=1){
+            $data=$this->view()->fetch('', $content);
+        }else{
+            $data=$this->view()->get();
+        }
+        $this->ajaxReturn(
+                ($ajax ? array(
+                    'code'=>0,
+                    'message'=>L('success'),
+                    'data'=>$data
+                ): $data), $type, $option
+            );
 	}
 
 	/**
@@ -177,7 +223,7 @@ class Controller{
         if(is_null($message)){
             $message=L('error');
         }
-		$this->dispatchJump($message, $code, $jumpUrl, $ajax);
+		$this->messageReturn($message, $code, $jumpUrl, $ajax);
 	}
 
 	/**
@@ -200,48 +246,43 @@ class Controller{
             $jumpUrl=$message;
             $message=L('success');
         }
-		$this->dispatchJump($message, 0, $jumpUrl, $ajax);
+		$this->messageReturn($message, 0, $jumpUrl, $ajax);
 	}
 
 	/**
 	 * Ajax方式返回数据到客户端
 	 *
 	 * @param mixed $data 要返回的数据，默认返回模板变量
-	 * @param String $type AJAX返回数据格式，默认返回JSON格式
-	 * @param int $option 传递给json_encode的option参数
+	 * @param string|int $type 为字符串AJAX返回数据格式（默认：JSON），为整数则赋值给$option参数
+	 * @param int $option 返回数据的后续处理选项
+     * 
+     * $option参数值说明：
+     *   0: 未结束请求，服务端可以继续输出；
+     *   1: 结束请求，服务端停止输出，后续代码中运行；
+     *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function ajaxReturn($data=null, $type='', $option=null){
-		if(empty($type)){
+	public function ajaxReturn($data=null, $type='', $option=1){
+		if(is_int($type)){
+            $option=$type;
+            $type='';
+        }
+        if($type===''){
 			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
 		}
 		if(is_null($data)){
 			$data=$this->view()->get(); //使用模板变量
 		}
         $type=strtolower($type);
-		switch($type){
-			case 'json':
-				// 返回JSON数据格式到客户端 包含状态信息
-                $data=to_string($data, $option);
-				break;
-			case 'jsonp':
-				// 返回JSON数据格式到客户端 包含状态信息
-				$varHdl=C('VAR_JSONP_HANDLER', 'callback');
-				$request=$this->getContext()->getRequest();
-				$handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
-                $data=$handler . '(' . to_string($data, $option) . ');';
-                $type='js';
-				break;
-			case 'eval':
-            case 'js':
-                $type='js';
-				break;
-			default:
-                $type='html';
-                $data=var_export($data, true);
-				break;
-		}
+        if($type=='jsonp'){
+            $varHdl=C('VAR_JSONP_HANDLER', 'callback');
+            $request=$this->getContext()->getRequest();
+            $handler=$request->get($varHdl,C('DEFAULT_JSONP_HANDLER', 'jsonpReturn'));
+            $data=$handler . '(' . to_string($data) . ');';
+            $type='js';
+        }
         $response=$this->getContext()->getResponse();
-        $response->flush($data, C('mimetype.'.$type), 'utf-8');
+        $response->write($data, C('mimetype.'.$type), 'utf-8');
+        $option && $response->end(null, $option==2);
 	}
 
 	/**
@@ -290,7 +331,7 @@ class Controller{
      * 
      * 默认为public目录下面的success页面 提示页面为可配置 支持模板标签
 	 */
-	private function dispatchJump($message, $code=0, $jumpUrl='', $ajax=false){
+	private function messageReturn($message, $code=0, $jumpUrl='', $ajax=false){
         $response=$this->getContext()->getResponse();
 		if(true === $ajax || env('IS_AJAX')){ // AJAX提交
 			$data=is_array($ajax) ? $ajax : array();

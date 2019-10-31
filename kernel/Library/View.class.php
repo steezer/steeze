@@ -123,7 +123,7 @@ final class View
      *
      * @param string $file 需要渲染的文件名
      * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
-     * @return mixed
+     * @return bool 成功输出返回true，如果模版未找到返回false
      */
     public function display($file = '', $data = '')
     {
@@ -132,6 +132,7 @@ final class View
         // 输出模板内容
         $this->getContext()->getResponse()
             ->write($content);
+        return !is_null($content);
     }
 
     /**

@@ -99,13 +99,11 @@ class Application extends Context
             //运行控制器方法
             return $this->invokeMethod($disposer, $route_a, $params);
         } else if (
-            C('use_view_route', env('use_view_route', true)) &&
-            $route_c && $route_a &&
-            !(is_null($viewer = $this->fetch($route_c . '/' . $route_a . '@:' . $route_m, $params)))
+            !C('use_view_route', env('use_view_route', false)) ||
+            !($route_c && $route_a &&
+                $this->display($route_c . '/' . $route_a . '@:' . $route_m, $params,0)
+             )
         ) {
-            //直接返回渲染后的模版视图
-            return $viewer;
-        } else {
             //返回错误页面
             throw new Exception(L('Page not found'), -404);
         }

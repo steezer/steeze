@@ -374,18 +374,22 @@ class Context extends Container{
 	 * 初始化系统模块配置（此处配置可作用于模块中）
 	 */
 	private function appConfig(){
-		// 定义是否为ajax请求
-        $isAjax=$this->request->input(C('VAR_AJAX_SUBMIT', 'ajax'), false);
+		/*
+         * ajax请求类型：
+         *    -1 (自动判断)
+         *     0 (非ajax请求)
+         *     1 (ajax请求，客户端渲染模板) 
+         *     2 (ajax请求，服务端渲染模板)
+         */
+        $ajax=$this->request->input(C('VAR_AJAX_SUBMIT', 'ajax').'/d', -1);
         $xRequestedWith=$this->request->header('x-requested-with');
-		load::env('IS_AJAX', (
-                $isAjax!==false ? $isAjax : (
+		load::env('IS_AJAX', $ajax!=-1 ? $ajax : ((
                     (
                         isset($xRequestedWith) && 
                         strtolower($xRequestedWith) == 'xmlhttprequest'
                     ) || 
                     $this->request->server('php_sapi')=='cli'
-                )
-        ) ? true : false);
+                ) ? 1 : 0));
 	}
     
     /**
