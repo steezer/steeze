@@ -200,7 +200,7 @@ class Manager {
 								{  //解析节点内的assign标签
 									$matches[2][$index]=preg_replace_callback('/' . $ld . 'assign\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAssign'), $matches[2][$index]);
 								}
-								$sections[$names['name']]=$matches[2][$index];
+								$sections[$names['name']]=array($matches[2][$index], $names);
 							}
 						}
 					}
@@ -239,7 +239,15 @@ class Manager {
     public function parseLayoutSlice($matches){
         $sections=end($this->stack);
         $data=self::parseAttrs($matches[1]);
-		return  isset($data['name']) && isset($sections[$data['name']]) ? $sections[$data['name']] : '';
+        if(isset($data['name']) && isset($sections[$data['name']])){
+            $params=array_pop($sections[$data['name']]);
+            $content=array_pop($sections[$data['name']]);
+            foreach($params as $key=>$value){
+                $content=str_replace('{@'.trim($key,'() ').'}',$value,$content);
+            }
+            return $content;
+        }
+		return  '';
     }
 	
 	/**

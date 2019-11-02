@@ -72,7 +72,7 @@ class Controller{
 	/**
 	 * 模板显示 调用内置的模板引擎显示方法，
 	 *
-	 * @param string $file 指定要调用的模板文件 默认为空则由系统自动定位模板文件
+	 * @param string|array $file 指定要调用的模板文件 默认为空则由系统自动定位模板文件，为数组则传递模版变量
      * @param array|int $data 如果是否数组则为模板变量，如果为整数则赋值给$option参数
 	 * @param int $option 返回数据的后续处理选项
      * @return bool 如果模板文件不存在，返回false， 否则返回true
@@ -83,28 +83,45 @@ class Controller{
      *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
 	public function display($file='', $data=null, $option=1){
+        if(is_array($file)){
+            $data=$file;
+            $file='';
+        }
         if(is_array($data)){
             $this->view()->assign($data);
         }elseif(is_int($data)){
             $option=$data;
+            $data=array();
         }
+        
         $ajax=env('IS_AJAX');
         $type=!$ajax ? 'html' : '';
+        $result=null;
         if(!$ajax || $ajax!=1){
-            $data=$this->view()->fetch($file);
-            if(is_null($data)){
+            $result=$this->view()->fetch($file);
+            if(is_null($result)){
                 return false;
             }
         }else{
             $data=$this->view()->get();
         }
-        $this->ajaxReturn(
-                ($ajax ? array(
+        
+        if(!$ajax){
+            // 非ajax请求
+            $this->ajaxReturn($result, $type, $option);
+        }else{
+            $data=array(
                     'code'=>0,
                     'message'=>L('success'),
-                    'data'=>$data
-                ): $data), $type, $option
-            );
+                    'data'=>(array)$data
+                );
+            if($ajax!=1){
+                // 直接请求视图
+                $data['view']=$result;
+            }
+            $this->ajaxReturn($data, $type, $option);
+        }
+        
         return true;
 	}
 
@@ -125,21 +142,35 @@ class Controller{
             $this->view()->assign($data);
         }elseif(is_int($data)){
             $option=$data;
+            $data=array();
         }
         $ajax=env('IS_AJAX');
         $type=!$ajax ? 'html' : '';
+        $result=null;
         if(!$ajax || $ajax!=1){
-            $data=$this->view()->fetch('', $content);
+            $result=$this->view()->fetch('', $content);
+            if(is_null($result)){
+                return false;
+            }
         }else{
             $data=$this->view()->get();
         }
-        $this->ajaxReturn(
-                ($ajax ? array(
+        
+        if(!$ajax){
+            // 非ajax请求
+            $this->ajaxReturn($result, $type, $option);
+        }else{
+            $data=array(
                     'code'=>0,
                     'message'=>L('success'),
-                    'data'=>$data
-                ): $data), $type, $option
-            );
+                    'data'=>(array)$data
+                );
+            if($ajax!=1){
+                // 直接请求视图
+                $data['view']=$result;
+            }
+            $this->ajaxReturn($data, $type, $option);
+        }
 	}
 
 	/**
