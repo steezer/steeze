@@ -129,6 +129,9 @@ function getip($isOnline=0){
  * @return string
  */
 function sizeformat($size, $bits=2){
+    if(!$size){
+        return '0B';
+    }
 	$unit=array('B','KB','MB','GB','TB','PB');
 	return round($size / pow(1024, ($i=floor(log($size, 1024)))), $bits) . $unit[$i];
 }
