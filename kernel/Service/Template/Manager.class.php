@@ -210,7 +210,7 @@ class Manager {
 					$str=preg_replace('/' . $ld . 'slice\s+.+?\s*' . $rd . '.*?' . $ld . '\/slice' . $rd . '/is', '', $str);
 					if(stripos($str, $ld . 'assign ') !== false){
 						if(preg_match_all('/' . $ld . 'assign\s+.+?\s*\/?' . $rd . '/is', $str, $matches)){
-							$content=implode('', $matches[0]).$content;
+							$content=implode('', (array)$matches[0]).$content;
 						}
 					}
 					unset($matches);
@@ -350,7 +350,7 @@ class Manager {
                         array_unshift($route_cs, array_pop($cas));
                     }
                 }
-                $class=$m.'.'.implode('/', $route_cs);
+                $class=$m.'.'.implode('/', (array)$route_cs);
 			}
 			unset($datas['name']);
             $dataArr=array2html($datas);
@@ -596,7 +596,7 @@ class Manager {
 				}else{
 					$tmps=explode(',', $cmatches[2]);
 					array_unshift($tmps, $var_str);
-					$var_str=implode(',', $tmps);
+					$var_str=implode(',', (array)$tmps);
 				}
 				$var_str=$cmatches[1] . '(' . $var_str . ')';
 			}else{

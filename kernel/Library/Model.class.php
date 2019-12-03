@@ -13,6 +13,7 @@ use Exception;
  * @method Model having(string $opt) 配合group方法完成从分组的结果中筛选
  * @method Model group(string $opt) 结合合计函数，根据一个或多个列对结果集进行分组，多个字段以","分割
  * @method Model lock(boolean $isUse=false) 用于数据库的锁机制
+ * @method int count() 统计数量
  * @method Model distinct(boolean $isUse=false) 用于返回唯一不同的值
  * @method Model auto(array $rules) 自动表单处理，填充因子定义格式：array('field','填充内容','填充条件','附加规则',[额外参数])
  * @method Model filter(callable $func) 安全过滤函数，对写入的数据进行过滤
@@ -113,7 +114,7 @@ class Model implements ArrayAccess{
                     $conn=isset($databases[$connName]) ? $connName:'default';
 					$connection=array_merge(
 							$databases[$conn],
-							DB::parseDsn($connection)
+                            DatabaseService::parseDsn($connection)
 						);
 				}
 			}
@@ -325,7 +326,7 @@ class Model implements ArrayAccess{
 				$fields=$this->fields;
 			}
 			foreach($data as $key=>$val){
-				if(!in_array($key, $fields, true)){
+				if(!in_array($key, (array)$fields, true)){
 					if(!empty($this->options['strict'])){
 					    throw new Exception(L('data type invalid') . ':[' . $key . '=>' . $val . ']', -501);
 					}
@@ -1128,7 +1129,7 @@ class Model implements ArrayAccess{
 			if(C('TOKEN_ON'))
 				$fields[]=C('TOKEN_NAME', null, '__hash__');
 			foreach($data as $key=>$val){
-				if(!in_array($key, $fields)){
+				if(!in_array($key, (array)$fields)){
 					unset($data[$key]);
 				}
 			}
@@ -1150,7 +1151,7 @@ class Model implements ArrayAccess{
 			foreach($data as $key=>$val){
 				if(!in_array($key, $fields)){
 					unset($data[$key]);
-				}elseif($this->stripSlashes && MAGIC_QUOTES_GPC && is_string($val)){
+				}elseif($this->stripSlashes && is_string($val)){
 					$data[$key]=stripslashes($val);
 				}
 			}
@@ -1419,7 +1420,7 @@ class Model implements ArrayAccess{
 	 * 
 	 * @access public
 	 * @param string $value 验证数据
-	 * @param mixed $rule 验证表达式
+	 * @param string $rule 验证表达式
 	 * @param string $type 验证方式 默认为正则验证
 	 * @return boolean
 	 */
@@ -1428,7 +1429,7 @@ class Model implements ArrayAccess{
 		switch($type){
 			case 'in': // 验证是否在某个指定范围之内 逗号分隔字符串或者数组
 			case 'notin':
-				$range=is_array($rule) ? $rule : explode(',', $rule);
+				$range=is_array($rule) ? $rule : (array)explode(',', $rule);
 				return $type == 'in' ? in_array($value, $range) : !in_array($value, $range);
 			case 'between': // 验证是否在某个范围
 			case 'notbetween': // 验证是否不在某个范围
@@ -1459,9 +1460,9 @@ class Model implements ArrayAccess{
 					$end=strtotime($end);
 				return $now_time >= $start && $now_time <= $end;
 			case 'ip_allow': // IP 操作许可验证
-				return in_array(get_client_ip(), explode(',', $rule));
+				return in_array(getIp(), (array)explode(',', $rule));
 			case 'ip_deny': // IP 操作禁止验证
-				return !in_array(get_client_ip(), explode(',', $rule));
+				return !in_array(getIp(), (array)explode(',', $rule));
 			case 'regex':
 			default: // 默认使用正则验证 可以使用验证类中定义的验证名称
 			         // 检查附加规则
@@ -1530,11 +1531,10 @@ class Model implements ArrayAccess{
 	 */
 	protected function escapeTable($sql,$isTable=true){
 		if(strpos($sql, '__')!==false){
-			$filters['__PREFIX__']=$this->tablePrefix;
+            $sql=str_replace('__PREFIX__', $this->tablePrefix, $sql);
 			if($isTable){
-				$filters['__TABLE__']=$this->getTableName();
+                $sql=str_replace('__TABLE__', $this->getTableName(), $sql);
 			}
-			$sql=strtr($sql, $filters);
 			
 			if(strpos($sql, '__')!==false){
 				$sql=preg_replace_callback("/__([A-Z0-9_-]+)__/sU", array($this, '_escapeTableCallBack'), $sql);
@@ -1992,7 +1992,7 @@ class Model implements ArrayAccess{
 				$field=explode(',', $field);
 			}
 			$fields=$this->getDbFields();
-			$field=$fields ? array_diff($fields, $field) : $field;
+			$field=$fields ? array_diff($fields, (array)$field) : $field;
 		}
 		$this->options['field']=$field;
 		return $this;

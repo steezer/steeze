@@ -79,7 +79,7 @@ abstract class Driver {
      */
     public function __construct($config=''){
         if(!empty($config)) {
-            $this->config   =   array_merge($this->config,$config);
+            $this->config   =   array_merge($this->config, (array)$config);
             if(is_array($this->config['params'])){
                 $this->options  =   $this->config['params'] + $this->options;
             }
@@ -173,7 +173,10 @@ abstract class Driver {
         if(!empty($this->bind)){
             $this->queryStr = strtr(
                     $this->queryStr,
-                    array_map(array($this, 'addQuot'), $this->bind)
+                    array_map(
+                        array($this, 'addQuot'), 
+                        $this->bind
+                    )
                 );
         }
         if($fetchSql){
@@ -491,6 +494,7 @@ abstract class Driver {
      * @return string
      */
     protected function parseSet($data) {
+        $set=array();
         foreach ($data as $key=>$val){
             if(is_array($val) && 'exp' == $val[0]){
                 $set[]  =   $this->parseKey($key).'='.$val[1];
@@ -590,14 +594,14 @@ abstract class Driver {
             $array   =  array();
             foreach ($tables as $table=>$alias){
                 if(!is_numeric($table)){
-                    $array[] =  $this->parseKey($table).' '.$this->parseKey($alias);
+                    $array[] = $this->parseKey($table).' '.$this->parseKey($alias);
                 }else{
-                    $array[] =  $this->parseKey($alias);
+                    $array[] = $this->parseKey($alias);
                 }
             }
-            $tables  =  $array;
+            $tables = $array;
         }elseif(is_string($tables)){
-            $tables  =  explode(',',$tables);
+            $tables = (array)explode(',',$tables);
             array_walk($tables, array(&$this, 'parseKey'));
         }
         return implode(',',$tables);
@@ -994,13 +998,15 @@ abstract class Driver {
      * @param array $option  查询数据参数
      * @return false | integer
      */
-    public function selectInsert($fields,$table,$options=array()) {
-        $this->model  =   $options['model'];
+    public function selectInsert($fields, $table, $options=array()) {
+        $this->model = $options['model'];
         $this->parseBind(!empty($options['bind'])?$options['bind']:array());
-        if(is_string($fields))   $fields    = explode(',',$fields);
+        if(is_string($fields)){
+            $fields = (array)explode(',',$fields);
+        }
         array_walk($fields, array($this, 'parseKey'));
-        $sql   =    'INSERT INTO '.$this->parseTable($table).' ('.implode(',', $fields).') ';
-        $sql   .= $this->buildSelectSql($options);
+        $sql = 'INSERT INTO '.$this->parseTable($table).' ('.implode(',', $fields).') ';
+        $sql .= $this->buildSelectSql($options);
         return $this->execute($sql,!empty($options['fetch_sql']) ? true : false);
     }
 
