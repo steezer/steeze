@@ -897,6 +897,8 @@ function http_request($config, $data=null, $headers=null){
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 	}else{
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+        curl_setopt($ch, CURLOPT_MAXREDIRS,20);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION,true);
     }
     
     //其它选项

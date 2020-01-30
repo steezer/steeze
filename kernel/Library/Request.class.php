@@ -315,9 +315,9 @@ class Request
     /**
      * 获取POST/GET输入参数，优先级为: POST> GET
      *
-     * @param string $key 获取的键名，默认为null，取所有值
+     * @param string $key 获取的键名，默认为null，取所有值，如果以"?"字符开头，则用于测试变量是否设置
      * @param mixed $default 默认值
-     * @param array $vars 按顺序优先获取的变量，支持post、get、header、cookie和server
+     * @param array $vars 按顺序优先获取的变量，支持post、get、header、cookie和server（默认: post、get）
      * @return string|array
      */
     public function input($name = null, $default = null, $vars = array('post', 'get'))
@@ -330,6 +330,11 @@ class Request
         }
 
         $funcs = array();
+        $isTest=false;
+        if($name[0]=='?'){
+            $name=substr($name, 1);
+            $isTest=true;
+        }
         if (strpos($name, '/')) {
             $keys = explode('/', $name, 2);
             $name = trim($keys[0]);
@@ -349,7 +354,10 @@ class Request
                 break;
             }
         }
-
+        
+        if($isTest){
+            return $value !== null;
+        }
         if ($value === null) {
             $value = $default;
         }
