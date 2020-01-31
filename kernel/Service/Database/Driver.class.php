@@ -9,6 +9,8 @@ use Exception;
  * 数据库实现基类
  * 
  * @package Database
+ * @method array getFields($tableName) 获取字段
+ * @method array getTables($dbName='') 取得数据库的表信息
  */
 abstract class Driver {
     /**
