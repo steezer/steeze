@@ -189,7 +189,7 @@ class Loader {
                         $pos = strpos($path, DS, 4);
                         $path = strtolower(substr($path, 4, $pos - 4)) . substr($path, $pos);
                     }
-                    $isLib=strpos($path, 'Library')===0;
+                    $isLib=strpos($path, 'Library'.DS)!==false;
                     $file = APP_PATH . $path . ( $isLib ? $libExt : $ext);
                 } else if (strpos($path, 'Vendor' . DS) === 0) {
                     $file = VENDOR_PATH . substr($path, 7) . $ext;
