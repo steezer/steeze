@@ -367,7 +367,7 @@ class Context extends Container{
 		
         !env('ASSETS_URL') && load::env('ASSETS_URL', env('ROOT_URL') . 'assets/'); //静态文件路径
 		!env('UPLOAD_URL') && load::env('UPLOAD_URL', env('ASSETS_URL') . 'ufs/'); //上传图片访问路径
-		!env('SYS_VENDOR_URL') && load::env('SYS_VENDOR_URL', env('ASSETS_URL') . 'assets/vendor/'); //外部资源扩展路径
+		!env('SYS_VENDOR_URL') && load::env('SYS_VENDOR_URL', env('ASSETS_URL') . 'vendor/'); //外部资源扩展路径
 	}
 	
 	/**
