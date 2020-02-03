@@ -128,7 +128,7 @@ define('DEFAULT_HOST', env('default_host', '127.0.0.1'));
 !defined('DEFAULT_APP_NAME') && define('DEFAULT_APP_NAME', 'home');
 
 //注册类加载器
-spl_autoload_register('Loader::import');
+Loader::register();
 
 //配置错误及异常处理
 set_error_handler(array('\Library\AppException', 'onError'), APP_DEBUG_LEVEL);
@@ -140,6 +140,178 @@ set_exception_handler(array('\Library\AppException', 'onException'));
  * @package default
  */
 class Loader {
+    
+    // 类名映射
+    protected static $map = [];
+    // 加载列表
+    protected static $cacheFiles = [];
+    // PSR-4
+    private static $prefixLengthsPsr4 = [];
+    private static $prefixDirsPsr4    = [];
+    // PSR-0
+    private static $prefixesPsr0 = [];
+    // 是否使用composer
+    private static $useComposer=false;
+    
+    /**
+     * 注册自动加载机制
+     */
+    public static function register(){
+        // 判断是否使用composer
+        self::$useComposer=is_dir(VENDOR_PATH.'composer');
+        // 注册自动加载函数
+        spl_autoload_register('Loader::import');
+        // 注册composer自动加载
+        self::$useComposer && self::registerComposerLoader();
+    }
+    
+    /**
+     * 系统类加载
+     * 
+     * @param string $path 类路径
+     * @return string
+     */
+    public static function import($class){
+        $file = null;
+        $ext = '.php';
+        if (isset(self::$map[$class])) {
+            // 从映射查找
+            $file = self::$map[$class];
+        }else{
+            // 本地系统查找
+            $path = str_replace('\\', DS, $class);
+            if (strpos($path, DS)) {
+                $libExt = '.class'.$ext;
+                if (strpos($path, 'App' . DS) === 0) {
+                    if (defined('DEFAULT_APP_NAME') && DEFAULT_APP_NAME === '') {
+                        $path = substr($path, 4);
+                    } else {
+                        $pos = strpos($path, DS, 4);
+                        $path = strtolower(substr($path, 4, $pos - 4)) . substr($path, $pos);
+                    }
+                    $isLib=strpos($path, 'Library')===0;
+                    $file = APP_PATH . $path . ( $isLib ? $libExt : $ext);
+                } else if (strpos($path, 'Vendor' . DS) === 0) {
+                    $file = VENDOR_PATH . substr($path, 7) . $ext;
+                } else {
+                    $file = KERNEL_PATH . $path . $libExt;
+                }
+            }
+        }
+        
+        // 加载文件
+        if (
+            (!is_null($file) && is_file($file)) || 
+            (self::$useComposer && ($file = self::findFileInComposer($class, $ext)))
+        ) {
+            APP_DEBUG && self::$cacheFiles[] = $file;
+            include $file;
+        }
+    }
+    
+    /**
+     * 注册classmap
+     *
+     * @param array|string $class 
+     * @param string $map
+     */
+    public static function addMap($class, $map = ''){
+        if (is_array($class)) {
+            self::$map = array_merge(self::$map, $class);
+        } else {
+            self::$map[$class] = $map;
+        }
+    }
+    
+    /**
+     * 注册composer自动加载
+     */
+    private static function registerComposerLoader(){
+        if (is_file(VENDOR_PATH . 'composer/autoload_namespaces.php')) {
+            $map = require VENDOR_PATH . 'composer/autoload_namespaces.php';
+            foreach ($map as $namespace => $path) {
+                self::$prefixesPsr0[$namespace[0]][$namespace] = (array) $path;
+            }
+        }
+
+        if (is_file(VENDOR_PATH . 'composer/autoload_psr4.php')) {
+            $map = require VENDOR_PATH . 'composer/autoload_psr4.php';
+            foreach ($map as $namespace => $path) {
+                $length = strlen($namespace);
+                if ('\\' !== $namespace[$length - 1]) {
+                    throw new \InvalidArgumentException("A non-empty PSR-4 prefix must end with a namespace separator.");
+                }
+                self::$prefixLengthsPsr4[$namespace[0]][$namespace] = $length;
+                self::$prefixDirsPsr4[$namespace] = (array) $path;
+            }
+        }
+
+        if (is_file(VENDOR_PATH . 'composer/autoload_classmap.php')) {
+            $classMap = require VENDOR_PATH . 'composer/autoload_classmap.php';
+            if ($classMap) {
+                self::addMap($classMap);
+            }
+        }
+
+        if (is_file(VENDOR_PATH . 'composer/autoload_files.php')) {
+            $includeFiles = require VENDOR_PATH . 'composer/autoload_files.php';
+            foreach ($includeFiles as $fileIdentifier => $file) {
+                if (empty($GLOBALS['__composer_autoload_files'][$fileIdentifier])) {
+                    require $file;
+                    $GLOBALS['__composer_autoload_files'][$fileIdentifier] = true;
+                }
+            }
+        }
+    }
+    
+    /**
+     * 从composer中查找文件
+     *
+     * @param string $class
+     * @param string $ext
+     * @return string
+     */
+    private static function findFileInComposer($class, $ext = '.php'){
+        // PSR-4 lookup
+        $logicalPathPsr4 = strtr($class, '\\', DS) . $ext;
+        
+        $first = $class[0];
+        if (isset(self::$prefixLengthsPsr4[$first])) {
+            foreach (self::$prefixLengthsPsr4[$first] as $prefix => $length) {
+                if (0 === strpos($class, $prefix)) {
+                    foreach (self::$prefixDirsPsr4[$prefix] as $dir) {
+                        if (is_file($file = $dir . DS . substr($logicalPathPsr4, $length))) {
+                            return $file;
+                        }
+                    }
+                }
+            }
+        }
+        // PSR-0 lookup
+        if (false !== ($pos = strrpos($class, '\\'))) {
+            // namespaced
+            $logicalPathPsr0 = substr($logicalPathPsr4, 0, $pos + 1)
+                                . strtr(substr($logicalPathPsr4, $pos + 1), '_', DS);
+        } else {
+            // PEAR-like
+            $logicalPathPsr0 = strtr($class, '_', DS) . $ext;
+        }
+        
+        if (isset(self::$prefixesPsr0[$first])) {
+            foreach (self::$prefixesPsr0[$first] as $prefix => $dirs) {
+                if (0 === strpos($class, $prefix)) {
+                    foreach ($dirs as $dir) {
+                        if (is_file($file = $dir . DS . $logicalPathPsr0)) {
+                            return $file;
+                        }
+                    }
+                }
+            }
+        }
+        // 记录不存在的类
+        return self::$map[$class] = false;
+    }
+    
 
     /**
      * 加载并运行应用程序对象
@@ -174,34 +346,6 @@ class Loader {
         }
         $key = strtoupper($key);
         return isset($_ENV[$key]) ? $_ENV[$key] : $default;
-    }
-
-    /**
-     * 系统类加载
-     * 
-     * @param string $path 类路径
-     * @return string
-     */
-    public static function import($path){
-        $path = str_replace('\\', DS, $path);
-        if (strpos($path, DS)) {
-            $filename = null;
-            if (strpos($path, 'App' . DS) === 0) {
-                if (defined('DEFAULT_APP_NAME') && DEFAULT_APP_NAME === '') {
-                    $filename = APP_PATH . substr($path, 4) . '.php';
-                } else {
-                    $pos = strpos($path, DS, 4);
-                    $filename = APP_PATH . strtolower(substr($path, 4, $pos - 4)) . substr($path, $pos) . '.php';
-                }
-            } else if (strpos($path, 'Vendor' . DS) === 0) {
-                $filename = VENDOR_PATH . substr($path, 7) . '.php';
-            } else {
-                $filename = KERNEL_PATH . $path . '.class.php';
-            }
-            if (!is_null($filename) && is_file($filename)) {
-                include $filename;
-            }
-        }
     }
 
     /**

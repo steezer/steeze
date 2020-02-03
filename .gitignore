@@ -4,3 +4,5 @@
 /public/assets/ufs/
 /storage/Cache/
 /storage/Logs/
+/vendor/
+/composer.lock

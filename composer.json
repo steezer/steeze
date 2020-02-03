@@ -1,0 +1,21 @@
+{
+    "name": "steezer/steeze",
+    "description": "An elegant and concise, but efficient PHP framework",
+    "type": "project",
+    "keywords": ["framework", "steeze", "ORM"],
+    "homepage": "http://steeze.cn/",
+    "license": "Apache2",
+    "authors": [
+        {
+            "name": "XieChunping",
+            "email": "spring.wind2006@163.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "steezer/steeze-vendor":"^1.0"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
