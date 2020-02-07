@@ -27,8 +27,9 @@ use Exception;
  * @method Model token(boolean $isClose=false) 用于临时关闭令牌验证
  * @method Model index(string $field) 对查询数据集进行按照字段索引，如果$field参数是以","分割的字符串，则以前一个字段值为索引，后一个字段值为值
  * @method Model force(string|array $index) 索引分析，可在操作链中指定需要强制使用的索引
- * @method mixed getBy[field](string $value) 根据[field]字段的值$value，获取一条记录
- * @method mixed getFieldBy[field](string $value, string $fdName) 根据[field]字段的值$value，获取字段名称为$fdName的值
+ * @method mixed getBy[field](mixed $value) 根据[field]字段的值$value，获取一条记录
+ * @method mixed getFieldBy[field](mixed $value, string $fdName) 根据[field]字段的值$value，获取字段名称为$fdName的值
+ * @method array selectBy[field](mixed $value) 根据[field]字段的值$value，获取多条记录
  */
 class Model implements ArrayAccess{
 	// 操作状态
@@ -303,6 +304,11 @@ class Model implements ArrayAccess{
 			$name=parse_name(substr($method, 10));
 			$where[$name]=$args[0];
 			return $this->where($where)->getField($args[1]);
+		}elseif(strtolower(substr($method, 0, 8)) == 'selectby'){
+			// 根据某个字段获取记录
+			$field=parse_name(substr($method, 8));
+			$where[$field]=$args[0];
+			return $this->where($where)->select();
 		}elseif(isset($this->_scope[$method])){ // 命名范围的单独调用支持
 			return $this->scope($method, $args[0]);
 		}else{
