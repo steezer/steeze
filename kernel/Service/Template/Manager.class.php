@@ -395,10 +395,10 @@ class Manager {
 		if(!isset($arrs['start']) || !isset($arrs['end'])){
 			return '';
 		}
-		$start=doubleval($arrs['start']);
-		$end=doubleval($arrs['end']);
+		$start=$arrs['start'][0]=='$' ? $arrs['start'] : doubleval($arrs['start']);
+		$end=$arrs['end'][0]=='$' ? $arrs['end'] : doubleval($arrs['end']);
 		$comparison=  self::operator(' ' .(!isset($arrs['comparison']) ? 'lt' : $arrs['comparison']).' ');
-		$step = !isset($arrs['step']) ? 1 : doubleval($arrs['step']);
+		$step = !isset($arrs['step']) ? 1 : ($arrs['step'][0]=='$' ? $arrs['step'] : doubleval($arrs['step']));
 		$name = '$'.(!isset($arrs['name']) ? 'i' : trim($arrs['name'],' $'));
 		$str=$name.'='.$start.';'.$name.$comparison.$end.';'.$name.'+='.$step;
 		return '<?php for(' . $str . ') { ?>';
