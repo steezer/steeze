@@ -297,7 +297,7 @@ abstract class Driver {
     /**
      * 启动事务
      * @access public
-     * @return void
+     * @return boolean
      */
     public function startTrans() {
         $this->initConnect(true);
@@ -307,7 +307,7 @@ abstract class Driver {
             $this->_linkID->beginTransaction();
         }
         $this->transTimes++;
-        return ;
+        return true;
     }
 
     /**
@@ -319,12 +319,12 @@ abstract class Driver {
         if ($this->transTimes > 0) {
             $result = $this->_linkID->commit();
             $this->transTimes = 0;
-            if(!$result){
-                $this->error();
-                return false;
+            if($result){
+                return true;
             }
+            $this->error();
         }
-        return true;
+        return false;
     }
 
     /**

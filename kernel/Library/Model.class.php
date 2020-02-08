@@ -79,6 +79,8 @@ class Model implements ArrayAccess{
 	protected $_map=array(); // 字段映射定义
 	protected $_scope=array(); // 命名范围定义
 	
+    // 是否自动提交
+    protected $autoCommit=true;
 	// 是否自动检测数据表字段信息
 	protected $autoCheckFields=true;
 	// 字段值是否去掉反斜杠
@@ -91,7 +93,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 架构函数 取得DB类的实例对象 字段检查
 	 * 
-	 * @access public
 	 * @param string $name 模型名称
 	 * @param string $tablePrefix 表前缀
 	 * @param mixed $connection 数据库连接信息
@@ -158,7 +159,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 自动检测数据表信息
 	 * 
-	 * @access protected
 	 * @return void
 	 */
 	protected function _checkTableInfo(){
@@ -184,9 +184,6 @@ class Model implements ArrayAccess{
 
 	/**
 	 * 获取字段信息并缓存
-	 * 
-	 * @access public
-	 * @return void
 	 */
 	public function flush(){
 		// 缓存不存在则查询数据表信息
@@ -233,10 +230,8 @@ class Model implements ArrayAccess{
 	/**
 	 * 设置数据对象的值
 	 * 
-	 * @access public
 	 * @param string $name 名称
 	 * @param mixed $value 值
-	 * @return void
 	 */
 	public function __set($name,$value){
 		// 设置数据对象属性
@@ -246,7 +241,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取数据对象的值
 	 * 
-	 * @access public
 	 * @param string $name 名称
 	 * @return mixed
 	 */
@@ -257,7 +251,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 检测数据对象的值
 	 * 
-	 * @access public
 	 * @param string $name 名称
 	 * @return boolean
 	 */
@@ -268,9 +261,7 @@ class Model implements ArrayAccess{
 	/**
 	 * 销毁数据对象的值
 	 * 
-	 * @access public
 	 * @param string $name 名称
-	 * @return void
 	 */
 	public function __unset($name){
 		unset($this->data[$name]);
@@ -279,7 +270,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 利用__call方法实现一些特殊的Model方法
 	 * 
-	 * @access public
 	 * @param string $method 方法名称
 	 * @param array $args 调用参数
 	 * @return mixed
@@ -325,7 +315,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 对保存到数据库的数据进行处理
 	 * 
-	 * @access protected
 	 * @param mixed $data 要操作的数据
 	 * @return boolean
 	 */
@@ -375,7 +364,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 新增数据
 	 * 
-	 * @access public
 	 * @param mixed $data 数据
 	 * @param array $options 表达式
 	 * @param boolean $replace 是否replace
@@ -414,13 +402,15 @@ class Model implements ArrayAccess{
 				if(false === $this->_after_insert($data, $options)){
 					return false;
 				}
-                $this->_after_change($data, $options, self::MODEL_INSERT);
+                $this->autoCommit && 
+                    $this->_after_change($data, $options, self::MODEL_INSERT);
 				return $insertId;
 			}
 			if(false === $this->_after_insert($data, $options)){
 				return false;
 			}
-            $this->_after_change($data, $options, self::MODEL_INSERT);
+            $this->autoCommit && 
+                $this->_after_change($data, $options, self::MODEL_INSERT);
 		}
 		return $result;
 	}
@@ -449,7 +439,8 @@ class Model implements ArrayAccess{
 		if(false !== $result){
 			$insertId=$this->getLastInsID();
 			if($insertId){
-                $this->_after_change($dataList, $options, self::MODEL_INSERT);
+                $this->autoCommit && 
+                    $this->_after_change($dataList, $options, self::MODEL_INSERT);
 				return $insertId;
 			}
 		}
@@ -459,7 +450,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 通过Select方式添加记录
 	 * 
-	 * @access public
 	 * @param string $fields 要插入的数据表字段名
 	 * @param string $table 要插入的数据表名
 	 * @param array $options 表达式
@@ -483,7 +473,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 保存数据
 	 * 
-	 * @access public
 	 * @param mixed $data 数据
 	 * @param array $options 表达式
 	 * @return boolean
@@ -549,7 +538,8 @@ class Model implements ArrayAccess{
 				$data[$pk]=$pkValue;
 			}
 			$this->_after_update($data, $options);
-            $this->_after_change($data, $options, self::MODEL_UPDATE);
+            $this->autoCommit && 
+                $this->_after_change($data, $options, self::MODEL_UPDATE);
 		}
 		return $result;
 	}
@@ -565,7 +555,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 删除数据
 	 * 
-	 * @access public
 	 * @param mixed $options 表达式
 	 * @return mixed
 	 */
@@ -628,7 +617,8 @@ class Model implements ArrayAccess{
 			if(isset($pkValue))
 				$data[$pk]=$pkValue;
 			$this->_after_delete($data, $options);
-            $this->_after_change($data, $options, self::MODEL_DELETE);
+            $this->autoCommit && 
+                $this->_after_change($data, $options, self::MODEL_DELETE);
 		}
 		// 返回删除记录个数
 		return $result;
@@ -645,7 +635,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询数据集
 	 * 
-	 * @access public
 	 * @param array $options 表达式参数
 	 * @return mixed
 	 */
@@ -723,7 +712,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 生成查询SQL 可用于子查询
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function buildSql(){
@@ -733,7 +721,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 分析表达式
 	 * 
-	 * @access protected
 	 * @param array $options 表达式参数
 	 * @return array
 	 */
@@ -788,7 +775,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 数据类型检测
 	 * 
-	 * @access protected
 	 * @param mixed $data 数据
 	 * @param string $key 字段名
 	 * @return void
@@ -811,7 +797,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 数据读取后的处理
 	 * 
-	 * @access protected
 	 * @param array $data 当前数据
 	 * @return array
 	 */
@@ -831,7 +816,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询数据
 	 * 
-	 * @access public
 	 * @param mixed $options 表达式参数
 	 * @return mixed
 	 */
@@ -904,7 +888,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 处理字段映射
 	 * 
-	 * @access public
 	 * @param array $data 当前数据
 	 * @param integer $type 类型 0 写入 1 读取
 	 * @return array
@@ -932,7 +915,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 设置记录的某个字段值 支持使用数据库字段和方法
 	 * 
-	 * @access public
 	 * @param string|array $field 字段名
 	 * @param string $value 字段值
 	 * @return boolean
@@ -949,7 +931,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 字段值增长
 	 * 
-	 * @access public
 	 * @param string $field 字段名
 	 * @param integer $step 增长值
 	 * @param integer $lazyTime 延时时间(s)
@@ -972,7 +953,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 字段值减少
 	 * 
-	 * @access public
 	 * @param string $field 字段名
 	 * @param integer $step 减少值
 	 * @param integer $lazyTime 延时时间(s)
@@ -995,7 +975,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 延时更新检查 返回false表示需要延时 否则返回实际写入的数值
 	 * 
-	 * @access public
 	 * @param string $guid 写入标识
 	 * @param integer $step 写入步进值
 	 * @param integer $lazyTime 延时时间(s)
@@ -1025,7 +1004,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取一条记录的某个字段值
 	 * 
-	 * @access public
 	 * @param string $field 字段名
 	 * @param string $spea 字段数据间隔符号 NULL返回数组
 	 * @return mixed
@@ -1109,7 +1087,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 创建数据对象 但不保存到数据库
 	 * 
-	 * @access public
 	 * @param mixed $data 创建数据
 	 * @param string $type 状态
 	 * @return mixed
@@ -1220,7 +1197,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 使用正则验证数据
 	 * 
-	 * @access public
 	 * @param string $value 要验证的数据
 	 * @param string $rule 验证规则
 	 * @return boolean
@@ -1248,7 +1224,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 自动表单处理
 	 * 
-	 * @access public
 	 * @param array $data 创建数据
 	 * @param string $type 创建类型
 	 * @return mixed
@@ -1308,7 +1283,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 自动表单验证
 	 * 
-	 * @access protected
 	 * @param array $data 创建数据
 	 * @param string $type 创建类型
 	 * @return boolean
@@ -1363,7 +1337,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 验证表单字段 支持批量验证 如果批量验证返回错误的数组信息
 	 * 
-	 * @access protected
 	 * @param array $data 创建数据
 	 * @param array $val 验证因子
 	 * @return boolean
@@ -1385,7 +1358,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 根据验证因子验证字段
 	 * 
-	 * @access protected
 	 * @param array $data 创建数据
 	 * @param array $val 验证因子
 	 * @return boolean
@@ -1444,7 +1416,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 验证数据 支持 in between equal length regex expire ip_allow ip_deny
 	 * 
-	 * @access public
 	 * @param string $value 验证数据
 	 * @param string $rule 验证表达式
 	 * @param string $type 验证方式 默认为正则验证
@@ -1499,7 +1470,6 @@ class Model implements ArrayAccess{
 	/**
 	 * SQL查询
 	 * 
-	 * @access public
 	 * @param string $sql SQL指令
 	 * @param mixed $parse 是否需要解析SQL
 	 * @return mixed
@@ -1535,7 +1505,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 执行SQL语句
 	 * 
-	 * @access public
 	 * @param string $sql SQL指令
 	 * @param mixed $parse 是否需要解析SQL
 	 * @return false | integer
@@ -1581,7 +1550,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 解析SQL语句
 	 * 
-	 * @access public
 	 * @param string $sql SQL指令
 	 * @param boolean $parse 是否需要解析SQL
 	 * @return string
@@ -1607,7 +1575,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 切换当前的数据库连接
 	 * 
-	 * @access public
 	 * @param integer $linkNum 连接序号
 	 * @param mixed $config 数据库连接信息
 	 * @param boolean $force 强制重新连接
@@ -1643,7 +1610,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 得到当前的数据对象名称
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getModelName(){
@@ -1670,7 +1636,6 @@ class Model implements ArrayAccess{
 	 * 得到完整的数据表名
 	 * 
      * @param bool $isTrue 是否获取真实表名，默认为true（真实表名为包括数据库和前缀）
-	 * @access public
 	 * @return string
 	 */
 	public function getTableName($isTrue=true){
@@ -1697,40 +1662,40 @@ class Model implements ArrayAccess{
 
 	/**
 	 * 启动事务
-	 * 
-	 * @access public
-	 * @return void
 	 */
 	public function startTrans(){
-		$this->commit();
+        $this->autoCommit=false;
+		$this->db->commit();
 		$this->db->startTrans();
-		return;
 	}
 
 	/**
 	 * 提交事务
 	 * 
-	 * @access public
 	 * @return boolean
 	 */
 	public function commit(){
-		return $this->db->commit();
+        $this->autoCommit=true;
+		$result=$this->db->commit();
+        if($result){
+            $this->_after_change(array(), array(), self::MODEL_BOTH);
+        }
+        return $result;
 	}
 
 	/**
 	 * 事务回滚
 	 * 
-	 * @access public
 	 * @return boolean
 	 */
 	public function rollback(){
+        $this->autoCommit=false;
 		return $this->db->rollback();
 	}
 
 	/**
 	 * 返回模型的错误信息
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getError(){
@@ -1740,7 +1705,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 返回数据库的错误信息
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getDbError(){
@@ -1750,7 +1714,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 返回最后插入的ID
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getLastInsID(){
@@ -1760,7 +1723,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 返回最后执行的sql语句
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getLastSql(){
@@ -1775,7 +1737,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取主键名称
 	 * 
-	 * @access public
 	 * @return string
 	 */
 	public function getPk(){
@@ -1785,7 +1746,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取数据表字段信息
 	 * 
-	 * @access public
 	 * @return array
 	 */
 	public function getDbFields(){
@@ -1813,7 +1773,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取数据表字段详细信息
 	 *
-	 * @access public
 	 * @return array
 	 */
 	public function getDbFieldInfos(){
@@ -1862,7 +1821,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 设置数据对象值
 	 * 
-	 * @access public
 	 * @param mixed $data 数据
 	 * @return Model
 	 */
@@ -1886,8 +1844,7 @@ class Model implements ArrayAccess{
 	/**
 	 * 指定当前的数据表
 	 * 
-	 * @access public
-	 * @param mixed $table
+	 * @param array|string $table
 	 * @return Model
 	 */
 	public function table($table){
@@ -1907,8 +1864,7 @@ class Model implements ArrayAccess{
 	/**
 	 * USING支持 用于多表删除
 	 * 
-	 * @access public
-	 * @param mixed $using
+	 * @param array|string $using
 	 * @return Model
 	 */
 	public function using($using){
@@ -1923,7 +1879,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询SQL组装 join
 	 * 
-	 * @access public
 	 * @param mixed $join
 	 * @param string $type JOIN类型
 	 * @return Model
@@ -1946,7 +1901,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询SQL组装 union
 	 * 
-	 * @access public
 	 * @param mixed $union
 	 * @param boolean $all
 	 * @return Model
@@ -1980,7 +1934,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询缓存
 	 * 
-	 * @access public
 	 * @param mixed $key
 	 * @param integer $expire
 	 * @param string $type
@@ -2004,7 +1957,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 指定查询字段 支持字段排除
 	 * 
-	 * @access public
 	 * @param mixed $field
 	 * @param boolean $except 是否排除
 	 * @return Model
@@ -2027,7 +1979,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 调用命名范围
 	 * 
-	 * @access public
 	 * @param mixed $scope 命名范围名称 支持多个 和直接定义
 	 * @param array $args 参数
 	 * @return Model
@@ -2064,7 +2015,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 指定查询条件 支持安全过滤
 	 * 
-	 * @access public
 	 * @param mixed $where 条件表达式
 	 * @param mixed $parse 预处理参数
 	 * @return Model
@@ -2105,7 +2055,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 指定查询数量
 	 * 
-	 * @access public
 	 * @param mixed $offset 起始位置
 	 * @param mixed $length 查询数量
 	 * @return Model
@@ -2121,7 +2070,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 指定分页
 	 * 
-	 * @access public
 	 * @param mixed $page 页数
 	 * @param mixed $listRows 每页数量
 	 * @return Model
@@ -2140,7 +2088,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 查询注释
 	 * 
-	 * @access public
 	 * @param string $comment 注释
 	 * @return Model
 	 */
@@ -2152,7 +2099,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 获取执行的SQL语句
 	 * 
-	 * @access public
 	 * @param boolean $fetch 是否返回sql
 	 * @return Model
 	 */
@@ -2164,7 +2110,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 参数绑定
 	 * 
-	 * @access public
 	 * @param string $key 参数名
 	 * @param mixed $value 绑定的变量及绑定参数
 	 * @return Model
@@ -2188,7 +2133,6 @@ class Model implements ArrayAccess{
 	/**
 	 * 设置模型的属性值
 	 * 
-	 * @access public
 	 * @param string $name 名称
 	 * @param mixed $value 值
 	 * @return Model
@@ -2214,4 +2158,5 @@ class Model implements ArrayAccess{
 	public function offsetUnset ($offset) {
 		unset($this->data[$offset]);
 	}
+    
 }
