@@ -1673,13 +1673,15 @@ class Model implements ArrayAccess{
 	/**
 	 * 提交事务
 	 * 
+     * @param array $data
+     * @param array $options
 	 * @return boolean
 	 */
-	public function commit(){
+	public function commit($data=array(), $options=array()){
         $this->autoCommit=true;
 		$result=$this->db->commit();
         if($result){
-            $this->_after_change(array(), array(), self::MODEL_CHANGE);
+            $this->_after_change($data, $options, self::MODEL_CHANGE);
         }
         return $result;
 	}
