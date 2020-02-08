@@ -36,7 +36,8 @@ class Model implements ArrayAccess{
     const MODEL_DELETE=0; // 删除模型
 	const MODEL_INSERT=1; // 插入模型数据
 	const MODEL_UPDATE=2; // 更新模型数据
-	const MODEL_BOTH=3; // 包含上面两种方式
+	const MODEL_BOTH=3; // 包含插入和更新两种方式
+    const MODEL_CHANGE=4; // 包含删除、插入和更新的模型数据改变
 	const MUST_VALIDATE=1; // 必须验证
 	const EXISTS_VALIDATE=0; // 表单存在字段则验证
 	const VALUE_VALIDATE=2; // 表单值不为空则验证
@@ -1678,7 +1679,7 @@ class Model implements ArrayAccess{
         $this->autoCommit=true;
 		$result=$this->db->commit();
         if($result){
-            $this->_after_change(array(), array(), self::MODEL_BOTH);
+            $this->_after_change(array(), array(), self::MODEL_CHANGE);
         }
         return $result;
 	}
