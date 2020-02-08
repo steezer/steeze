@@ -33,6 +33,7 @@ use Exception;
  */
 class Model implements ArrayAccess{
 	// 操作状态
+    const MODEL_DELETE=0; // 删除模型
 	const MODEL_INSERT=1; // 插入模型数据
 	const MODEL_UPDATE=2; // 更新模型数据
 	const MODEL_BOTH=3; // 包含上面两种方式
@@ -368,7 +369,7 @@ class Model implements ArrayAccess{
 	}
     
     // 数据发生改变后的回调方法，包括新增、更新和删除
-    protected function _after_change($data, $options){
+    protected function _after_change($data, $options, $action){
     }
 
 	/**
@@ -413,13 +414,13 @@ class Model implements ArrayAccess{
 				if(false === $this->_after_insert($data, $options)){
 					return false;
 				}
-                $this->_after_change($data, $options);
+                $this->_after_change($data, $options, self::MODEL_INSERT);
 				return $insertId;
 			}
 			if(false === $this->_after_insert($data, $options)){
 				return false;
 			}
-            $this->_after_change($data, $options);
+            $this->_after_change($data, $options, self::MODEL_INSERT);
 		}
 		return $result;
 	}
@@ -448,7 +449,7 @@ class Model implements ArrayAccess{
 		if(false !== $result){
 			$insertId=$this->getLastInsID();
 			if($insertId){
-                $this->_after_change($dataList, $options);
+                $this->_after_change($dataList, $options, self::MODEL_INSERT);
 				return $insertId;
 			}
 		}
@@ -548,7 +549,7 @@ class Model implements ArrayAccess{
 				$data[$pk]=$pkValue;
 			}
 			$this->_after_update($data, $options);
-            $this->_after_change($data, $options);
+            $this->_after_change($data, $options, self::MODEL_UPDATE);
 		}
 		return $result;
 	}
@@ -627,7 +628,7 @@ class Model implements ArrayAccess{
 			if(isset($pkValue))
 				$data[$pk]=$pkValue;
 			$this->_after_delete($data, $options);
-            $this->_after_change($data, $options);
+            $this->_after_change($data, $options, self::MODEL_DELETE);
 		}
 		// 返回删除记录个数
 		return $result;
