@@ -366,6 +366,10 @@ class Model implements ArrayAccess{
 	// 写入数据前的回调方法 包括新增和更新
 	protected function _before_write(&$data){
 	}
+    
+    // 数据发生改变后的回调方法，包括新增、更新和删除
+    protected function _after_change($data, $options){
+    }
 
 	/**
 	 * 新增数据
@@ -409,11 +413,13 @@ class Model implements ArrayAccess{
 				if(false === $this->_after_insert($data, $options)){
 					return false;
 				}
+                $this->_after_change($data, $options);
 				return $insertId;
 			}
 			if(false === $this->_after_insert($data, $options)){
 				return false;
 			}
+            $this->_after_change($data, $options);
 		}
 		return $result;
 	}
@@ -442,6 +448,7 @@ class Model implements ArrayAccess{
 		if(false !== $result){
 			$insertId=$this->getLastInsID();
 			if($insertId){
+                $this->_after_change($dataList, $options);
 				return $insertId;
 			}
 		}
@@ -541,6 +548,7 @@ class Model implements ArrayAccess{
 				$data[$pk]=$pkValue;
 			}
 			$this->_after_update($data, $options);
+            $this->_after_change($data, $options);
 		}
 		return $result;
 	}
@@ -619,6 +627,7 @@ class Model implements ArrayAccess{
 			if(isset($pkValue))
 				$data[$pk]=$pkValue;
 			$this->_after_delete($data, $options);
+            $this->_after_change($data, $options);
 		}
 		// 返回删除记录个数
 		return $result;
