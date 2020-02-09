@@ -185,21 +185,38 @@ class Response
      * @param string $filename 要发送的文件名称
      * @param int $offset 上传文件的偏移量，可以指定从文件的中间部分开始传输数据。此特性可用于支持断点续传
      * @param int $length 发送数据的尺寸，默认为整个文件的尺寸
+     * @param bool $isCache 是否使用缓存（默认false）
      * 
      * 说明：调用sendfile前不得使用write方法发送Http-Chunk
      */
-    public function sendfile($filename, $offset = 0, $length = 0)
+    public function sendfile($filename, $offset = 0, $length = 0, $isCache=false)
     {
         if (!$this->isEnd) {
-            //输出文件类型
+            // 输出文件类型
             $ext = fileext($filename);
             $mimetype = C('mimetype.' . $ext, 'application/octet-stream');
-            $this->clientHeader($mimetype, false, false);
-            //发送文件
+            $this->clientHeader($mimetype, false, $isCache);
+            // 发送文件
             if (!is_null($this->response)) {
                 $this->response->sendfile($filename, $offset, $length);
             } else {
-                readfile($filename);
+                $fp = fopen($filename, 'rb');
+                // 每次发送文件块大小
+                $chunk=1024 * 512;
+                fseek($fp, $offset);
+                while (!feof($fp)) {
+                    $size=$length ? min($chunk, $length) : $chunk;
+                    echo fread($fp, $size);
+                    ob_flush();
+                    flush();
+                    if($length){
+                        $length-=$chunk;
+                        if($length<=0){
+                            break;
+                        }
+                    }
+                }
+                fclose($fp);
             }
         }
     }
@@ -274,10 +291,10 @@ class Response
      *
      * @param string $dataType 数据类型，可以是文件扩展名或类型标志（如：text/html）
      * @param string|bool $charset 编码类型，默认为空使用系统配置，为false则不输出编码类型
-     * @param bool $cache 是否输出控制缓存
+     * @param bool $isCache 是否输出控制缓存
      * @return void
      */
-    private function clientHeader($dataType = '', $charset = '', $cache = true)
+    private function clientHeader($dataType = '', $charset = '', $isCache = true)
     {
         if (empty($dataType)) {
             $dataType = 'text/html';
@@ -288,7 +305,7 @@ class Response
             $dataType = $dataType . '; charset=' . ($charset ? $charset : C('charset', 'utf-8'));
         }
         $this->header('Content-Type', $dataType); // 网页字符编码
-        $cache &&   // 页面缓存控制
+        $isCache &&   // 页面缓存控制
             $this->header('Cache-control', C('HTTP_CACHE_CONTROL', 'private'));
         $this->header('X-Powered-By', 'steeze/' . STEEZE_VERSION); //系统版本标志
     }
