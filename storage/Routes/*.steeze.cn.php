@@ -3,9 +3,9 @@ use Library\Model;
 use Library\Container;
 
 return [
-  //   '/'=> function(){
-		// return 'Under construction...';
-  //   },
+    '/'=> function(){
+		return 'Under construction...';
+    },
     
     '/container' => function(){
         //非swoole模式下运行的容器对象实例都绑定到了应用对象
@@ -39,6 +39,8 @@ return [
         return $str;
     },
     '/hello'=> 'Index/hello',
+    '/lists/{user?}'=> 'Index/lists',
+    '/user/{user}'=> 'User/info',
     '/member/index/hello'=> 'Member/Index/hello',
     'convert' => [
         '/{c}/{a}#page={page|d}'=>'{c}/{a}',

@@ -183,6 +183,28 @@ class Controller{
 	public function fetch($file='', $data=''){
 		return $this->view()->fetch($file, $data);
 	}
+    
+    /**
+     * 从字符串模版渲染
+     *
+     * @param string $str 模版字符串
+     * @param array $data 参数数据
+     * @return string
+     */
+    public function fetchString($str, $data=null){
+        return $this->view()->fetchString($str, $data);
+    }
+    
+    /**
+     * 从模版文件渲染
+     *
+     * @param string $file 模版文件
+     * @param array $data 参数数据
+     * @return string
+     */
+    public function fetchFile($file, $data=null){
+        return $this->view()->fetchFile($file, $data);
+    }
 
 	/**
 	 * 创建静态页面

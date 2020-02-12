@@ -4,6 +4,7 @@ namespace Library;
 
 use Exception;
 use Loader as load;
+use Service\Template\Manager as TemplateManager;
 
 /**
  * 系统视图类
@@ -148,35 +149,84 @@ final class View
             $this->assign($data);
             $data = '';
         }
-        if (empty($data)) {
-            $res = !is_file($file) ? self::resolvePath($file) : $file;
-            $file = is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
-            unset($res);
-            // 模板文件不存在直接返回
-
-            if (!is_file($file)) {
-                return null;
-            }
+        return $data==='' ? $this->fetchFile($file) : 
+                $this->fetchString($data);
+    }
+    
+    /**
+     * 从字符串模版渲染
+     *
+     * @param string $str 模版字符串
+     * @param array $data 参数数据
+     * @return string
+     */
+    public function fetchString($str, $data=null)
+    {
+        // 赋值模版变量
+        !is_null($data) && 
+            $this->assign((array)$data);
+        
+        // 解析字符串
+        $str=TemplateManager::instance()->parse($str);
+        
+        return $this->parse($str, false);
+    }
+    
+    /**
+     * 从模版文件渲染
+     *
+     * @param string $file 模版文件
+     * @param array $data 参数数据
+     * @return string
+     */
+    public function fetchFile($file, $data=null)
+    {
+        // 解析模版文件
+        $res = !is_file($file) ? self::resolvePath($file) : $file;
+        $file = is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
+        unset($res);
+        
+        // 模板文件不存在直接返回
+        if (!is_file($file)) {
+            return null;
         }
-        // 防止变量冲突
-        $__file__ = $file;
-        $__content__ = $data;
-        // 页面缓存
+        // 赋值模版变量
+        !is_null($data) && 
+            $this->assign((array)$data);
+        
+        return $this->parse($file, true);
+    }
+    
+    /**
+     * 解析文件或字符串
+     *
+     * @param string $fileOrString 文件路径或字符串
+     * @param boolean $isFile 是否为文件，默认
+     * @return string
+     */
+    private function parse($fileOrString, $isFile=false)
+    {
+        // 开始页面缓存
         ob_start();
         ob_implicit_flush(0);
         // 模板阵列变量分解成为独立变量，如果为数字索引，则加前缀“_”
         extract($this->tVar, EXTR_OVERWRITE | EXTR_PREFIX_INVALID, '_');
-        $this->tVar = array();
-        // 直接载入PHP模板
-        if (empty($_content)) {
-            include $__file__;
-        } else {
-            eval('?>' . $__content__);
+        $this->tVar=array();
+        
+        if($isFile){
+            include $fileOrString;
+        }else{
+            if(function_exists('eval')){
+                eval('?>' . $fileOrString);
+            }else{
+                $___filename__=CACHE_PATH.'tpl_'.md5($fileOrString).'.php';
+                file_put_contents($___filename__, $fileOrString);
+                include $___filename__;
+                unlink($___filename__);
+            }
         }
-        // 获取并清空缓存
-        $data = ob_get_clean();
-        // 输出模板文件
-        return $data;
+        // 清空缓存并返回
+        return ob_get_clean();
     }
 
     /**

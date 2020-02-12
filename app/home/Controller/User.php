@@ -15,8 +15,9 @@ class User extends Controller{
     const MIDDLEWARE='auth';
 	
 	// 模型参数直接绑定路由
-	public function info(UserModel $user, $id){
-        return $user;
+	public function info(UserModel $user){
+        $tpl='user: id-{$id}, name-{$name}';
+        return $this->fetchString($tpl, $user->data());
 	}
 	
 	// 模型查询
