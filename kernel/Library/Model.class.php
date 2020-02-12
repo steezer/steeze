@@ -75,21 +75,48 @@ class Model implements ArrayAccess{
 	protected $data=array();
 	// 查询表达式参数
 	protected $options=array();
+    
+    /**
+     * 自动验证定义
+     * array(field,rule,message,condition,type,when,params)
+     *
+     * @var array
+     */
 	protected $_validate=array(); // 自动验证定义
+    
+    /**
+     * 自动填充内容
+     * array('field','填充内容','填充条件','附加规则',[额外参数])
+     *
+     * @var array
+     */
 	protected $_auto=array(); // 自动完成定义
-	protected $_map=array(); // 字段映射定义
-	protected $_scope=array(); // 命名范围定义
+    
+    /**
+     * 字段映射定义
+     *
+     * @var array
+     */
+	protected $_map=array();
+    
+    /**
+     * 命名范围定义
+     *
+     * @var array
+     */
+	protected $_scope=array();
 	
-    // 是否自动提交
-    protected $autoCommit=true;
 	// 是否自动检测数据表字段信息
 	protected $autoCheckFields=true;
 	// 字段值是否去掉反斜杠
 	protected $stripSlashes=false;
 	// 是否批处理验证
 	protected $patchValidate=false;
+    // 是否自动提交
+    protected $autoCommit=true;
+    
 	// 链操作方法列表
-	protected $methods=array('strict','order','alias','having','group','lock','distinct','auto','filter','validate','result','token','index','force');
+	private $methods=array('strict','order','alias','having','group','lock','distinct','auto','filter','validate','result','token','index','force');
 
 	/**
 	 * 架构函数 取得DB类的实例对象 字段检查
