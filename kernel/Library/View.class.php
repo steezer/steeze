@@ -220,8 +220,9 @@ final class View
                 eval('?>' . $fileOrString);
             }else{
                 $___filename__=CACHE_PATH.'tpl_'.md5($fileOrString).'.php';
-                file_put_contents($___filename__, $fileOrString);
-                include $___filename__;
+                if(file_put_contents($___filename__, $fileOrString)){
+                    include $___filename__;
+                }
                 unlink($___filename__);
             }
         }
