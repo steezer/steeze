@@ -39,11 +39,11 @@ return [
         return $str;
     },
     '/hello'=> 'Index/hello',
-    '/lists/{user?}'=> 'Index/lists',
-    '/user/{user}'=> 'User/info',
-    '/member/index/hello'=> 'Member/Index/hello',
+    '/test'=> 'Index/test',
     'convert' => [
+        '/{c}/{a}'=>'{c}/{a}',
         '/{c}/{a}#page={page|d}'=>'{c}/{a}',
         '/{c}/{a}/{user|d}#a={id|d?}'=>'{c}/{a}',
-    ]
+        '/{m}/{c}/{a}'=>'{m}/{c}/{a}',
+    ] 
 ];

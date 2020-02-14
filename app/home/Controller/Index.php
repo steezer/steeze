@@ -17,6 +17,13 @@ class Index extends Controller{
 		$this->assign('company',['year'=>12,'name'=>['s'=>121]]);
 		$this->display();
 	}
+    
+    public function test(){
+        return M('user')->result(function($data){
+            $data['address']=M('address')->getByUserId($data['user_id']);
+            return $data;
+        })->select();
+    }
 	
     //数据库表的参数绑定
 	public function lists(Model $user){
