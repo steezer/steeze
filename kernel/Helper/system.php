@@ -1215,7 +1215,7 @@ function G($start, $end='', $dec=4){
 	}elseif(!empty($end)){ // 统计时间和内存使用
 		if(!isset($_info[$end]))
 			$_info[$end]=microtime(TRUE);
-		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON && $dec == 'm'){
+		if(defined('MEMORY_LIMIT_ON') && constant('MEMORY_LIMIT_ON') && $dec == 'm'){
 			if(!isset($_mem[$end]))
 				$_mem[$end]=memory_get_usage();
 			return number_format(($_mem[$end] - $_mem[$start]) / 1024);
@@ -1224,7 +1224,7 @@ function G($start, $end='', $dec=4){
 		}
 	}else{ // 记录时间和内存使用
 		$_info[$start]=microtime(TRUE);
-		if(defined('MEMORY_LIMIT_ON') && MEMORY_LIMIT_ON)
+		if(defined('MEMORY_LIMIT_ON') && constant('MEMORY_LIMIT_ON'))
 			$_mem[$start]=memory_get_usage();
 	}
 	return null;
@@ -1436,7 +1436,7 @@ function U($url='', $vars='', $domain=false, $type=-1){
 		if(!empty($paths)){
 			$var_m=C('VAR_MODULE', 'm');
 			$var[$var_m]=implode($depr, $paths);
-			if((defined('BIND_MODULE') && BIND_MODULE == $var[$var_m]) || $var[$var_m] === ''){
+			if((defined('BIND_MODULE') && constant('BIND_MODULE') == $var[$var_m]) || $var[$var_m] === ''){
 				unset($var[$var_m]);
 			}else{
 				unset($vars[$var_m]);
