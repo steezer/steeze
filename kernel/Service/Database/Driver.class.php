@@ -180,8 +180,10 @@ abstract class Driver {
      */
     public function query($str,$fetchSql=false, &$options=array()) {
         $this->initConnect(false);
-        if ( !$this->_linkID ) return false;
-        $this->queryStr  = $str;
+        if (!$this->_linkID){
+             return false;
+        }
+        $this->queryStr = $str;
         if(!empty($this->bind)){
             $this->queryStr = strtr(
                     $this->queryStr,
@@ -195,7 +197,9 @@ abstract class Driver {
             return $this->queryStr;
         }
         //释放前次的查询结果
-        if ( !empty($this->PDOStatement) ) $this->free();
+        if ( !empty($this->PDOStatement) ){
+             $this->free();
+        }
         $this->queryTimes++;
 
         // 调试开始
