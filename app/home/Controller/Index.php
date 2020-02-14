@@ -19,10 +19,11 @@ class Index extends Controller{
 	}
     
     public function test(){
-        return M('user')->result(function($data){
-            $data['address']=M('address')->getByUserId($data['user_id']);
-            return $data;
-        })->select();
+        $result=M('user')->result(function($data){
+                    $data['address']=M('address')->getByUserId($data['id']);
+                    return $data;
+                })->select();
+        var_dump($result);
     }
 	
     //数据库表的参数绑定

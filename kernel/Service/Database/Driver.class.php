@@ -392,7 +392,8 @@ abstract class Driver {
                 $result = $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
             }else{
                 $result=array();
-                while(($row=$this->PDOStatement->fetch(PDO::FETCH_ASSOC))!==false){
+                $statement=$this->PDOStatement;
+                while(($row=$statement->fetch(PDO::FETCH_ASSOC))!==false){
                     // 处理结果集
                     if($isResult){
                         $row=$this->setResult($row, $options['result'], $param);
@@ -415,6 +416,7 @@ abstract class Driver {
                         $result[]=$row;
                     }
                 }
+                $statement=null;
             }
             $this->numRows = count( $result );
             return $result;
