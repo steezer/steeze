@@ -78,9 +78,9 @@ class Route
             //设置默认路由常量，同时使用传统路由方式匹配模式
             if ($path == env('ROOT_URL') || USE_DEFUALT_HANDLE) {
                 !isset($route_c) && ($route_c = defined('BIND_CONTROLLER') ?
-                        BIND_CONTROLLER : ucfirst($this->request->input(C('var_controller', 'c'), C('default_c'))));
+                        constant('BIND_CONTROLLER') : ucfirst($this->request->input(C('var_controller', 'c'), C('default_c'))));
                 !isset($route_a) && ($route_a = defined('BIND_ACTION') ?
-                        BIND_ACTION : $this->request->input(C('var_action', 'a'), C('default_a')));
+                        constant('BIND_ACTION') : $this->request->input(C('var_action', 'a'), C('default_a')));
             }
         } else if (is_callable($handle)) {
             $this->setDisposer($handle);
@@ -250,9 +250,10 @@ class Route
      *
      * @param string $path 路径
      * @param string $pattern 匹配模式
-     * @return array|false 成功返回变量的键值，失败返回false
+     * @param array &$output 变量输出
+     * @return bool
      */
-    private function getVars($path, $pattern)
+    public static function getVars($path, $pattern, &$output)
     {
         $index = 0;
         $start = 0;
@@ -307,12 +308,12 @@ class Route
                 $kvType = isset($kvnts[1]) ? $kvnts[1] : 's';
                 if ($kvType == 'd') {  // 变量类型检查
                     if (is_numeric($value)) {
-                        $this->params[$kvName] = $value;
+                        $output[$kvName] = $value;
                     } else {
                         return false;
                     }
                 } else if ($value !== '') { //此处兼容首页参数
-                    $this->params[$kvName] = $value;
+                    $output[$kvName] = $value;
                 }
                 
             }
@@ -354,13 +355,14 @@ class Route
         $routeLen = substr_count($route, '/');
         $urlLen = substr_count($path, '/');
         $optCount = substr_count($route, '?');
+        $isMathAll = $route === '/**';
 
         //无参数或有参数的路径匹配
         if (
             ($method == 'ANY' || $method == env('REQUEST_METHOD')) && 
-            ($routeLen == $urlLen || $urlLen + $optCount == $routeLen)
+            ($isMathAll || $routeLen == $urlLen || $urlLen + $optCount == $routeLen)
         ) {
-            if (!strcasecmp($route, $path)) {
+            if ($isMathAll || !strcasecmp($route, $path)) {
                 //如果url完全匹配（不区分大小写），直接返回
                 return $this->dealWithhandle($handle, $querys);
             } else {
@@ -376,7 +378,7 @@ class Route
                          */
                         if (
                             strpos($kv, '{') === false ||
-                            !$this->getVars($urlArrs[$ki], $kv)
+                            !$this->getVars($urlArrs[$ki], $kv, $this->params)
                         ) { // 变量匹配检查
                             break;
                         }
@@ -419,7 +421,7 @@ class Route
                     $varName=$kv[1];
                     $varValue=$this->request->input($keyName);
                     if($varValue!==null){
-                        $this->getVars($varValue, $varName);
+                        $this->getVars($varValue, $varName, $this->params);
                     }
                 }
             }
