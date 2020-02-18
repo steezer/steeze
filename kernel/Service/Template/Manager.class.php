@@ -168,7 +168,7 @@ class Manager {
 	public function parseAssign($matches){
 		$datas=self::parseAttrs($matches[1]); // 获取属性
 		if(isset($datas['name']) && isset($datas['value'])){
-			return '<?php $'.$this->parseDoVar($datas['name']).'='.var_export($datas['value'],true).';?>';
+			return '<?php $'.self::parseDoVar($datas['name']).'='.var_export($datas['value'],true).';?>';
 		}
 		return '';
 	}
@@ -368,7 +368,7 @@ class Manager {
 	public function parseIf($matches){
 		$arrs=self::parseAttrs($matches[1]);
 		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
-		$condition=$this->changeDotArray($condition);
+		$condition=self::changeDotArray($condition);
 		return '<?php if(' . $condition . ') { ?>';
 	}
 	
@@ -381,7 +381,7 @@ class Manager {
 	public function parseElseif($matches){
 		$arrs=self::parseAttrs($matches[1]);
 		$condition=self::operator(isset($arrs['condition']) ? $arrs['condition'] : $matches[1]);
-		$condition=$this->changeDotArray($condition);
+		$condition=self::changeDotArray($condition);
 		return '<?php }elseif(' . $condition . ') { ?>';
 	}
 	
@@ -427,7 +427,7 @@ class Manager {
 			isset($arrs['order']) && strpos($arrs['order'], '$') !== 0 && ($arrs['order']='$' . $arrs['order']);
 		}
 		if(isset($arrs['name']) && isset($arrs['item'])){
-			$arrs['name']=$this->changeDotArray($arrs['name']);
+			$arrs['name']=self::changeDotArray($arrs['name']);
 			$order=(isset($arrs['order']) ? $arrs['order'] : '$n');
 			return '<?php ' . $order . '=0;if(is_array(' . $arrs['name'] . ')) foreach(' . $arrs['name'] . ' as ' . (isset($arrs['key']) ? $arrs['key'] . '=>' . $arrs['item'] : $arrs['item']) . ') { ' . $order . '++;?>';
 		}
@@ -441,9 +441,9 @@ class Manager {
 	 */
 	public function parseArray($matches){
 		$var_str=preg_replace("/\[([a-zA-Z0-9_\-\.]+)\]/s", "['\\1']", $matches[1]);
-        $var_str=$this->changeDotArray($var_str);
+        $var_str=self::changeDotArray($var_str);
 		if(isset($matches[2])){
-			$var_str=$this->parseVarFuncs($var_str, $matches[2]);
+			$var_str=self::parseVarFuncs($var_str, $matches[2]);
 		}
 		return '<?php echo ' . $var_str . ';?>';
 	}
@@ -455,7 +455,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseFunc($matches){
-		return '<?php echo ' . $this->changeDotArray($matches[1]) . ';?>';
+		return '<?php echo ' . self::changeDotArray($matches[1]) . ';?>';
 	}
 	
 	/**
@@ -465,13 +465,13 @@ class Manager {
 	 * @return string
 	 */
 	public function parseVar($matches){
-		$var_str=$this->parseDoVar($matches[1]);
+		$var_str=self::parseDoVar($matches[1]);
 		//常量的特殊处理，支持获取环境变量作为常量
 		if(preg_match('/^\w+$/', $var_str)){
 			$var_str='(defined(\''.$var_str.'\')?'.$var_str.':env(\''.$var_str.'\',\''.$var_str.'\'))';
 		}
 		if(isset($matches[2])){
-			$var_str=$this->parseVarFuncs($var_str, $matches[2]);
+			$var_str=self::parseVarFuncs($var_str, $matches[2]);
 		}
 		return '<?php echo ' . $var_str . ';?>';
 	}
@@ -483,7 +483,7 @@ class Manager {
 	 * @return string
 	 */
 	public function parseExpression($matches){
-		return '<?php echo (' . $this->changeDotArray($matches[1]) . ');?>';
+		return '<?php echo (' . self::changeDotArray($matches[1]) . ');?>';
 	}
 	
 	/**
@@ -550,14 +550,14 @@ class Manager {
 	 * @param string $str 需要转化的字符串
 	 * @return string 转化后的字符串
 	 */
-	public function changeDotArray($var_str){
+	public static function changeDotArray($var_str){
 		if(strpos($var_str, '$') !== false){
 			$is_esc=strpos($var_str, '\$') !== false;
 			if($is_esc){
 				$rep=':ESC' . substr(md5($var_str), 8, 16) . ':';
 				$var_str=str_replace('\$', $rep, $var_str);
 			}
-			$var_str=preg_replace_callback('/(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[\$a-zA-Z0-9_]+)+)/', array($this,'parseDoVar'), $var_str);
+			$var_str=preg_replace_callback('/(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[\$a-zA-Z0-9_]+)+)/', array('self','parseDoVar'), $var_str);
 			if($is_esc){
 				$var_str=str_replace($rep, '$', $var_str);
 			}
@@ -571,7 +571,7 @@ class Manager {
 	 * @param mixed $para
 	 * @return string 数组表示的字符串
 	 */
-	public function parseDoVar($para){
+	public static function parseDoVar($para){
 		$var_str='';
 		foreach(explode('.', (is_array($para) ? $para[1] : $para)) as $ky=>$vl){
 			if($vl !== ''){
@@ -582,13 +582,14 @@ class Manager {
 	}
 	
 	/**
-	 * 解析多级函数调用的字符串表示形式， 例如：将{$addtime|date='Y-m-d','###'|md5}解析为<?php echo md5(date('Y-m-d',$addtime));?>
+	 * 解析多级函数调用的字符串表示形式
+     * 例如：将{$addtime|date='Y-m-d','###'|md5}解析为<?php echo md5(date('Y-m-d',$addtime));?>
 	 *
 	 * @param string $var_str 变量的字符串表示
 	 * @param string $funstr 函数列表
 	 * @return string 函数调用表示的字符串
 	 */
-	private function parseVarFuncs($var_str,$funstr){
+	public static function parseVarFuncs($var_str,$funstr){
 		$fns=explode('|', substr($funstr, 1));
 		foreach($fns as $fn){
 			if(preg_match('/^([\\$@]?[a-zA-Z_][a-zA-Z0-9_:]*)=(.+)/', $fn, $cmatches)){
