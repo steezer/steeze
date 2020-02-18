@@ -27,8 +27,8 @@ class Manager {
 	
 	// 模板标签右边界字符
 	public function __construct(){
-		$this->leftDelim=defined('TAGLIB_BEGIN') ? TAGLIB_BEGIN : C('TAGLIB_BEGIN', '<');
-		$this->rightDelim=defined('TAGLIB_END') ? TAGLIB_END : C('TAGLIB_END', '>');
+		$this->leftDelim=defined('TAGLIB_BEGIN') ? constant('TAGLIB_BEGIN') : C('TAGLIB_BEGIN', '<');
+		$this->rightDelim=defined('TAGLIB_END') ? constant('TAGLIB_END') : C('TAGLIB_END', '>');
 	}
 	
 	public function set_delim($ldelim,$rdelim){
