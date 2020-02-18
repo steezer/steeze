@@ -142,7 +142,7 @@ class Manager {
 		// 函数调用解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{:?(([\$@]?[a-zA-Z_][a-zA-Z0-9_:]*)\(([^{}]*)\))}/', array($this,'parseFunc'), $str); // parse function or var function call like {date('Y-m-d',$r['addtime'])}
 		// 变量输出（支持“.”语法表示数组）
-		$str=preg_replace_callback('/{(\$?[a-zA-Z_][a-zA-Z0-9_\.]*)(\|[^{}]+)?}/', array($this,'parseVar'), $str); // parse pure var like {$a_b|md5}
+		$str=preg_replace_callback('/{(\$?[a-zA-Z_][a-zA-Z0-9_\.\$]*)(\|[^{}]+)?}/', array($this,'parseVar'), $str); // parse pure var like {$a_b|md5}
 		// 数组变量常规输出
 		$str=preg_replace_callback('/{(\$[a-zA-Z0-9_\[\]\'\"\$]+)(\|[^{}]+)?}/s', array($this,'parseArray'), $str); // parse var array var like {$r['add']|md5}
 		// 表达式解析（支持“.”语法表示数组）
