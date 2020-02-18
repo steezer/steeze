@@ -144,7 +144,7 @@ class Manager {
 		// 变量输出（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{(\$?[a-zA-Z_][a-zA-Z0-9_\.\$]*)(\|[^{}]+)?}/', array($this,'parseVar'), $str); // parse pure var like {$a_b|md5}
 		// 数组变量常规输出
-		$str=preg_replace_callback('/{(\$[a-zA-Z0-9_\[\]\'\"\$]+)(\|[^{}]+)?}/s', array($this,'parseArray'), $str); // parse var array var like {$r['add']|md5}
+		$str=preg_replace_callback('/{(\$[a-zA-Z0-9_\[\]\'\"\$\.]+)(\|[^{}]+)?}/s', array($this,'parseArray'), $str); // parse var array var like {$r['add']|md5}
 		// 表达式解析（支持“.”语法表示数组）
 		$str=preg_replace_callback('/{[\({](.+?)[\)}]}/s', array($this,'parseExpression'), $str); // parse expression like "{(a=10?1:0)}" or "{{a=10?1:0}}"
 		// 解析表达式转义字符
@@ -441,6 +441,7 @@ class Manager {
 	 */
 	public function parseArray($matches){
 		$var_str=preg_replace("/\[([a-zA-Z0-9_\-\.]+)\]/s", "['\\1']", $matches[1]);
+        $var_str=$this->changeDotArray($var_str);
 		if(isset($matches[2])){
 			$var_str=$this->parseVarFuncs($var_str, $matches[2]);
 		}
