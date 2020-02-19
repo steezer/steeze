@@ -529,13 +529,14 @@ class Manager {
 			isset($tagCaches[$tag]) && is_object($tagCaches[$tag]) && 
 			is_callable(array($tagCaches[$tag], $method))
 		){
+            $param['attrs']=self::parseAttrs($matches[3]);
+            if(isset($matches[4])){
+                $param['html']=$matches[4];
+            }
 			return $container->invokeMethod(
                     $tagCaches[$tag], 
                     $method,
-                    array(
-						'attrs'=>self::parseAttrs($matches[3]),
-						'html'=>(isset($matches[4]) ? $matches[4] : ''),
-					)
+                    $param
                 );
 		}else{
 			return $matches[0];
