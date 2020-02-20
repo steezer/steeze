@@ -16,6 +16,7 @@ class Manager {
 	private $rightDelim;
 	private static $_instance=null;
     private $stack=array(); //数据临时栈
+    private $isKeepUserTag=false; //是否保留未识别的用户标签
 	
 	// 单例模式
 	public static function instance(){
@@ -29,6 +30,7 @@ class Manager {
 	public function __construct(){
 		$this->leftDelim=defined('TAGLIB_BEGIN') ? constant('TAGLIB_BEGIN') : C('TAGLIB_BEGIN', '<');
 		$this->rightDelim=defined('TAGLIB_END') ? constant('TAGLIB_END') : C('TAGLIB_END', '>');
+        $this->isKeepUserTag=C('KEEP_USER_TAG', false);
 	}
 	
 	public function set_delim($ldelim,$rdelim){
@@ -98,9 +100,21 @@ class Manager {
 		(stripos($str, $ld . 'template ') !== false || stripos($str, $ld . 'include ') !== false) && ($str=preg_replace_callback('/' . $ld . '(?:template|include)\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseInclude'), $str));
 		stripos($str, $ld . 'action ') !== false && ($str=preg_replace_callback('/' . $ld . 'action\s+(.+?)\s*\/?' . $rd . '/is', array($this,'parseAction'), $str));
         
-		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+([^'.$ld.$rd.']*)\s*\/' . $rd . '/is', array($this,'parseTagLib'), $str);
-		$str=preg_replace_callback('/' . $ld . '([a-z]\w*):([a-z]\w*)\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/\1:\2' . $rd . '/is', array($this,'parseTagLib'), $str);
-		
+        // 用户自定义标签
+        $singleTagRegex='/' . $ld . '([a-z]\w*):([a-z]\w*)\s+([^'.$ld.$rd.']*)\s*\/' . $rd . '/is';
+        $doubleTagRegex='/' . $ld . '([a-z]\w*):([a-z]\w*)\s+(.*?)\s*' . $rd . '(.*?)' . $ld . '\/\1:\2' . $rd . '/is';
+        while(preg_match($singleTagRegex, $str)){
+            $str=preg_replace_callback($singleTagRegex, array($this,'parseTagLib'), $str);
+            if($this->isKeepUserTag){
+                break;
+            }
+        }
+		while(preg_match($doubleTagRegex, $str)){
+            $str=preg_replace_callback($doubleTagRegex, array($this,'parseTagLib'), $str);
+            if($this->isKeepUserTag){
+                break;
+            }
+        }
 		
 		// PHP标签的解析
 		if(stripos($str, $ld . 'php') !== false){
@@ -539,7 +553,7 @@ class Manager {
                     $param
                 );
 		}else{
-			return $matches[0];
+			return $this->isKeepUserTag ? $matches[0] : '';
 		}
 	}
 	
