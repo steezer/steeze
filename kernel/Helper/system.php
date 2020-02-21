@@ -1099,7 +1099,8 @@ function assets($file, $type='', $check=false, $default='default'){
 		return $file;
 	}
 	
-	if(($pos=strpos($file, '/')) !== 0){
+    // 相对文件路径
+	if($file[0] != '/'){
 		$module='';
 		$style='';
 		if(strpos($file, '@') != false){
@@ -1121,43 +1122,69 @@ function assets($file, $type='', $check=false, $default='default'){
 		if($file === ''){
 			return '';
 		}
-		$isRemote=strpos($style, '://') !== false;
+        
+        // 检查自定义风格是否为外部地址
+		$isExtern=strpos($style, '://') !== false;
 		
-		// 单个文件导入，根据文件名（如果为js,css,images文件）自动识别上级目录
-		$typeDir='';
-		if(!$isBase && ($ext=($type !== '' ? $type : fileext(strpos($file, '?')!==false ? strstr($file,'?',true) : $file)))){
-			if($ext == 'js' || $ext == 'css'){
-				$typeDir=$ext.'/';
-			}elseif($ext == 'jpg' || $ext == 'png' || $ext == 'gif' || $ext == 'jpeg' || $ext == 'bmp'){
+		// 单个文件名的js/css/images文件自动识别上级目录
+		if(!$isBase && strpos($file, '/')===false){
+            $typeDir='';
+            if($type===''){
+                $type=fileext(strpos($file, '?')!==false ? strstr($file,'?',true) : $file);
+            }
+			if($type == 'js' || $type == 'css'){
+				$typeDir=$type.'/';
+			}elseif($type == 'jpg' || $type == 'png' || $type == 'gif' || $type == 'jpeg' || $type == 'bmp'){
 				$typeDir='images/';
 			}
+            
+            //如果上级目录识别成功，并且文件不包含上级目录则自动附加上级目录
+            if(!empty($typeDir) && strpos($file, $typeDir)!==0){
+                $file=$typeDir.$file;
+            }
 		}
 		
-		//如果上级目录识别成功，并且文件不包含上级目录则自动附加上级目录
-		if(!empty($typeDir) && strpos($file, $typeDir)!==0){
-			$file=$typeDir.$file;
-		}
-		
-		
-		$module=strtolower($module);
 		if($style != '/'){
 			$style=rtrim($style, '/');
 		}
+        
+        // 外部地址直接返回
+        if($isExtern){
+            return $style . '/' . $file;
+        }
 		
-		if($check && !$isRemote){
+        $module=strtolower($module);
+        
+        // 检查文件是否存在
+		if($check && !$isExtern){
 			if(strpos($style, '/') === 0){
+                // 绝对路径的检查
 				$style=ltrim($style, '/');
-				return is_file(ASSETS_PATH . ($style != '' ? $style . DS : '') . $file) ? env('ASSETS_URL') . ($style != '' ? $style . '/' : '') . $file : '';
+                if(is_file(ASSETS_PATH . ($style != '' ? $style . DS : '') . $file)){
+                    return env('ASSETS_URL') . ($style != '' ? $style . '/' : '') . $file ;
+                }
 			}else{
+                // 相对路径的检查，不存在使用默认风格
 				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
-					return is_file(ASSETS_PATH . 'app' . DS . $module . DS . $default . DS . $file) ? env('ASSETS_URL') . 'app/' . $module . '/' . trim($default, '/') . '/' . $file : '';
+                    if(is_file(ASSETS_PATH . 'app' . DS . $module . DS . $default . DS . $file)){
+                        return env('ASSETS_URL') . 'app/' . $module . '/' . trim($default, '/') . '/' . $file;
+                    }
 				}
 			}
+            return '';
 		}
-		return $isRemote ? $style . '/' . $file : env('ASSETS_URL') . (strpos($style, '/') === 0 ? ($style != '/' ? ltrim($style, '/') . '/' : '') : 'app/' . $module . '/' . ($style === '' ? '' : $style . '/')) . $file;
-	}else{
-		return env('ASSETS_URL') . ltrim($file, '/');
+        
+        // 绝对路径和相对风格路径
+        if(strpos($style, '/') === 0){
+            $style=$style != '/' ? ltrim($style, '/') . '/' : '';
+        }else{
+            $style='app/' . $module . '/' . ($style === '' ? '' : $style . '/');
+        }
+		return env('ASSETS_URL') . $style . $file;
 	}
+    
+    // 绝对文件路径
+    return env('ASSETS_URL') . ltrim($file, '/');
 }
 
 /**
