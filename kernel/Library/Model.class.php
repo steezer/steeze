@@ -1663,11 +1663,11 @@ class Model implements ArrayAccess{
 	/**
 	 * 得到完整的数据表名
 	 * 
-     * @param bool $isAddPrefix 是否带表前缀
-     * @param bool $isAddDbName 是否带数据库名称
+     * @param bool $isTablePrefix 是否带表前缀
+     * @param bool $isDbName 是否带数据库名称
 	 * @return string
 	 */
-	public function getTableName($isAddPrefix=true, $isAddDbName=false){
+	public function getTableName($isTablePrefix=true, $isDbName=false){
 		if(empty($this->trueTableName)){
             $prefix=$this->tablePrefix;
 			if(!empty($this->tableName)){
@@ -1677,10 +1677,10 @@ class Model implements ArrayAccess{
 				$table=$prefix!=='' && strpos($name,$prefix)===0 ? substr($name, strlen($prefix)) : $name;
 			}
             $tableName=strtolower($prefix.$table); //不带数据库前缀的表名
-            $this->trueTableName=!empty($this->dbName) && $isAddDbName ? $this->dbName . '.' . $tableName : $tableName;
-            return $isAddPrefix ? $this->trueTableName : $table;
+            $this->trueTableName=!empty($this->dbName) && $isDbName ? $this->dbName . '.' . $tableName : $tableName;
+            return $isTablePrefix ? $this->trueTableName : $table;
 		}
-        if(!$isAddPrefix){
+        if(!$isTablePrefix){
             //不带数据库前缀的表名
             $tableName=!empty($this->dbName) && strpos($this->trueTableName, $this->dbName.'.')===0 ? 
                     substr($this->trueTableName,strlen($this->dbName)+1) : $this->trueTableName;
