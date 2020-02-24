@@ -36,6 +36,7 @@ class Pager
         } else {
             $this->config[$key] = $value;
         }
+        return $this;
     }
 
     /**
