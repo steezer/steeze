@@ -53,13 +53,11 @@ class Pager
      *          'size'=> $pagesize,  //每页大小（可选），默认：15
      *          'url'=> $curl, //分页URL（可选），默认使用当前页
      * 			'type'=>'page',  //分页参数（可选），默认:page
-     * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
      * 		]
      */
     function getPager($config, $setPages = 10, $urlRule = '', $array = array())
     {
         $defaults = array('type' => 'page', 'size' => 15, 'count' => 1);
-        $addUrl = '';
         $configs = array_merge($defaults, $config);
         if (!isset($configs['url'])) {
             $configs['url'] = $this->getUrl();
@@ -69,7 +67,7 @@ class Pager
             $configs['page'] = intval(trim($pagesizes[0]));
             $configs['size'] = intval(trim($pagesizes[1]));
         }
-        $callback = isset($config['callback']) ? $config['callback'] : '';
+
         if (isset($GLOBALS['URL_RULE']) && $urlRule == '') {
             $urlRule = $GLOBALS['URL_RULE'];
             $array = $GLOBALS['URL_ARRAY'];
