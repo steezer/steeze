@@ -85,9 +85,9 @@ define('DATA_PATH', STORAGE_PATH . 'Data' . DS);
 define('ASSETS_PATH', ROOT_PATH . 'assets' . DS);
 
 /**
- * 文件上传目录路径
+ * 上传文件路径
  */
-define('UPLOAD_PATH', ASSETS_PATH . 'ufs' . DS);
+!defined('UPLOAD_PATH') && define('UPLOAD_PATH', ROOT_PATH . 'ufs' . DS);
 
 /**
  * 文件存储类型
