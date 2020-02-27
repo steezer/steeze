@@ -337,19 +337,6 @@ class Controller{
         $response->write($data, C('mimetype.'.$type), 'utf-8');
         $option && $response->end(null, $option==2);
 	}
-
-	/**
-	 * Action跳转(URL重定向） 支持指定模块和延时跳转
-	 *
-	 * @param string $url 跳转的URL表达式
-	 * @param array $params 其它URL参数
-	 * @param integer $delay 延时跳转的时间 单位为秒
-	 * @param string $msg 跳转提示信息
-	 */
-	public function redirect($url, $params=array(), $delay=0, $msg=''){
-		$targetUrl=U($url, $params);
-		$this->context->getResponse()->redirect($targetUrl, $delay, $msg);
-	}
     
     /**
 	 * 获取列表分页
