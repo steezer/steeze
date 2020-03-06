@@ -632,8 +632,8 @@ class Manager {
 	public static function parseAttrs($str){
 		$isDq=strpos($str, '\"') !== false;
 		$isSq=strpos($str, '\\\'') !== false;
-		$spat='/(\w+)=\'([^\']+)\'/';
-		$dpat='/(\w+)="([^"]+)"/';
+		$spat='/(\w+)=\'([^\']*)\'/';
+		$dpat='/(\w+)="([^"]*)"/';
 		$str_md5=substr(md5($str), 9, 16);
 		
 		if($isDq){
