@@ -285,7 +285,7 @@ final class View
         $a = empty(self::$_a) && env('ROUTE_A', false) ? env('ROUTE_A') : self::$_a;
         $c = empty(self::$_c) && env('ROUTE_C', false) ? env('ROUTE_C') : self::$_c;
         $m = empty(self::$_m) && env('ROUTE_M', false) ? env('ROUTE_M') : self::$_m;
-        $depr = defined('TAGLIB_DEPR') ? TAGLIB_DEPR : C('TAGLIB_DEPR', '/');
+        $depr = defined('TAGLIB_DEPR') ? constant('TAGLIB_DEPR') : C('TAGLIB_DEPR', '/');
         $template = rtrim(str_replace(':', $depr, $template), $depr . '@');
         $style = '';
                 
