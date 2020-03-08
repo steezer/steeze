@@ -266,8 +266,15 @@ final class View
                 }
                 self::$_c = implode('/', $classes);
                 self::$_a = $method;
-
-                return $context->invokeMethod($concrete, $method, $param);
+                
+                if(method_exists($concrete, $method)){
+                    return $context->invokeMethod($concrete, $method, $param);
+                }
+                
+                if(is_callable(array($concrete, $method))){
+                    return call_user_func_array(array($concrete, $method), $param);
+                }
+                
             }
         }
         return null;
