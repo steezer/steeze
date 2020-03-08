@@ -512,7 +512,7 @@ class Manager {
 		$var_str=self::parseDoVar($matches[1]);
 		//常量的特殊处理，支持获取环境变量作为常量
 		if(preg_match('/^\w+$/', $var_str)){
-			$var_str='(defined(\''.$var_str.'\')?'.$var_str.':env(\''.$var_str.'\',\''.$var_str.'\'))';
+			$var_str='(defined(\''.$var_str.'\')?constant(\''.$var_str.'\'):env(\''.$var_str.'\',\''.$var_str.'\'))';
 		}
 		if(isset($matches[2])){
 			$var_str=self::parseVarFuncs($var_str, $matches[2]);
