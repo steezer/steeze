@@ -280,11 +280,11 @@ final class View
      * @param string $template 模板文件规则
      * @return string
      */
-    public static function resolvePath($template = '')
+    public static function resolvePath($template = '', $defaultA=null, $defaultC=null, $defaultM=null)
     {
-        $a = empty(self::$_a) && env('ROUTE_A', false) ? env('ROUTE_A') : self::$_a;
-        $c = empty(self::$_c) && env('ROUTE_C', false) ? env('ROUTE_C') : self::$_c;
-        $m = empty(self::$_m) && env('ROUTE_M', false) ? env('ROUTE_M') : self::$_m;
+        $a = !is_null($defaultA) ? $defaultA : (empty(self::$_a) && env('ROUTE_A', false) ? env('ROUTE_A') : self::$_a);
+        $c = !is_null($defaultC) ? $defaultC : (empty(self::$_c) && env('ROUTE_C', false) ? env('ROUTE_C') : self::$_c);
+        $m = !is_null($defaultM) ? $defaultM : (empty(self::$_m) && env('ROUTE_M', false) ? env('ROUTE_M') : self::$_m);
         $depr = defined('TAGLIB_DEPR') ? constant('TAGLIB_DEPR') : C('TAGLIB_DEPR', '/');
         $template = rtrim(str_replace(':', $depr, $template), $depr . '@');
         $style = '';

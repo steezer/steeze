@@ -17,6 +17,7 @@ class Manager {
 	private static $_instance=null;
     private $stack=array(); //数据临时栈
     private $isKeepUserTag=false; //是否保留未识别的用户标签
+    private $resolver=null; //模板名称解析器
 	
 	// 单例模式
 	public static function instance(){
@@ -33,10 +34,45 @@ class Manager {
         $this->isKeepUserTag=C('KEEP_USER_TAG', false);
 	}
 	
-	public function set_delim($ldelim,$rdelim){
+    /**
+     * 设置模板标签左右分隔符
+     *
+     * @param [type] $ldelim
+     * @param [type] $rdelim
+     */
+	public function setDelim($ldelim, $rdelim){
 		$this->leftDelim=$ldelim;
 		$this->rightDelim=$rdelim;
 	}
+    
+    /**
+     * 设置模板解析器
+     *
+     * @param mixed $resolver 模板解析器
+     */
+    public function setResolver($resolver){
+        $this->resolver=$resolver;
+    }
+    
+    /**
+     * 模板路径解析
+     *
+     * @param string $name 模板名称
+     * @param boolean $isBuild 是否进行编译
+     */
+    public function resolveFile($name, $isBuild=true){
+        // 使用自定义模板名称解析
+        if(!is_null($this->resolver) && is_callable($this->resolver)){
+            return call_user_func($this->resolver, $name, $isBuild);
+        }
+        // 使用系统默认模板名称解析
+        $r=View::resolvePath($name);
+        if($isBuild){
+            $paras=array('\'' . $r['a'] . '\'','\'' . $r['c'] . '\'','\'' . $r['style'] . '\'','\'' . $r['m'] . '\'');
+            return '<?php include template(' . implode(',', $paras) . '); ?>';
+        }
+        return template($r['a'], $r['c'], $r['style'], $r['m'], false);
+    }
 	
 	/**
 	 * 模板编译
@@ -199,8 +235,7 @@ class Manager {
 			$datas=self::parseAttrs($matches[1]); // 获取属性
 			unset($matches);
 			if(isset($datas['name'])){
-				$r=View::resolvePath($datas['name']);
-				$layout=template($r['a'],$r['c'],$r['style'],$r['m'],false);
+                $layout=$this->resolveFile($datas['name'], false);
 				if(is_file($layout)){
 					$content=file_get_contents($layout);
 					$content=preg_replace('/\<\!--\s*[%\{].*?[%\}]\s*--\>/is', '', $content);
@@ -220,7 +255,7 @@ class Manager {
 					}
 					unset($matches);
 					
-					//获取模版的模板变量并加到布局文件头部
+					//获取模板的模板变量并加到布局文件头部
 					$str=preg_replace('/' . $ld . 'slice\s+.+?\s*' . $rd . '.*?' . $ld . '\/slice' . $rd . '/is', '', $str);
 					if(stripos($str, $ld . 'assign ') !== false){
 						if(preg_match_all('/' . $ld . 'assign\s+.+?\s*\/?' . $rd . '/is', $str, $matches)){
@@ -323,15 +358,10 @@ class Manager {
 		if(isset($arrs['file'])){
 			$files=explode(',', $arrs['file']);
 			foreach($files as $file){
-				$r=View::resolvePath($file);
-				$paras=array('\'' . $r['a'] . '\'','\'' . $r['c'] . '\'','\'' . $r['style'] . '\'','\'' . $r['m'] . '\'');
-				$res.='include template(' . implode(',', $paras) . ');';
+                $res.=$this->resolveFile($file);
 			}
-		}else{
-			$res.='include template(' . $matches[1] . ');';
 		}
-		
-		return !empty($res) ? '<?php ' . $res . ' ?>' : '';
+		return $res;
 	}
 	
 	/**
