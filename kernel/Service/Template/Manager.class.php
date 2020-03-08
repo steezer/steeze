@@ -58,16 +58,16 @@ class Manager {
      * 模板路径解析
      *
      * @param string $name 模板名称
-     * @param boolean $isBuild 是否进行编译
+     * @param boolean $isCompile 是否进行编译
      */
-    public function resolveFile($name, $isBuild=true){
+    public function resolveFile($name, $isCompile=true){
         // 使用自定义模板名称解析
         if(!is_null($this->resolver) && is_callable($this->resolver)){
-            return call_user_func($this->resolver, $name, $isBuild);
+            return call_user_func($this->resolver, $name, $isCompile);
         }
         // 使用系统默认模板名称解析
         $r=View::resolvePath($name);
-        if($isBuild){
+        if($isCompile){
             $paras=array('\'' . $r['a'] . '\'','\'' . $r['c'] . '\'','\'' . $r['style'] . '\'','\'' . $r['m'] . '\'');
             return '<?php include template(' . implode(',', $paras) . '); ?>';
         }
