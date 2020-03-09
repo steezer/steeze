@@ -397,7 +397,7 @@ class Manager {
                 $class=$m.'.'.implode('/', (array)$route_cs);
 			}
 			unset($datas['name']);
-            $dataArr=array2html($datas);
+            $dataArr=dump_array($datas);
             $str.=(!empty($return) ? '$' . $return . ' = ' : 'echo to_string') . '($this->render(\''.$class.'\',\'_'.$action.'\','.$dataArr.'));';
 		}
 		return !empty($str) ? '<?php ' . $str . ' ?>' : '';

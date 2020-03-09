@@ -623,7 +623,7 @@ function array2string($data, $isSlashes=true){
  * @param array $data
  * @return string
  */
-function array2html($data){
+function dump_array($data){
 	if(is_array($data)){
 		$str='array(';
 		foreach($data as $key=>$val){
@@ -631,7 +631,7 @@ function array2html($data){
 				$key='\'' . $key . '\'';
 			}
 			if(is_array($val)){
-				$str.=$key . '=>' . array2html($val) . ',';
+				$str.=$key . '=>' . dump_array($val) . ',';
 			}else{
 				if(strpos($val, '$') === 0){
 					$str.=$key . '=>' . $val . ',';
