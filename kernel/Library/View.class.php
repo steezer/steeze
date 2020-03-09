@@ -272,7 +272,7 @@ final class View
                 }
                 
                 if(is_callable(array($concrete, $method))){
-                    return call_user_func_array(array($concrete, $method), $param);
+                    return call_user_func(array($concrete, $method), $param);
                 }
                 
             }
