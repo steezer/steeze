@@ -58,6 +58,41 @@ class Controller{
     }
     
     /**
+	 * 获取视图对象
+	 *
+	 * @return View
+	 */
+	protected function getView(){
+		if(is_null($this->view)){
+            $this->view=make('\Library\View', $this->context);
+		}
+		return $this->view;
+	}
+    
+    /**
+	 * 获取列表分页
+     * 
+	 * @param array $config 分页信息参数配置
+	 * @param int $setPages 显示页数（可选），默认：10
+	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
+	 * @param array $array 附加的参数（可选）
+	 * @return array 分页配置，包括html和info字段
+	 * 
+     * 分页信息参数范例：
+	 * 		[
+     *          'total'=> $totalrows,  //记录总数
+     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
+     *          'size'=> $pagesize,  //每页大小（可选），默认：15
+     *          'url'=> $curl, //分页URL（可选），默认使用当前页
+	 * 			'type'=>'page',  //分页参数（可选），默认:page
+	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
+	 * 		]
+	 */
+    protected function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
+        $this->getView()->getPager($config, $setPages, $urlRule, $array);
+    }
+    
+    /**
      * 渲染输出控制器方法的返回值
      *
      * @param Controller $controller
@@ -336,41 +371,6 @@ class Controller{
         $response=$this->getContext()->getResponse();
         $response->write($data, C('mimetype.'.$type), 'utf-8');
         $option && $response->end(null, $option==2);
-	}
-
-    /**
-	 * 获取列表分页
-     * 
-	 * @param array $config 分页信息参数配置
-	 * @param int $setPages 显示页数（可选），默认：10
-	 * @param string $urlRule 包含变量的URL规则模板（可选），默认：{type}={page}
-	 * @param array $array 附加的参数（可选）
-	 * @return array 分页配置，包括html和info字段
-	 * 
-     * 分页信息参数范例：
-	 * 		[
-     *          'total'=> $totalrows,  //记录总数
-     *          'page'=> $currentpage,  //当前分页，支持例如：“3, 5”（当前第3页，分页大小为5）
-     *          'size'=> $pagesize,  //每页大小（可选），默认：15
-     *          'url'=> $curl, //分页URL（可选），默认使用当前页
-	 * 			'type'=>'page',  //分页参数（可选），默认:page
-	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
-	 * 		]
-	 */
-    protected function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
-        $this->getView()->getPager($config, $setPages, $urlRule, $array);
-    }
-    
-    /**
-	 * 获取视图对象
-	 *
-	 * @return View
-	 */
-	protected function getView(){
-		if(is_null($this->view)){
-            $this->view=make('\Library\View', $this->context);
-		}
-		return $this->view;
 	}
     
     /**
