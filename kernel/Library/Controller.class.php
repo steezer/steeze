@@ -53,7 +53,7 @@ class Controller{
      *
      * @return Application
      */
-    public function getContext(){
+    protected function getContext(){
         return $this->context;
     }
     
@@ -65,8 +65,8 @@ class Controller{
      * @param array $param
      * @return mixed
      */
-	public function render($controller, $action, array $param=array()){
-		return $this->view()->render($controller, $action, $param);
+	protected function render($controller, $action, array $param=array()){
+		return $this->getView()->render($controller, $action, $param);
 	}
 
 	/**
@@ -82,13 +82,13 @@ class Controller{
      *   1: 结束请求，服务端停止输出，后续代码中运行；
      *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function display($file='', $data=null, $option=1){
+	protected function display($file='', $data=null, $option=1){
         if(is_array($file)){
             $data=$file;
             $file='';
         }
         if(is_array($data)){
-            $this->view()->assign($data);
+            $this->getView()->assign($data);
         }elseif(is_int($data)){
             $option=$data;
             $data=array();
@@ -98,12 +98,12 @@ class Controller{
         $type=!$ajax ? 'html' : '';
         $result=null;
         if(!$ajax || $ajax!=1){
-            $result=$this->view()->fetch($file);
+            $result=$this->getView()->fetch($file);
             if(is_null($result)){
                 return false;
             }
         }else{
-            $data=$this->view()->get();
+            $data=$this->getView()->get();
         }
         
         if(!$ajax){
@@ -137,9 +137,9 @@ class Controller{
      *   1: 结束请求，服务端停止输出，后续代码中运行；
      *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function show($content='', $data=null, $option=1){
+	protected function show($content='', $data=null, $option=1){
         if(is_array($data)){
-            $this->view()->assign($data);
+            $this->getView()->assign($data);
         }elseif(is_int($data)){
             $option=$data;
             $data=array();
@@ -148,12 +148,12 @@ class Controller{
         $type=!$ajax ? 'html' : '';
         $result=null;
         if(!$ajax || $ajax!=1){
-            $result=$this->view()->fetch('', $content);
+            $result=$this->getView()->fetch('', $content);
             if(is_null($result)){
                 return false;
             }
         }else{
-            $data=$this->view()->get();
+            $data=$this->getView()->get();
         }
         
         if(!$ajax){
@@ -180,8 +180,8 @@ class Controller{
 	 * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
 	 * @return string
 	 */
-	public function fetch($file='', $data=''){
-		return $this->view()->fetch($file, $data);
+	protected function fetch($file='', $data=''){
+		return $this->getView()->fetch($file, $data);
 	}
     
     /**
@@ -191,8 +191,8 @@ class Controller{
      * @param array $data 参数数据
      * @return string
      */
-    public function fetchString($str, $data=null){
-        return $this->view()->fetchString($str, $data);
+    protected function fetchString($str, $data=null){
+        return $this->getView()->fetchString($str, $data);
     }
     
     /**
@@ -202,8 +202,8 @@ class Controller{
      * @param array $data 参数数据
      * @return string
      */
-    public function fetchFile($file, $data=null){
-        return $this->view()->fetchFile($file, $data);
+    protected function fetchFile($file, $data=null){
+        return $this->getView()->fetchFile($file, $data);
     }
 
 	/**
@@ -214,7 +214,7 @@ class Controller{
 	 * @param string $templateFile 指定要调用的模板文件 默认为空 由系统自动定位模板文件
 	 * @return string
 	 */
-	public function buildHtml($htmlfile, $htmlpath='', $templateFile=''){
+	protected function buildHtml($htmlfile, $htmlpath='', $templateFile=''){
 		$content=$this->fetch($templateFile);
 		$htmlpath=!empty($htmlpath) ? $htmlpath : ROOT_PATH;
 		$htmlfile=$htmlpath . $htmlfile . C('HTML_FILE_SUFFIX', '.html');
@@ -231,8 +231,8 @@ class Controller{
 	 * @param mixed $value 变量的值
 	 * @return Controller
 	 */
-	public function assign($name, $value=''){
-		$this->view()->assign($name, $value);
+	protected function assign($name, $value=''){
+		$this->getView()->assign($name, $value);
 		return $this;
 	}
 
@@ -243,8 +243,8 @@ class Controller{
 	 * @param string $name 模板显示变量
 	 * @return mixed
 	 */
-	public function get($name=''){
-		return $this->view()->get($name);
+	protected function get($name=''){
+		return $this->getView()->get($name);
 	}
 
 	/**
@@ -262,7 +262,7 @@ class Controller{
 	 * 4. error($message)
      * 5. error()
 	 */
-	public function error($message=null, $code=1, $jumpUrl='', $ajax=false){
+	protected function error($message=null, $code=1, $jumpUrl='', $ajax=false){
 		if(is_string($code)){
 			if(is_bool($jumpUrl) || is_int($jumpUrl)){
 				$ajax=$jumpUrl;
@@ -292,7 +292,7 @@ class Controller{
 	 * 3. success($message)
      * 5. success()
 	 */
-	public function success($message=null,$jumpUrl='',$ajax=false){
+	protected function success($message=null,$jumpUrl='',$ajax=false){
         if(is_null($message)){
             $message=L('success');
         }else if(is_array($message)){
@@ -314,7 +314,7 @@ class Controller{
      *   1: 结束请求，服务端停止输出，后续代码中运行；
      *   2: 结束请求，服务端停止输出，后续代码继续运行（异步请求）；
 	 */
-	public function ajaxReturn($data=null, $type='', $option=1){
+	protected function ajaxReturn($data=null, $type='', $option=1){
 		if(is_int($type)){
             $option=$type;
             $type='';
@@ -323,7 +323,7 @@ class Controller{
 			$type=C('DEFAULT_AJAX_RETURN', 'JSON');
 		}
 		if(is_null($data)){
-			$data=$this->view()->get(); //使用模板变量
+			$data=$this->getView()->get(); //使用模板变量
 		}
         $type=strtolower($type);
         if($type=='jsonp'){
@@ -337,7 +337,7 @@ class Controller{
         $response->write($data, C('mimetype.'.$type), 'utf-8');
         $option && $response->end(null, $option==2);
 	}
-    
+
     /**
 	 * 获取列表分页
      * 
@@ -357,10 +357,22 @@ class Controller{
 	 * 			'callback'=>'showPage(\'?\')', //js回调函数（可选）
 	 * 		]
 	 */
-    public function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
-        $this->view()->getPager($config, $setPages, $urlRule, $array);
+    protected function getPager($config=array(), $setPages=10, $urlRule='', $array=array()){
+        $this->getView()->getPager($config, $setPages, $urlRule, $array);
     }
-
+    
+    /**
+	 * 获取视图对象
+	 *
+	 * @return View
+	 */
+	protected function getView(){
+		if(is_null($this->view)){
+            $this->view=make('\Library\View', $this->context);
+		}
+		return $this->view;
+	}
+    
     /**
 	 * 跳转操作 支持错误导向和正确跳转 调用模板显示 
 	 *
@@ -409,18 +421,6 @@ class Controller{
         
         //结束所有输出
         $response->end();
-	}
-    
-	/**
-	 * 获取视图对象
-	 *
-	 * @return View
-	 */
-	private function view(){
-		if(is_null($this->view)){
-            $this->view=make('\Library\View', $this->context);
-		}
-		return $this->view;
 	}
 	
 }
