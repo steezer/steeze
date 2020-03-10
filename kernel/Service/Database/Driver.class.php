@@ -382,24 +382,19 @@ abstract class Driver {
             $isResult=isset($options['result']);
             $param=array();
             
-            // 解析数组格式参数传递，如：array($this, 'result', 1);
-            if(
-                $isResult && 
-                is_array($options['result']) && 
-                count($options['result'])>2
-            ){
-                $param=array_splice($options['result'], 2);
-            }
-            
             // 如果无索引和结果处理全部获取后返回
             if(!$isIndex && !$isResult){
                 $result = $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
             }else{
                 $result=array();
                 $statement=$this->PDOStatement;
+                $indexNum=0;
+                $param[]=$indexNum;
                 while(($row=$statement->fetch(PDO::FETCH_ASSOC))!==false){
                     // 处理结果集
                     if($isResult){
+                        array_pop($param);
+                        $param[]=$indexNum;
                         $row=$this->setResult($row, $options['result'], $param);
                         if($row===true){
                             continue;
@@ -407,6 +402,7 @@ abstract class Driver {
                             break;
                         }
                     }
+                    $indexNum++;
                     // 处理索引
                     if($isIndex){
                         $index=explode(',', $options['index']);
