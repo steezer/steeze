@@ -152,6 +152,8 @@ class Loader {
     private static $prefixesPsr0 = [];
     // 是否使用composer
     private static $useComposer=false;
+    // 自定义加载器
+    private static $userLoader=null;
     
     /**
      * 注册自动加载机制
@@ -191,8 +193,11 @@ class Loader {
                     }
                     $isLib=strpos($path, 'Library'.DS)!==false;
                     $file = APP_PATH . $path . ( $isLib ? $libExt : $ext);
-                } else if (strpos($path, 'Vendor' . DS) === 0) {
-                    $file = VENDOR_PATH . substr($path, 7) . $ext;
+                } else if (
+                    self::$userLoader!=null && 
+                    is_callable(self::$userLoader)
+                ) {
+                    $file = call_user_func(self::$userLoader, $path);
                 } else {
                     $file = KERNEL_PATH . $path . $libExt;
                 }
@@ -207,6 +212,15 @@ class Loader {
             APP_DEBUG && self::$cacheFiles[] = $file;
             include $file;
         }
+    }
+    
+    /**
+     * 设置用户自定义加载器
+     *
+     * @param Closure $loader
+     */
+    public static function setUserLoader($loader){
+        self::$userLoader=$loader;
     }
     
     /**
