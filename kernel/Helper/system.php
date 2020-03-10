@@ -633,18 +633,14 @@ function dump_array($data){
 			if(is_array($val)){
 				$str.=$key . '=>' . dump_array($val) . ',';
 			}else{
-				if(strpos($val, '$') === 0){
-					$str.=$key . '=>' . $val . ',';
-				}else{
-					if(is_string($val)){
-						if(strpos($val, '$') !== false){
-							$val='"' . addslashes($val) . '"';
-						}else{
-							$val='\'' . addslashes($val) . '\'';
-						}
-					}
-					$str.=$key . '=>' . $val . ',';
-				}
+                if(is_string($val) && $val[0]!='$'){
+                    if($val[0]=='{' && substr($val, -1, 1)=='}'){
+                        $val='('.substr($val, 1, -1).')';
+                    } else {
+                        $val='\'' . addslashes($val) . '\'';
+                    }
+                }
+                $str.=$key . '=>' . $val . ',';
 			}
 		}
 		return $str . ')';
