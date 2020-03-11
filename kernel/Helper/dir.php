@@ -125,11 +125,17 @@ function dir_list($path, $exts='', $list=[]){
  * 设置目录下面的所有文件的访问和修改时间
  *
  * @param string $path 路径
- * @param int $mtime = TIME 修改时间
- * @param int $atime = TIME 访问时间
+ * @param int $mtime 修改时间
+ * @param int $atime 访问时间
  * @return array 不是目录时返回false，否则返回 true
  */
-function dir_touch($path, $mtime=TIME, $atime=TIME){
+function dir_touch($path, $mtime=null, $atime=null){
+    if(is_null($mtime)){
+        $mtime=time();
+    }
+    if(is_null($atime)){
+        $atime=time();
+    }
 	if(!is_dir($path)){
 		return false;
 	}
