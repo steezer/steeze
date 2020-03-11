@@ -40,7 +40,12 @@ class Zip{
 			$timearray['minutes']=0;
 			$timearray['seconds']=0;
 		}
-		return (($timearray['year'] - 1980) << 25) | ($timearray['mon'] << 21) | ($timearray['mday'] << 16) | ($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
+		return (($timearray['year'] - 1980) << 25) | 
+                ($timearray['mon'] << 21) | 
+                ($timearray['mday'] << 16) | 
+                ($timearray['hours'] << 11) | 
+                ($timearray['minutes'] << 5) | 
+                ($timearray['seconds'] >> 1);
 	}
 
 	private function addFile($data,$filename,$time=0){
@@ -100,16 +105,21 @@ class Zip{
 	private function file(){
 		$data=implode('', $this->datasec);
 		$ctrldir=implode('', $this->ctrl_dir);
-		
-		return $data . $ctrldir . $this->eof_ctrl_dir . pack('v', sizeof($this->ctrl_dir)) . pack('v', sizeof($this->ctrl_dir)) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "\x00\x00";
+		return $data . 
+                $ctrldir . 
+                $this->eof_ctrl_dir . 
+                pack('v', sizeof($this->ctrl_dir)) . 
+                pack('v', sizeof($this->ctrl_dir)) . 
+                pack('V', strlen($ctrldir)) . 
+                pack('V', strlen($data)) . "\x00\x00";
 	}
 
-	private function readCentralFileHeaders($zip){
-		$binary_data=fread($zip, 46);
+	private function readCentralFileHeaders($fp){
+		$binary_data=fread($fp, 46);
 		$header=unpack('vchkid/vid/vversion/vversion_extracted/vflag/vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize/vfilename_len/vextra_len/vcomment_len/vdisk/vinternal/Vexternal/Voffset', $binary_data);
-		$header['filename']=($header['filename_len'] != 0) ? fread($zip, $header['filename_len']) : '';
-		$header['extra']=($header['extra_len'] != 0) ? fread($zip, $header['extra_len']) : '';
-		$header['comment']=($header['comment_len'] != 0) ? fread($zip, $header['comment_len']) : '';
+		$header['filename']=($header['filename_len'] != 0) ? fread($fp, $header['filename_len']) : '';
+		$header['extra']=($header['extra_len'] != 0) ? fread($fp, $header['extra_len']) : '';
+		$header['comment']=($header['comment_len'] != 0) ? fread($fp, $header['comment_len']) : '';
 		if($header['mdate'] && $header['mtime']){
 			$hour=($header['mtime'] & 0xF800) >> 11;
 			$minute=($header['mtime'] & 0x07E0) >> 5;
@@ -129,12 +139,12 @@ class Zip{
 		return $header;
 	}
 
-	private function readFileHeader($zip){
-		$binary_data=fread($zip, 30);
+	private function readFileHeader($fp){
+		$binary_data=fread($fp, 30);
 		$data=unpack('vchk/vid/vversion/vflag/vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize/vfilename_len/vextra_len', $binary_data);
 		
-		$header['filename']=fread($zip, $data['filename_len']);
-		$header['extra']=($data['extra_len'] != 0) ? fread($zip, $data['extra_len']) : '';
+		$header['filename']=fread($fp, $data['filename_len']);
+		$header['extra']=($data['extra_len'] != 0) ? fread($fp, $data['extra_len']) : '';
 		$header['compression']=$data['compression'];
 		$header['size']=$data['size'];
 		$header['compressed_size']=$data['compressed_size'];
@@ -160,14 +170,14 @@ class Zip{
 		return $header;
 	}
 
-	private function extractFile($header,$to,$zip){
-		$header=$this->readfileheader($zip);
+	private function extractFile($header, $dist, $fp){
+		$header=$this->readfileheader($fp);
 		
-		if(substr($to, -1) != '/'){
-			$to.='/';
+		if(substr($dist, -1) != '/'){
+			$dist.='/';
 		}
-		if(!is_dir($to)){
-			@mkdir($to, 0777);
+		if(!is_dir($dist)){
+			@mkdir($dist, 0777);
 		}
 		
 		$pth=explode('/', dirname($header['filename']));
@@ -177,14 +187,14 @@ class Zip{
 				continue;
 			}
 			$pthss.=$pth[$i] . '/';
-			if(!is_dir($to . $pthss)){
-				@mkdir($to . $pthss, 0777);
+			if(!is_dir($dist . $pthss)){
+				@mkdir($dist . $pthss, 0777);
 			}
 		}
 		
 		if(!(isset($header['external']) && $header['external'] == 0x41FF0010) && !(isset($header['external']) && $header['external'] == 16)){
 			if($header['compression'] == 0){
-				$fp=@fopen($to . $header['filename'], 'wb');
+				$fp=@fopen($dist . $header['filename'], 'wb');
 				if(!$fp){
 					return (-1);
 				}
@@ -192,15 +202,15 @@ class Zip{
 				
 				while($size != 0){
 					$read_size=($size < 2048 ? $size : 2048);
-					$buffer=fread($zip, $read_size);
+					$buffer=fread($fp, $read_size);
 					$binary_data=pack('a' . $read_size, $buffer);
 					@fwrite($fp, $binary_data, $read_size);
 					$size-=$read_size;
 				}
 				fclose($fp);
-				touch($to . $header['filename'], $header['mtime']);
+				touch($dist . $header['filename'], $header['mtime']);
 			}else{
-				$fp=@fopen($to . $header['filename'] . '.gz', 'wb');
+				$fp=@fopen($dist . $header['filename'] . '.gz', 'wb');
 				if(!$fp){
 					return (-1);
 				}
@@ -209,7 +219,7 @@ class Zip{
 				$size=$header['compressed_size'];
 				while($size != 0){
 					$read_size=($size < 1024 ? $size : 1024);
-					$buffer=fread($zip, $read_size);
+					$buffer=fread($fp, $read_size);
 					$binary_data=pack('a' . $read_size, $buffer);
 					@fwrite($fp, $binary_data, $read_size);
 					$size-=$read_size;
@@ -218,12 +228,12 @@ class Zip{
 				$binary_data=pack('VV', $header['crc'], $header['size']);
 				fwrite($fp, $binary_data, 8);
 				fclose($fp);
-				$gzp=@gzopen($to . $header['filename'] . '.gz', 'rb') or die('Cette archive est compress!');
+				$gzp=@gzopen($dist . $header['filename'] . '.gz', 'rb') or die('Cette archive est compress!');
 				
 				if(!$gzp){
 					return (-2);
 				}
-				$fp=@fopen($to . $header['filename'], 'wb');
+				$fp=@fopen($dist . $header['filename'], 'wb');
 				if(!$fp){
 					return (-1);
 				}
@@ -238,33 +248,34 @@ class Zip{
 				}
 				fclose($fp);
 				gzclose($gzp);
-				touch($to . $header['filename'], $header['mtime']);
-				@unlink($to . $header['filename'] . '.gz');
+				touch($dist . $header['filename'], $header['mtime']);
+				@unlink($dist . $header['filename'] . '.gz');
 			}
 		}
 		return true;
 	}
-
-	private function readCentralDir($zip,$zipfile){
-		$filesize=filesize($zipfile);
-		fseek($zip, $filesize - 22);
-		$EofCentralDirSignature=unpack('Vsignature', fread($zip, 4));
+    
+    
+	private function readCentralDir($fp, $filename){
+		$filesize=filesize($filename);
+		fseek($fp, $filesize - 22);
+		$EofCentralDirSignature=unpack('Vsignature', fread($fp, 4));
 		if($EofCentralDirSignature['signature'] != 0x06054b50){
 			$maxLength=65535 + 22;
 			$maxLength > $filesize && $maxLength=$filesize;
-			fseek($zip, $filesize - $maxLength);
-			$searchPos=ftell($zip);
+			fseek($fp, $filesize - $maxLength);
+			$searchPos=ftell($fp);
 			while($searchPos < $filesize){
-				fseek($zip, $searchPos);
-				$sigData=unpack('Vsignature', fread($zip, 4));
+				fseek($fp, $searchPos);
+				$sigData=unpack('Vsignature', fread($fp, 4));
 				if($sigData['signature'] == 0x06054b50){
 					break;
 				}
 				$searchPos++;
 			}
 		}
-		$data=unpack('vdisk/vdisk_start/vdisk_entries/ventries/Vsize/Voffset/vcomment_size', fread($zip, 18));
-		$centd['comment']=($data['comment_size'] != 0) ? fread($zip, $data['comment_size']) : ''; // 注释
+		$data=unpack('vdisk/vdisk_start/vdisk_entries/ventries/Vsize/Voffset/vcomment_size', fread($fp, 18));
+		$centd['comment']=($data['comment_size'] != 0) ? fread($fp, $data['comment_size']) : ''; // 注释
 		$centd['entries']=$data['entries'];
 		$centd['disk_entries']=$data['disk_entries'];
 		$centd['offset']=$data['offset'];
@@ -274,13 +285,18 @@ class Zip{
 		return $centd;
 	}
 	
-	// 压缩到服务器
-	public function zipToFile($dir,$savepath){
+	/**
+     * 压缩到服务器
+     *
+     * @param string $dirname
+     * @param string $distFilename
+     */
+	public function zipToFile($dirname, $distFilename){
 		if(@!function_exists('gzcompress')){
 			return;
 		}
 		ob_end_clean();
-		$filelist=$this->visitFile($dir);
+		$filelist=$this->visitFile($dirname);
 		if(count($filelist) == 0){
 			return;
 		}
@@ -295,32 +311,36 @@ class Zip{
 			$fd=fopen($file, 'rb');
 			$content=@fread($fd, filesize($file));
 			fclose($fd);
-			$file=substr($file, strlen($dir));
+			$file=substr($file, strlen($dirname));
 			if(substr($file, 0, 1) == '\\' || substr($file, 0, 1) == '/'){
 				$file=substr($file, 1);
 			}
-			
 			$this->addFile($content, $file);
 		}
 		$out=$this->file();
 		
-		$toDir=dirname($savepath);
-		if(!is_dir($toDir)){
-			@mkdir($toDir, 0777);
+		$distDir=dirname($distFilename);
+		if(!is_dir($distDir)){
+			@mkdir($distDir, 0777);
 		}
 		
-		$fp=fopen($savepath, 'wb');
+		$fp=fopen($distFilename, 'wb');
 		fwrite($fp, $out, strlen($out));
 		fclose($fp);
 	}
 	
-	// 压缩并直接下载
-	public function zipToDownload($dir,$dName=''){
+	/**
+     * 压缩并直接下载
+     *
+     * @param string $dirname
+     * @param string $filename
+     */
+	public function zipToDownload($dirname, $filename=''){
 		if(@!function_exists('gzcompress')){
 			return;
 		}
 		ob_end_clean();
-		$filelist=$this->visitFile($dir);
+		$filelist=$this->visitFile($dirname);
 		if(count($filelist) == 0){
 			return;
 		}
@@ -334,7 +354,7 @@ class Zip{
 			$fd=fopen($file, 'rb');
 			$content=@fread($fd, filesize($file));
 			fclose($fd);
-			$file=substr($file, strlen($dir));
+			$file=substr($file, strlen($dirname));
 			if(substr($file, 0, 1) == '\\' || substr($file, 0, 1) == '/'){
 				$file=substr($file, 1);
 			}
@@ -342,27 +362,33 @@ class Zip{
 		}
 		
 		$out=$this->file();
-		$dName=$dName ? $dName : 'download' . date('YmdHis', time()) . '.zip';
+		$filename=$filename ? $filename : 'download' . date('YmdHis', time()) . '.zip';
 		header('Content-Encoding: none');
 		header('Content-Type: application/zip');
-		header('Content-Disposition: attachment ; filename=' . $dName);
+		header('Content-Disposition: attachment ; filename=' . $filename);
 		header('Pragma: no-cache');
 		header('Expires: 0');
 		print($out);
 	}
 	
-	// 解压文件
-	public function unZip($zipfile,$to,$index=Array(-1)){
-		if(!$zipfile || !is_file($zipfile)){
+	/**
+     * 解压文件
+     *
+     * @param string $filename
+     * @param string $dist
+     * @param array $index
+     */
+	public function unZip($filename, $dist, $index=array(-1)){
+		if(!$filename || !is_file($filename)){
 			return false;
 		}
 		$ok=0;
-		$zip=fopen($zipfile, 'rb');
-		if(!$zip){
+		$fp=fopen($filename, 'rb');
+		if(!$fp){
 			return (-1);
 		}
 		
-		$cdir=$this->readCentralDir($zip, $zipfile);
+		$cdir=$this->readCentralDir($fp, $filename);
 		$pos_entry=$cdir['offset'];
 		
 		if(!is_array($index)){
@@ -375,36 +401,41 @@ class Zip{
 		}
 		
 		for($i=0; $i < $cdir['entries']; $i++){
-			fseek($zip, $pos_entry);
-			$header=$this->readCentralFileHeaders($zip);
+			fseek($fp, $pos_entry);
+			$header=$this->readCentralFileHeaders($fp);
 			$header['index']=$i;
-			$pos_entry=ftell($zip);
-			rewind($zip);
-			fseek($zip, $header['offset']);
+			$pos_entry=ftell($fp);
+			rewind($fp);
+			fseek($fp, $header['offset']);
 			if(in_array('-1', $index) || in_array($i, $index)){
-				$stat[$header['filename']]=$this->extractFile($header, $to, $zip);
+				$stat[$header['filename']]=$this->extractFile($header, $dist, $fp);
 			}
 		}
-		fclose($zip);
+		fclose($fp);
 		return $stat;
 	}
 	
-	// 获取被压缩文件的信息
-	public function getZipInnerFilesInfo($zipfile){
-		if(!$zipfile || !is_file($zipfile)){
+	/**
+     * 获取被压缩文件的信息
+     *
+     * @param string $filename
+     * @return array
+     */
+	public function getZipInnerFilesInfo($filename){
+		if(!$filename || !is_file($filename)){
 			return false;
 		}
-		$zip=fopen($zipfile, 'rb');
-		if(!$zip){
+		$fp=fopen($filename, 'rb');
+		if(!$fp){
 			return (0);
 		}
-		$centd=$this->readCentralDir($zip, $zipfile);
+		$centd=$this->readCentralDir($fp, $filename);
 		
-		rewind($zip);
-		fseek($zip, $centd['offset']);
+		rewind($fp);
+		fseek($fp, $centd['offset']);
 		$ret=array();
 		for($i=0; $i < $centd['entries']; $i++){
-			$header=$this->readCentralFileHeaders($zip);
+			$header=$this->readCentralFileHeaders($fp);
 			$header['index']=$i;
 			$info=array(
 					'filename' => $header['filename'], // 文件名
@@ -422,20 +453,27 @@ class Zip{
 			$ret[]=$info;
 			unset($header);
 		}
-		fclose($zip);
+		fclose($fp);
 		return $ret;
 	}
-	// 获取压缩文件的注释
-	public function getZipComment($zipfile){
-		if(!$zipfile || !is_file($zipfile)){
+    
+	/**
+     * 获取压缩文件的注释
+     *
+     * @param string $filename
+     * @return string
+     */
+	public function getZipComment($filename){
+		if(!$filename || !is_file($filename)){
 			return false;
 		}
-		$zip=fopen($zipfile, 'rb');
-		if(!$zip){
-			return (0);
+		$fp=fopen($filename, 'rb');
+		if(!$fp){
+			return false;
 		}
-		$centd=$this->readCentralDir($zip, $zipfile);
-		fclose($zip);
+		$centd=$this->readCentralDir($fp, $filename);
+		fclose($fp);
 		return $centd['comment'];
 	}
+    
 }
