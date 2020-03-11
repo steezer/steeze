@@ -8,15 +8,15 @@
 
 
 /**
- * 功能：转化 \ 为 /
+ * 标准化路径
  * 
  * @param string $path 路径
  * @return string	路径
  */
 function dir_path($path){
-	$path=str_replace('\\', '/', $path);
-	if(substr($path, -1) != '/'){
-		$path=$path . '/';
+	$path=str_replace('/', DS, $path);
+	if(substr($path, -1) != DS){
+		$path=$path . DS;
 	}
 	return $path;
 }
@@ -32,18 +32,16 @@ function dir_create($path, $mode=0777){
 	if(is_dir($path)){
 		return TRUE;
 	}
-	$ftp_enable=0;
 	$path=dir_path($path);
-	$temp=explode('/', $path);
-	$cur_dir='';
+	$temp=explode(DS, $path);
+	$dir='';
 	$max=count($temp) - 1;
 	for($i=0; $i < $max; $i++){
-		$cur_dir.=$temp[$i] . '/';
-		if(@is_dir($cur_dir)){
+		$dir.=$temp[$i] . DS;
+		if(is_dir($dir)){
 			continue;
 		}
-		@mkdir($cur_dir, 0777, true);
-		@chmod($cur_dir, 0777);
+		mkdir($dir, $mode, true);
 	}
 	return is_dir($path);
 }
@@ -59,7 +57,7 @@ function dir_copy($fromdir, $todir){
 	$fromdir=dir_path($fromdir);
 	$todir=dir_path($todir);
 	if(!is_dir($fromdir)){
-		return FALSE;
+		return false;
 	}
 	if(!is_dir($todir)){
 		dir_create($todir);
@@ -76,7 +74,7 @@ function dir_copy($fromdir, $todir){
 			}
 		}
 	}
-	return TRUE;
+	return true;
 }
 
 /**
