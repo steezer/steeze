@@ -37,6 +37,20 @@ final class View
      * @var Pager
      */
     private $pager = null;
+    
+    /**
+     * 模版管理变量
+     *
+     * @var TemplateManager
+     */
+    private $parser=null;
+    
+    /**
+     * 文件路径接下去
+     *
+     * @var \Closure
+     */
+    private $fileResolver=null;
 
     /**
      * 设置应用上下文对象
@@ -50,6 +64,24 @@ final class View
         } else {
             throw new Exception(L('You should create view in Application context!'));
         }
+    }
+    
+    /**
+     * 设置模板解析器
+     *
+     * @param TemplateManager $parser
+     */
+    public function setParser($parser){
+        $this->parser=$parser;
+    }
+    
+    /**
+     * 设置模板解析器
+     *
+     * @param \Closure $resolver
+     */
+    public function setFileResolver($resolver){
+        $this->fileResolver=$resolver;
     }
 
     /**
@@ -167,7 +199,8 @@ final class View
             $this->assign((array)$data);
         
         // 解析字符串
-        $str=TemplateManager::instance()->parse($str);
+        $str=!is_null($this->parser) ? $this->parser->parse($str) :
+                    TemplateManager::instance()->parse($str);
         
         return $this->parse($str, false);
     }
@@ -182,9 +215,17 @@ final class View
     public function fetchFile($file, $data=null)
     {
         // 解析模版文件
-        $res = !is_file($file) ? self::resolvePath($file) : $file;
-        $file = is_array($res) ? template($res['a'], $res['c'], $res['style'], $res['m']) : $res;
-        unset($res);
+        if(!is_file($file)){
+            if(
+                $this->fileResolver!==null && 
+                is_callable($this->fileResolver)
+            ){
+                $file=call_user_func($this->fileResolver, $file);
+            }else{
+                $res=self::resolvePath($file);
+                $file = template($res['a'], $res['c'], $res['style'], $res['m']);
+            }
+        }
         
         // 模板文件不存在直接返回
         if (!is_file($file)) {
