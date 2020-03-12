@@ -193,13 +193,15 @@ class Loader {
                     }
                     $isLib=strpos($path, 'Library'.DS)!==false;
                     $file = APP_PATH . $path . ( $isLib ? $libExt : $ext);
-                } else if (
-                    self::$userLoader!=null && 
-                    is_callable(self::$userLoader)
-                ) {
-                    $file = call_user_func(self::$userLoader, $path);
                 } else {
                     $file = KERNEL_PATH . $path . $libExt;
+                    if (
+                        !is_file($file) &&
+                        self::$userLoader!=null && 
+                        is_callable(self::$userLoader)
+                    ) {
+                        $file = call_user_func(self::$userLoader, $path);
+                    }
                 }
             }
         }
