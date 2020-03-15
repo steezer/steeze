@@ -1177,20 +1177,18 @@ function assets($file, $type='', $check=false, $default='Default'){
             // 绝对路径和相对风格路径
             if($style[0]!=='/'){
                 $style='app/' . $module . '/' . $style . '/';
-            }else{
-                $style=ltrim($style, '/');
             }
-            $url=$style . $file;
+            $url=$style . '/' . $file;
         }
         if($url===''){
             return '';
         }
 	}else{
-        $url=ltrim($file, '/');
+        $url=$file;
     }
     
     // 绝对文件路径
-    return env('ASSETS_URL') . simplify_ds($url, '/');
+    return env('ASSETS_URL') . simplify_ds(ltrim($url, '/'), '/');
 }
 
 /**
