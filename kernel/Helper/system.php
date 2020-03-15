@@ -206,12 +206,13 @@ function thumb($imgUrl, $maxWidth=0, $maxHeight=0, $cutType=0, $defaultImg='', $
  * @param string $path 路径名称
  * @return string
  */
-function simplify_ds($path){
-	if(DS != '/'){
-		$path=str_replace('/', DS, $path);
+function simplify_ds($path, $ds=DS){
+	if($ds != '/'){
+		$path=str_replace('/', $ds, $path);
 	}
-	while(strpos($path, DS . DS) !== false){
-		$path=str_replace(DS . DS, DS, $path);
+    $dsds=$ds . $ds;
+	while(strpos($path, $dsds) !== false){
+		$path=str_replace($dsds, $ds, $path);
 	}
 	return $path;
 }
@@ -1077,7 +1078,7 @@ function session($name='', $value=''){
  * @param bool $check 是否检查存在，如果不存在返回空
  * @param string $default 如果不存在，默认的风格包名称
  */
-function assets($file, $type='', $check=false, $default='default'){
+function assets($file, $type='', $check=false, $default='Default'){
 	if(!is_string($type)){
 		if(is_string($check)){
 			$default=$check;
@@ -1095,6 +1096,7 @@ function assets($file, $type='', $check=false, $default='default'){
 		return $file;
 	}
 	
+    $url='';
     // 相对文件路径
 	if($file[0] != '/'){
 		$module='';
@@ -1150,37 +1152,45 @@ function assets($file, $type='', $check=false, $default='default'){
         }
 		
         $module=strtolower($module);
-        
         // 检查文件是否存在
 		if($check && !$isExtern){
-			if(strpos($style, '/') === 0){
+			if($style[0]==='/'){
                 // 绝对路径的检查
 				$style=ltrim($style, '/');
-                if(is_file(ASSETS_PATH . ($style != '' ? $style . DS : '') . $file)){
-                    return env('ASSETS_URL') . ($style != '' ? $style . '/' : '') . $file ;
+                $path=simplify_ds(ASSETS_PATH . $style . DS . $file);
+                if(is_file($path)){
+                    $url=$style . '/' . $file;
                 }
 			}else{
                 // 相对路径的检查，不存在使用默认风格
-				if(!is_file(ASSETS_PATH . $module . DS . ($style === '' ? '' : $style . DS) . $file)){
-                    if(is_file(ASSETS_PATH . 'app' . DS . $module . DS . $default . DS . $file)){
-                        return env('ASSETS_URL') . 'app/' . $module . '/' . trim($default, '/') . '/' . $file;
+                $path=simplify_ds(ASSETS_PATH . $module . DS . $style . DS . $file);
+				if(!is_file($path)){
+                    $path=simplify_ds(ASSETS_PATH . 'app' . DS . $module . DS . $default . DS . $file);
+                    if(is_file($path)){
+                        $url='app/' . $module . '/' . $default . '/' . $file;
                     }
-				}
+				}else{
+                    $url='app/' . $module . DS . $style . DS . $file;
+                }
 			}
-            return '';
-		}
-        
-        // 绝对路径和相对风格路径
-        if(strpos($style, '/') === 0){
-            $style=$style != '/' ? ltrim($style, '/') . '/' : '';
-        }else{
-            $style='app/' . $module . '/' . ($style === '' ? '' : $style . '/');
+		}else{
+            // 绝对路径和相对风格路径
+            if($style[0]!=='/'){
+                $style='app/' . $module . '/' . $style . '/';
+            }else{
+                $style=ltrim($style, '/');
+            }
+            $url=$style . $file;
         }
-		return env('ASSETS_URL') . $style . $file;
-	}
+        if($url===''){
+            return '';
+        }
+	}else{
+        $url=ltrim($file, '/');
+    }
     
     // 绝对文件路径
-    return env('ASSETS_URL') . ltrim($file, '/');
+    return env('ASSETS_URL') . simplify_ds($url, '/');
 }
 
 /**
