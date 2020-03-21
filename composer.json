@@ -2,12 +2,12 @@
     "name": "steezer/steeze",
     "description": "An elegant and concise, but efficient PHP framework",
     "type": "project",
-    "keywords": ["framework", "steeze", "ORM"],
-    "homepage": "http://steeze.cn/",
-    "license": "Apache2",
+    "keywords": ["steeze", "framework", "ORM", "lavaral", "thinkphp"],
+    "homepage": "https://github.com/steezer/steeze",
+    "license": "MIT",
     "authors": [
         {
-            "name": "XieChunping",
+            "name": "steezer",
             "email": "spring.wind2006@163.com"
         }
     ],
