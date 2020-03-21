@@ -112,7 +112,7 @@ class AppException extends Exception {
      * @param bool $isPrint 是否打印错误
 	 */
 	static public function report(&$info, $isPrint=false){
-        $info['file']=str_replace(dirname(KERNEL_PATH), '', $info['file']);
+        $info['file']=str_replace(BASE_PATH, '', $info['file']);
 		if(C('errorlog')){
 			$data='('.$info['code'].')'.$info['message'];
 			$data.=' in '.$info['file'].'['.$info['line'].']';

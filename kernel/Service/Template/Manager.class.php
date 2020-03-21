@@ -83,7 +83,7 @@ class Manager {
 	 */
 	public function compile($tplfile,$compiledtplfile){
 		if(!is_file($tplfile)){
-			throw new Exception(L('template {0} is not exists',str_replace(KERNEL_PATH . 'template' . DS . 'styles' . DS, '', $tplfile)));
+			throw new Exception(L('template {0} is not exists',str_replace(BASE_PATH , '', $tplfile)));
 		}
 		$content=file_get_contents($tplfile);
 		$filepath=dirname($compiledtplfile) . DS;

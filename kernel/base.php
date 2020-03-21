@@ -17,7 +17,7 @@ function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/G
 /**
  * 系统当前版本号
  */
-define('STEEZE_VERSION', '1.3.3');
+define('STEEZE_VERSION', '1.3.4');
 
 /**
  * 系统初始化标志
@@ -45,19 +45,24 @@ define('DS', DIRECTORY_SEPARATOR);
 define('KERNEL_PATH', dirname(__FILE__) . DS);
 
 /**
- * 应用目录（支持自定义）
+ * 基础目录（支持自定义）
  */
-!defined('APP_PATH') && define('APP_PATH', KERNEL_PATH . '..' . DS . 'app' . DS);
+!defined('BASE_PATH') && define('BASE_PATH', KERNEL_PATH . '..' . DS);
 
 /**
  * 应用目录（支持自定义）
  */
-!defined('VENDOR_PATH') && define('VENDOR_PATH', KERNEL_PATH . '..' . DS . 'vendor' . DS);
+!defined('APP_PATH') && define('APP_PATH', BASE_PATH . 'app' . DS);
+
+/**
+ * 应用目录（支持自定义）
+ */
+!defined('VENDOR_PATH') && define('VENDOR_PATH', BASE_PATH . 'vendor' . DS);
 
 /**
  * 数据存储目录（支持自定义，权限为可读写）
  */
-!defined('STORAGE_PATH') && define('STORAGE_PATH', KERNEL_PATH . '..' . DS . 'storage' . DS);
+!defined('STORAGE_PATH') && define('STORAGE_PATH', BASE_PATH . 'storage' . DS);
 
 /**
  * 缓存文件目录（权限为可读写）
@@ -77,7 +82,7 @@ define('DATA_PATH', STORAGE_PATH . 'Data' . DS);
 /**
  * 入口文件根目录路径（支持自定义）
  */
-!defined('ROOT_PATH') && define('ROOT_PATH', dirname(KERNEL_PATH) . DS . 'public' . DS);
+!defined('ROOT_PATH') && define('ROOT_PATH', BASE_PATH . 'public' . DS);
 
 /**
  * 资源文件路径
@@ -351,7 +356,7 @@ class Loader {
      */
     public static function env($key = null, $value = null, $default = null){
         if (is_null($key)) {
-            $path = KERNEL_PATH . '..' . DS . '.env';
+            $path = BASE_PATH . '.env';
             if (is_file($path) && is_array($result = parse_ini_file($path))) {
                 $_ENV = array_merge($_ENV, array_change_key_case($result, CASE_UPPER));
             }
