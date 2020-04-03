@@ -1243,9 +1243,19 @@ class Model implements ArrayAccess{
 				'tel'=> '/^\+?\d[\d\-]+$/',
 				'mobile'=> '/^\+?\d\d+$/',
 		);
-		// 检查是否有内置的正则表达式
-		if(isset($validate[strtolower($rule)]))
-			$rule=$validate[strtolower($rule)];
+        // 检查是否有内置的正则表达式
+        $rule=strtolower($rule);
+		if(isset($validate[$rule])){
+            $rule=$validate[$rule];
+        }
+        
+        //如果值为数组，只检查是否空
+        if(is_array($value)){
+            if($rule=='require'){
+                return !empty($value);
+            }
+            return false;
+        }
 		return preg_match($rule, $value) === 1;
 	}
 
