@@ -331,6 +331,7 @@ class Controller{
 	protected function success($message=null,$jumpUrl='',$ajax=false){
         if(is_bool($jumpUrl) || is_int($jumpUrl)){
             $ajax=$jumpUrl;
+            $jumpUrl='';
         }
         if(is_null($message)){
             $message=L('success');
