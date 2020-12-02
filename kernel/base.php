@@ -17,7 +17,7 @@ function_exists('date_default_timezone_set') && date_default_timezone_set('Etc/G
 /**
  * 系统当前版本号
  */
-define('STEEZE_VERSION', '1.3.4');
+define('STEEZE_VERSION', '1.3.5');
 
 /**
  * 系统初始化标志

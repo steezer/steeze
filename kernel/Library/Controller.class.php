@@ -298,10 +298,10 @@ class Controller{
      * 5. error()
 	 */
 	protected function error($message=null, $code=1, $jumpUrl='', $ajax=false){
+        if(is_bool($jumpUrl) || is_int($jumpUrl)){
+            $ajax=$jumpUrl;
+        }
 		if(is_string($code)){
-			if(is_bool($jumpUrl) || is_int($jumpUrl)){
-				$ajax=$jumpUrl;
-			}
 			$jumpUrl=$code;
 			$code=1;
 		}elseif(is_bool($code)){
@@ -328,6 +328,9 @@ class Controller{
      * 5. success()
 	 */
 	protected function success($message=null,$jumpUrl='',$ajax=false){
+        if(is_bool($jumpUrl) || is_int($jumpUrl)){
+            $ajax=$jumpUrl;
+        }
         if(is_null($message)){
             $message=L('success');
         }else if(is_array($message)){
@@ -392,8 +395,10 @@ class Controller{
 			if(is_array($jumpUrl)){
 				$data['data']=$jumpUrl;
 				$jumpUrl='';
-			}
-			$data['url']=$jumpUrl;
+            }
+            if(!empty($jumpUrl)){
+                $data['url']=$jumpUrl;
+            }
             $response->flush($data, C('mimetype.json'), 'utf-8');
 		}else{
 			is_int($ajax) && $this->assign('waitSecond', $ajax*1000);
