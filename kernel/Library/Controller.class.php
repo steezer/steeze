@@ -300,6 +300,7 @@ class Controller{
 	protected function error($message=null, $code=1, $jumpUrl='', $ajax=false){
         if(is_bool($jumpUrl) || is_int($jumpUrl)){
             $ajax=$jumpUrl;
+            $jumpUrl='';
         }
 		if(is_string($code)){
 			$jumpUrl=$code;
