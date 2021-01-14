@@ -28,7 +28,7 @@ use Exception;
  * @method Model index(string $field) 对查询数据集进行按照字段索引，如果$field参数是以","分割的字符串，则以前一个字段值为索引，后一个字段值为值
  * @method Model force(string|array $index) 索引分析，可在操作链中指定需要强制使用的索引
  * @method mixed getBy[field](mixed $value) 根据[field]字段的值$value，获取一条记录
- * @method mixed getFieldBy[field](mixed $value, string $fdName) 根据[field]字段的值$value，获取字段名称为$fdName的值
+ * @method mixed getFieldBy[field](mixed $value, string $fdName, $spea=null) 根据[field]字段的值$value，获取字段名称为$fdName的值, $spea 字段数据间隔符号 NULL返回数组
  * @method array selectBy[field](mixed $value) 根据[field]字段的值$value，获取多条记录
  */
 class Model implements ArrayAccess{
@@ -320,9 +320,10 @@ class Model implements ArrayAccess{
 			return $this->where($where)->find();
 		}elseif(strtolower(substr($method, 0, 10)) == 'getfieldby'){
 			// 根据某个字段获取记录的某个值
-			$name=parse_name(substr($method, 10));
+            $name=parse_name(substr($method, 10));
+            $spliter=isset($args[2]) ? $args[2] : null;
 			$where[$name]=$args[0];
-			return $this->where($where)->getField($args[1]);
+			return $this->where($where)->getField($args[1], $spliter);
 		}elseif(strtolower(substr($method, 0, 8)) == 'selectby'){
 			// 根据某个字段获取记录
 			$field=parse_name(substr($method, 8));
