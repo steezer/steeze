@@ -64,7 +64,7 @@ class Pager
             $configs['url'] = $this->getUrl();
         }
         if (is_string($configs['page']) && strpos($configs['page'], ',') !== false) {
-            $pagesizes = explode($configs['page'], ',');
+            $pagesizes = explode(',', $configs['page']);
             $configs['page'] = intval(trim($pagesizes[0]));
             $configs['size'] = intval(trim($pagesizes[1]));
         }
