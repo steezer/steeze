@@ -15,14 +15,15 @@ class File extends Cache {
      * 架构函数
      * @access public
      */
-    public function __construct($options=array()) {
-        $options = array_merge(array (
-        		'temp'        =>  C('data_cache_path',env('data_cache_path','')),
-        		'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
-        		'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
-        		'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
-        ),$options);
+    public function __construct($options=[]) {
+        $options = array_merge( [
+                        'temp'        =>  C('data_cache_path',env('data_cache_path','')),
+                        'expire'        => intval(C('data_cache_time',env('data_cache_time',60))),
+                        'prefix'        => C('data_cache_prefix',env('data_cache_prefix','')),
+                        'length'        => intval(C('data_cache_length',env('data_cache_length',0))),
+                    ], $options);
         
+        $this->options=$options;
         if(substr($this->options['temp'], -1) != '/'){
         		$this->options['temp'] .= '/';
        	}

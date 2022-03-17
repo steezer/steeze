@@ -105,9 +105,9 @@ Loader::helper('system');
 Loader::env();
 
 /**
- * 系统默认在调试模式下运行（支持自定义常量或环境变量app_debug），建议在生产系统中配置环境变量为false
+ * 系统默认在生产模式下运行（支持自定义常量或环境变量app_debug），建议在开发系统中配置环境变量为true
  */
-!defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug', true)); 
+!defined('APP_DEBUG') && define('APP_DEBUG', (bool)env('app_debug', false)); 
 
 /**
  * 系统错误信息显示级别（支持自定义）

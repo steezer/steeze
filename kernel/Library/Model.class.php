@@ -50,7 +50,7 @@ class Model implements ArrayAccess{
 	protected $db=null;
     
 	// 数据库对象池
-	private $_db=array();
+	private $_db=[];
 	// 主键名称
 	protected $pk='id';
 	// 主键是否自动增长
@@ -70,11 +70,11 @@ class Model implements ArrayAccess{
 	// 最近错误信息
 	protected $error='';
 	// 字段信息
-	protected $fields=array();
+	protected $fields=[];
 	// 数据信息
-	protected $data=array();
+	protected $data=[];
 	// 查询表达式参数
-	protected $options=array();
+	protected $options=[];
     
     /**
      * 自动验证定义
@@ -82,7 +82,7 @@ class Model implements ArrayAccess{
      *
      * @var array
      */
-	protected $_validate=array(); // 自动验证定义
+	protected $_validate=[]; // 自动验证定义
     
     /**
      * 自动填充内容
@@ -90,21 +90,21 @@ class Model implements ArrayAccess{
      *
      * @var array
      */
-	protected $_auto=array(); // 自动完成定义
+	protected $_auto=[]; // 自动完成定义
     
     /**
      * 字段映射定义
      *
      * @var array
      */
-	protected $_map=array();
+	protected $_map=[];
     
     /**
      * 命名范围定义
      *
      * @var array
      */
-	protected $_scope=array();
+	protected $_scope=[];
 	
 	// 是否自动检测数据表字段信息
 	protected $autoCheckFields=true;
@@ -398,13 +398,13 @@ class Model implements ArrayAccess{
 	 * @param boolean $replace 是否replace
 	 * @return mixed
 	 */
-	public function add($data='',$options=array(),$replace=false){
+	public function add($data='',$options=[],$replace=false){
 		if(empty($data)){
 			// 没有传递数据，获取当前数据对象的值
 			if(!empty($this->data)){
 				$data=$this->data;
 				// 重置数据
-				$this->data=array();
+				$this->data=[];
 			}else{
 				$this->error=L('data type invalid');
 				return false;
@@ -452,7 +452,7 @@ class Model implements ArrayAccess{
 	protected function _after_insert($data,$options){
 	}
 
-	public function addAll($dataList,$options=array(),$replace=false){
+	public function addAll($dataList,$options=[],$replace=false){
 		if(empty($dataList)){
 			$this->error=L('data type invalid');
 			return false;
@@ -484,7 +484,7 @@ class Model implements ArrayAccess{
 	 * @param array $options 表达式
 	 * @return boolean
 	 */
-	public function selectAdd($fields='',$table='',$options=array()){
+	public function selectAdd($fields='',$table='',$options=[]){
 		// 分析表达式
 		$options=$this->_parseOptions($options);
 		// 写入数据到数据库
@@ -506,13 +506,13 @@ class Model implements ArrayAccess{
 	 * @param array $options 表达式
 	 * @return boolean
 	 */
-	public function save($data='',$options=array()){
+	public function save($data='',$options=[]){
 		if(empty($data)){
 			// 没有传递数据，获取当前数据对象的值
 			if(!empty($this->data)){
 				$data=$this->data;
 				// 重置数据
-				$this->data=array();
+				$this->data=[];
 			}else{
 				$this->error=L('data type invalid');
 				return false;
@@ -587,7 +587,7 @@ class Model implements ArrayAccess{
 	 * @param mixed $options 表达式
 	 * @return mixed
 	 */
-	public function delete($options=array()){
+	public function delete($options=[]){
 		$pk=$this->getPk();
 		if(empty($options) && empty($this->options['where'])){
 			// 如果删除条件为空 则删除当前数据对象所对应的记录
@@ -606,7 +606,7 @@ class Model implements ArrayAccess{
 			}else{
 				$where[$pk]=$options;
 			}
-			$options=array();
+			$options=[];
 			$options['where']=$where;
 		}
 		// 根据复合主键删除记录
@@ -642,7 +642,7 @@ class Model implements ArrayAccess{
 		}
 		$result=$this->db->delete($options);
 		if(false !== $result && is_numeric($result)){
-			$data=array();
+			$data=[];
 			if(isset($pkValue))
 				$data[$pk]=$pkValue;
 			$this->_after_delete($data, $options);
@@ -667,7 +667,7 @@ class Model implements ArrayAccess{
 	 * @param array $options 表达式参数
 	 * @return mixed
 	 */
-	public function select($options=array()){
+	public function select($options=[]){
 		$pk=$this->getPk();
 		if(is_string($options) || is_numeric($options)){
 			// 根据主键查询
@@ -679,7 +679,7 @@ class Model implements ArrayAccess{
 			}else{
 				$where[$pk]=$options;
 			}
-			$options=array();
+			$options=[];
 			$options['where']=$where;
 		}elseif(is_array($options) && (count($options) > 0) && is_array($pk)){
 			// 根据复合主键查询
@@ -753,7 +753,7 @@ class Model implements ArrayAccess{
 	 * @param array $options 表达式参数
 	 * @return array
 	 */
-	protected function _parseOptions($options=array()){
+	protected function _parseOptions($options=[]){
 		if(is_array($options))
 			$options=array_merge($this->options, $options);
 		
@@ -791,7 +791,7 @@ class Model implements ArrayAccess{
 			}
 		}
 		// 查询过后清空sql表达式组装 避免影响下次查询
-		$this->options=array();
+		$this->options=[];
 		// 表达式过滤
 		$this->_options_filter($options);
 		return $options;
@@ -848,10 +848,10 @@ class Model implements ArrayAccess{
 	 * @param mixed $options 表达式参数
 	 * @return mixed
 	 */
-	public function find($options=array()){
+	public function find($options=[]){
 		if(is_numeric($options) || is_string($options)){
 			$where[$this->getPk()]=$options;
-			$options=array();
+			$options=[];
 			$options['where']=$where;
 		}
 		// 根据复合主键查找记录
@@ -1063,7 +1063,7 @@ class Model implements ArrayAccess{
 				$field=array_keys($resultSet[0]);
 				$key1=array_shift($field);
 				$key2=array_shift($field);
-				$cols=array();
+				$cols=[];
 				$isArray=count($_field)>2 || $_field[1]=='*';
 				foreach($resultSet as $result){
 					$name=$result[$key1];
@@ -1287,7 +1287,7 @@ class Model implements ArrayAccess{
 					switch(trim($auto[3])){
 						case 'function': // 使用函数进行填充 字段的值作为参数
 						case 'callback': // 使用回调方法
-							$args=isset($auto[4]) ? (array)$auto[4] : array();
+							$args=isset($auto[4]) ? (array)$auto[4] : [];
 							if(isset($data[$auto[0]])){
 								array_unshift($args, $data[$auto[0]]);
 							}
@@ -1336,7 +1336,7 @@ class Model implements ArrayAccess{
 		// 属性验证
 		if(isset($_validate)){ // 如果设置了数据自动验证则进行数据验证
 			if($this->patchValidate){ // 重置验证错误信息
-				$this->error=array();
+				$this->error=[];
 			}
 			foreach($_validate as $key=>$val){
 				// 验证因子定义格式
@@ -1405,7 +1405,7 @@ class Model implements ArrayAccess{
 		switch(strtolower(trim($val[4]))){
 			case 'function': // 使用函数进行验证
 			case 'callback': // 调用方法进行验证
-				$args=isset($val[6]) ? (array)$val[6] : array();
+				$args=isset($val[6]) ? (array)$val[6] : [];
 				if(is_string($val[0]) && strpos($val[0], ','))
 					$val[0]=explode(',', $val[0]);
 				if(is_array($val[0])){
@@ -1429,7 +1429,7 @@ class Model implements ArrayAccess{
 			case 'unique': // 验证某个值是否唯一
 				if(is_string($val[0]) && strpos($val[0], ','))
 					$val[0]=explode(',', $val[0]);
-				$map=array();
+				$map=[];
 				if(is_array($val[0])){
 					// 支持多个字段验证
 					foreach($val[0] as $field)
@@ -1716,7 +1716,7 @@ class Model implements ArrayAccess{
      * @param array $options
 	 * @return boolean
 	 */
-	public function commit($data=array(), $options=array()){
+	public function commit($data=[], $options=[]){
         $this->autoCommit=true;
 		$result=$this->db->commit();
         if($result){
@@ -1847,7 +1847,7 @@ class Model implements ArrayAccess{
             !is_null($this->tablePrefix) && 
             $this->tablePrefix!==''
         ){
-            $returnTables=array();
+            $returnTables=[];
             $prefixLength=strlen($this->tablePrefix);
             foreach($tables as &$val){
                 if(strpos($val, $this->tablePrefix)===0){
@@ -1873,7 +1873,7 @@ class Model implements ArrayAccess{
 		if(is_object($data)){
 			$data=get_object_vars($data);
 		}elseif(is_string($data)){
-            $param=array();
+            $param=[];
 			parse_str($data, $param);
             $data=$param;
 		}elseif(!is_array($data)){
@@ -2035,7 +2035,7 @@ class Model implements ArrayAccess{
 			}
 		}elseif(is_string($scope)){ // 支持多个命名范围调用 用逗号分割
 			$scopes=explode(',', $scope);
-			$options=array();
+			$options=[];
 			foreach($scopes as $name){
 				if(!isset($this->_scope[$name]))
 					continue;
@@ -2065,7 +2065,7 @@ class Model implements ArrayAccess{
         if(is_numeric($where)){
             $pk=$this->getPk();
             $val=$where;
-            $where=array();
+            $where=[];
             $where[$pk]=$val;
         }elseif(!is_null($parse) && is_string($where)){
 			if(!is_array($parse)){
@@ -2081,7 +2081,7 @@ class Model implements ArrayAccess{
 			$where=get_object_vars($where);
 		}
 		if(is_string($where) && '' != $where){
-			$map=array();
+			$map=[];
 			$map['_string']=$where;
 			$where=$map;
 		}

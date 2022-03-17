@@ -71,14 +71,17 @@ class Client{
 	
 	// 获得访客真实ip
 	static function getIpAddr($isOnline=0){
+        $ip='127.0.0.1';
 		if(getenv('HTTP_CLIENT_IP')){
 			$ip=getenv('HTTP_CLIENT_IP');
 		}else if(getenv('HTTP_X_FORWARDED_FOR')){
 			$ip=getenv('HTTP_X_FORWARDED_FOR');
 		}else if(getenv('REMOTE_ADDR')){
 			$ip=getenv('REMOTE_ADDR');
-		}else if(!empty($_SERVER["HTTP_CLIENT_IP"])){
-			$ip=$_SERVER["HTTP_CLIENT_IP"];
+		}else if(!empty($_SERVER['HTTP_CLIENT_IP'])){
+			$ip=$_SERVER['HTTP_CLIENT_IP'];
+		}else if(!empty($_SERVER['REMOTE_ADDR'])){
+			$ip=$_SERVER['REMOTE_ADDR'];
 		}
 		if(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){ // 获取代理ip
 			$ips=explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
