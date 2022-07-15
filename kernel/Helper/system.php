@@ -863,6 +863,8 @@ function http_request($config, $data=null, $headers=null){
     $method=isset($config['method']) ? $config['method'] : 'GET';
     $timeout=isset($config['timeout']) ? $config['timeout'] : 5;
     $output=isset($config['output']) ? $config['output'] : null;
+    $proxy=isset($config['proxy']) ? $config['proxy'] : null;
+
     
 	if(empty($url)){
 		return null;
@@ -896,6 +898,11 @@ function http_request($config, $data=null, $headers=null){
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
         curl_setopt($ch, CURLOPT_MAXREDIRS,20);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION,true);
+    }
+
+    // 代理设置
+    if(!is_null($proxy)){
+    	curl_setopt ($ch, CURLOPT_PROXY, $proxy);
     }
     
     //其它选项
