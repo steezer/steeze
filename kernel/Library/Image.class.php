@@ -79,96 +79,116 @@ class Image
      */
     private function getCutInfo($autocut, $setting)
     {
+        $srcwidth=$setting['srcwidth'];
+        $srcheight=$setting['srcheight'];
+        $maxwidth=$setting['maxwidth'];
+        $maxheight=$setting['maxheight'];
+
         // //执行剪裁功能前宽度、高度及限定点的设置////
         $reArr = array();
-        if ($autocut && ($setting['maxwidth'] > 0 || $setting['maxheight'] > 0)) {
-            if ($setting['maxwidth'] <= $setting['srcwidth'] && $setting['maxheight'] <= $setting['srcheight']) {
-                // 【缩小裁剪，两种剪裁方式相同】
-                if ($setting['maxwidth'] > 0 && $setting['maxheight'] > 0) {
-                    if ($setting['maxwidth'] / $setting['maxheight'] < $setting['srcwidth'] / $setting['srcheight']) {
-                        $reArr['cut_width'] = $setting['srcheight'] * ($setting['maxwidth'] / $setting['maxheight']);
-                        $reArr['cut_height'] = $setting['srcheight'];
-                        $reArr['psrc_x'] = ($setting['srcwidth'] - $reArr['cut_width']) / 2;
-                    } elseif ($setting['maxwidth'] / $setting['maxheight'] > $setting['srcwidth'] / $setting['srcheight']) {
-                        $reArr['cut_width'] = $setting['srcwidth'];
-                        $reArr['cut_height'] = $setting['srcwidth'] * ($setting['maxheight'] / $setting['maxwidth']);
-                        $reArr['psrc_y'] = ($setting['srcheight'] - $reArr['cut_height']) / 2;
-                    }
-                    $reArr['desc_width'] = $setting['maxwidth'];
-                    $reArr['desc_height'] = $setting['maxheight'];
-                }
-            } else if ($setting['maxwidth'] > $setting['srcwidth'] && $setting['maxheight'] < $setting['srcheight']) {
-                // 【宽度大于原始宽度，高度小于原始高度的剪裁】
-                if ($setting['maxheight'] <= 0) {
-                    if ($autocut == 2) { // 按原比例拉伸
-                        $setting['maxheight'] = $setting['srcheight'];
-                        return $this->getCutInfo($autocut, $setting);
-                    }
-                } else if ($autocut == 1) { // 直接居中投射，不放大
-                    $reArr['cut_width'] = $setting['srcwidth'];
-                    $reArr['cut_height'] = $setting['maxheight'];
-                    $reArr['psrc_y'] = ($setting['srcheight'] - $reArr['cut_height']) / 2;
-                    $reArr['pdesc_x'] = ($setting['maxwidth'] - $setting['srcwidth']) / 2;
-
-                    $reArr['desc_width'] = $reArr['cut_width'];
-                    $reArr['desc_height'] = $reArr['cut_height'];
-                } else if ($autocut == 2) { // 放大填充投射
-                    $reArr['cut_width'] = $setting['srcwidth'];
-                    $reArr['cut_height'] = $reArr['cut_width'] * ($setting['maxheight'] / $setting['maxwidth']);
-                    $reArr['psrc_y'] = ($setting['srcheight'] - $reArr['cut_height']) / 2;
-
-                    $reArr['desc_width'] = $setting['maxwidth'];
-                    $reArr['desc_height'] = $setting['maxheight'];
-                }
-            } else if ($setting['maxwidth'] < $setting['srcwidth'] && $setting['maxheight'] > $setting['srcheight']) {
-                // 【宽度小于原始宽度，高度大于原始高度的剪裁】
-                if ($setting['maxwidth'] <= 0) {
-                    if ($autocut == 2) { // 按原比例拉伸
-                        $setting['maxwidth'] = $setting['srcwidth'];
-                        return $this->getCutInfo($autocut, $setting);
-                    }
-                } else if ($autocut == 1) { // 直接居中投射，不放大
-                    $reArr['cut_width'] = $setting['maxwidth'];
-                    $reArr['cut_height'] = $setting['srcheight'];
-                    $reArr['psrc_x'] = ($setting['srcwidth'] - $reArr['cut_width']) / 2;
-                    $reArr['pdesc_y'] = ($setting['maxheight'] - $reArr['cut_height']) / 2;
-                    $reArr['desc_width'] = $reArr['cut_width'];
-                    $reArr['desc_height'] = $reArr['cut_height'];
-                } else if ($autocut == 2) { // //放大填充投射
-                    $reArr['cut_width'] = $setting['srcheight'] * ($setting['maxwidth'] / $setting['maxheight']);
-                    $reArr['cut_height'] = $setting['srcheight'];
-                    $reArr['psrc_x'] = ($setting['srcwidth'] - $reArr['cut_width']) / 2;
-
-                    $reArr['desc_width'] = $setting['maxwidth'];
-                    $reArr['desc_height'] = $setting['maxheight'];
-                }
-            } else {
-                // 【宽度和高度都大于或等于原始高度的剪裁】
-                if ($autocut == 1) { // 直接将原图置于放大图中央
-                    $reArr['cut_width'] = $setting['srcwidth'];
-                    $reArr['cut_height'] = $setting['srcheight'];
-                    $reArr['pdesc_x'] = ($setting['maxwidth'] - $reArr['cut_width']) / 2;
-                    $reArr['pdesc_y'] = ($setting['maxheight'] - $reArr['cut_height']) / 2;
-
-                    $reArr['desc_width'] = $reArr['cut_width'];
-                    $reArr['desc_height'] = $reArr['cut_height'];
-                } else if ($autocut == 2) { // 将原图按放大图比例检查，然后放大
-                    if ($setting['maxwidth'] / $setting['maxheight'] < $setting['srcwidth'] / $setting['srcheight']) {
-                        $reArr['cut_width'] = $setting['srcheight'] * ($setting['maxwidth'] / $setting['maxheight']);
-                        $reArr['cut_height'] = $setting['srcheight'];
-                        $reArr['psrc_x'] = ($setting['srcwidth'] - $reArr['cut_width']) / 2;
-                    } elseif ($setting['maxwidth'] / $setting['maxheight'] > $setting['srcwidth'] / $setting['srcheight']) {
-                        $reArr['cut_width'] = $setting['srcwidth'];
-                        $reArr['cut_height'] = $reArr['cut_width'] * ($setting['maxheight'] / $setting['maxwidth']);
-                        $reArr['psrc_y'] = ($setting['srcheight'] - $reArr['cut_height']) / 2;
-                    }
-                    $reArr['desc_width'] = $setting['maxwidth'];
-                    $reArr['desc_height'] = $setting['maxheight'];
-                }
-            }
-            $reArr['createwidth'] = $setting['maxwidth'];
-            $reArr['createheight'] = $setting['maxheight'];
+        if(!$autocut || ($maxwidth<=0 && $maxheight<=0)){
+            return $reArr;
         }
+
+        if (
+            $maxwidth <= $srcwidth && 
+            $maxheight <= $srcheight
+        ) {
+            // 【缩小裁剪，两种剪裁方式相同】
+            if ($maxwidth > 0 && $maxheight > 0) {
+                if ($maxwidth / $maxheight < $srcwidth / $srcheight) {
+                    $reArr['cut_width'] = $srcheight * ($maxwidth / $maxheight);
+                    $reArr['cut_height'] = $srcheight;
+                    $reArr['psrc_x'] = ($srcwidth - $reArr['cut_width']) / 2;
+                } elseif ($maxwidth / $maxheight > $srcwidth / $srcheight) {
+                    $reArr['cut_width'] = $srcwidth;
+                    $reArr['cut_height'] = $srcwidth * ($maxheight / $maxwidth);
+                    $reArr['psrc_y'] = ($srcheight - $reArr['cut_height']) / 2;
+                }
+                $reArr['desc_width'] = $maxwidth;
+                $reArr['desc_height'] = $maxheight;
+            }
+        }
+
+        else if (
+            $maxwidth >= $srcwidth && 
+            $maxheight <= $srcheight
+        ) {
+            // 【宽度大于原始宽度，高度小于原始高度的剪裁】
+            if ($maxheight <= 0) {
+                if ($autocut == 2) { // 按原比例拉伸
+                    $maxheight = $srcheight;
+                    return $this->getCutInfo($autocut, $setting);
+                }
+            } else if ($autocut == 1) { // 直接居中投射，不放大
+                $reArr['cut_width'] = $srcwidth;
+                $reArr['cut_height'] = $maxheight;
+                $reArr['psrc_y'] = ($srcheight - $reArr['cut_height']) / 2;
+                $reArr['pdesc_x'] = ($maxwidth - $srcwidth) / 2;
+
+                $reArr['desc_width'] = $reArr['cut_width'];
+                $reArr['desc_height'] = $reArr['cut_height'];
+            } else if ($autocut == 2) { // 放大填充投射
+                $reArr['cut_width'] = $srcwidth;
+                $reArr['cut_height'] = $reArr['cut_width'] * ($maxheight / $maxwidth);
+                $reArr['psrc_y'] = ($srcheight - $reArr['cut_height']) / 2;
+
+                $reArr['desc_width'] = $maxwidth;
+                $reArr['desc_height'] = $maxheight;
+            }
+        }
+
+        else if (
+            $maxwidth <= $srcwidth && 
+            $maxheight >= $srcheight
+        ) {
+            // 【宽度小于原始宽度，高度大于原始高度的剪裁】
+            if ($maxwidth <= 0) {
+                if ($autocut == 2) { // 按原比例拉伸
+                    $maxwidth = $srcwidth;
+                    return $this->getCutInfo($autocut, $setting);
+                }
+            } else if ($autocut == 1) { // 直接居中投射，不放大
+                $reArr['cut_width'] = $maxwidth;
+                $reArr['cut_height'] = $srcheight;
+                $reArr['psrc_x'] = ($srcwidth - $reArr['cut_width']) / 2;
+                $reArr['pdesc_y'] = ($maxheight - $reArr['cut_height']) / 2;
+                $reArr['desc_width'] = $reArr['cut_width'];
+                $reArr['desc_height'] = $reArr['cut_height'];
+            } else if ($autocut == 2) { // //放大填充投射
+                $reArr['cut_width'] = $srcheight * ($maxwidth / $maxheight);
+                $reArr['cut_height'] = $srcheight;
+                $reArr['psrc_x'] = ($srcwidth - $reArr['cut_width']) / 2;
+
+                $reArr['desc_width'] = $maxwidth;
+                $reArr['desc_height'] = $maxheight;
+            }
+        } else {
+            // 【宽度和高度都大于或等于原始高度的剪裁】
+            if ($autocut == 1) { // 直接将原图置于放大图中央
+                $reArr['cut_width'] = $srcwidth;
+                $reArr['cut_height'] = $srcheight;
+                $reArr['pdesc_x'] = ($maxwidth - $reArr['cut_width']) / 2;
+                $reArr['pdesc_y'] = ($maxheight - $reArr['cut_height']) / 2;
+
+                $reArr['desc_width'] = $reArr['cut_width'];
+                $reArr['desc_height'] = $reArr['cut_height'];
+            } else if ($autocut == 2) { // 将原图按放大图比例检查，然后放大
+                if ($maxwidth / $maxheight < $srcwidth / $srcheight) {
+                    $reArr['cut_width'] = $srcheight * ($maxwidth / $maxheight);
+                    $reArr['cut_height'] = $srcheight;
+                    $reArr['psrc_x'] = ($srcwidth - $reArr['cut_width']) / 2;
+                } elseif ($maxwidth / $maxheight > $srcwidth / $srcheight) {
+                    $reArr['cut_width'] = $srcwidth;
+                    $reArr['cut_height'] = $reArr['cut_width'] * ($maxheight / $maxwidth);
+                    $reArr['psrc_y'] = ($srcheight - $reArr['cut_height']) / 2;
+                }
+                $reArr['desc_width'] = $maxwidth;
+                $reArr['desc_height'] = $maxheight;
+            }
+        }
+        $reArr['createwidth'] = $maxwidth;
+        $reArr['createheight'] = $maxheight;
         return $reArr;
     }
 
@@ -226,14 +246,15 @@ class Image
             return false;
         }
 
-        $sizeSetting = array(
+        $setting = array(
             'type' => $type, 
+            'otype' => $otype,
             'srcwidth' => $srcwidth, 
             'srcheight' => $srcheight, 
             'maxwidth' => $maxwidth, 
             'maxheight' => $maxheight
         );
-        return $this->cutImg($image, $filename, $sizeSetting, $autocut, $delOld);
+        return $this->cutImg($image, $filename, $setting, $autocut, $delOld);
     }
     
     /**
@@ -241,27 +262,30 @@ class Image
      *
      * @param string $image
      * @param string $filename
-     * @param array $sizeSetting
+     * @param array $setting
      * @param int $autocut
      * @param int $delOld
      */
-    private function cutImg($image, $filename, $sizeSetting=array(), $autocut = 0, $delOld = 0)
+    private function cutImg($image, $filename, $setting=array(), $autocut = 0, $delOld = 0)
     {
-        extract($sizeSetting);
+        $type=$setting['type'];
+        $otype=$setting['otype'];
+        $srcwidth=$setting['srcwidth'];
+        $srcheight=$setting['srcheight'];
+        $maxwidth=$setting['maxwidth'];
+        $maxheight=$setting['maxheight'];
 
         // //计算图片比例////
-        $isZoom = ($maxwidth >= $srcwidth && $maxheight >= $srcheight);
         $creat_arr = $this->getpercent($srcwidth, $srcheight, $maxwidth, $maxheight);
         $pdesc_x = $pdesc_y = $psrc_x = $psrc_y = 0;
         $createwidth = $desc_width = $creat_arr['w'];
         $createheight = $desc_height = $creat_arr['h'];
         $cut_width = $srcwidth;
         $cut_height = $srcheight;
-        $otype = !empty($filename) ? strtolower(pathinfo($filename, PATHINFO_EXTENSION)) : $type;
-        unset($creat_arr);
+        
         // //执行剪裁功能前宽度、高度及限定点的设置////
         if ($autocut && ($maxwidth > 0 || $maxheight > 0)) {
-            $cutSetting = $this->getCutInfo($autocut, $sizeSetting);
+            $cutSetting = $this->getCutInfo($autocut, $setting);
             extract($cutSetting);
             unset($cutSetting);
         }
@@ -280,38 +304,58 @@ class Image
         if ($type == 'gif' && self::is_animation($image)) {
             return false; // 多帧动画不处理
         }
+        
         // //执行缩略图操作////
         $createfun = 'imagecreatefrom' . ($type == 'jpg' ? 'jpeg' : $type);
-        $src_img = $createfun($image);
+        if(!function_exists($createfun)){
+            return false;
+        }
+        $srcImage = $createfun($image);
+        
+
         if ($type != 'gif' && function_exists('imagecreatetruecolor')) {
-            $desc_img = imagecreatetruecolor($createwidth, $createheight);
+            $distImage = imagecreatetruecolor($createwidth, $createheight);
         } else {
-            $desc_img = imagecreate($createwidth, $createheight);
+            $distImage = imagecreate($createwidth, $createheight);
         }
 
         if ($type != 'gif' && $type != 'png') {
             // 指定白色背景
-            $bgColor = imagecolorallocate($desc_img, 255, 255, 255);
-            imagefill($desc_img, 0, 0, $bgColor);
+            $bgColor = imagecolorallocate($distImage, 255, 255, 255);
+            imagefill($distImage, 0, 0, $bgColor);
+        }else{
+            
+            $tranIndex = imagecolortransparent($srcImage);
+            if ($tranIndex >= 0) {
+                $tranColor = imagecolorsforindex($srcImage, $tranIndex);
+                $tranIndex = imagecolorallocate($distImage, $tranColor['red'], $tranColor['green'], $tranColor['blue']);
+                imagefill($distImage, 0, 0, $tranIndex);
+                imagecolortransparent($distImage, $tranIndex);
+            }
+            elseif ($type == 'png') {
+                imagealphablending($distImage, false);
+                $color = imagecolorallocatealpha($distImage, 0, 0, 0, 127);
+                imagefill($distImage, 0, 0, $color);
+                imagesavealpha($distImage, true);
+            }
+
         }
+        
         if (function_exists('imagecopyresampled')) {
-            imagecopyresampled($desc_img, $src_img, $pdesc_x, $pdesc_y, $psrc_x, $psrc_y, $desc_width, $desc_height, $cut_width, $cut_height);
+            imagecopyresampled($distImage, $srcImage, $pdesc_x, $pdesc_y, $psrc_x, $psrc_y, $desc_width, $desc_height, $cut_width, $cut_height);
         } else {
-            imagecopyresized($desc_img, $src_img, $pdesc_x, $pdesc_y, $psrc_x, $psrc_y, $desc_width, $desc_height, $cut_width, $cut_height);
+            imagecopyresized($distImage, $srcImage, $pdesc_x, $pdesc_y, $psrc_x, $psrc_y, $desc_width, $desc_height, $cut_width, $cut_height);
         }
-        imagedestroy($src_img);
+        
+        imagedestroy($srcImage);
 
         // //后期处理////
         if (!empty($otype)) {
             $type = $otype;
         }
         $type = ($type == 'jpg' ? 'jpeg' : $type);
-
-        if ($type == 'gif' || $type == 'png') {
-            $background_color = imagecolorallocate($desc_img, 0, 255, 0); // 指派一个绿色
-            imagecolortransparent($desc_img, $background_color); // 设置为透明色，若注释掉该行则输出绿色的图
-        } else if ($type == 'jpeg') {
-            imageinterlace($desc_img, 0);
+        if ($type == 'jpeg') {
+            imageinterlace($distImage, 0);
         }
 
         //输出图片
@@ -319,18 +363,18 @@ class Image
         if (function_exists($imagefun)) {
             if (empty($filename)) {
                 header('Content-type: image/' . $type);
-                $imagefun($desc_img);
+                $imagefun($distImage);
             } else {
                 $dirName = dirname($filename);
                 if (!is_dir($dirName)) {
                     @mkdir($dirName, 0777, true);
                 }
-                $imagefun($desc_img, $filename);
+                $imagefun($distImage, $filename);
             }
         }
 
         //销毁图片
-        imagedestroy($desc_img);
+        imagedestroy($distImage);
         if ($delOld) {
             unlink($image);
         }
