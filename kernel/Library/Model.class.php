@@ -195,8 +195,8 @@ class Model implements ArrayAccess{
 		if(empty($this->fields)){
 			// 如果数据表字段没有定义则自动获取
 			if(C('db_fields_cache', !APP_DEBUG)){
-				$db=$this->dbName ? $this->dbName : C('db_name');
-				$fields=F('_fields/' . strtolower($db . '.' . $this->tablePrefix . $this->name));
+                $name=$this->getTableName(true, true);
+				$fields=F('_fields/'.strtolower($name));
 				if($fields){
 					$this->fields=$fields;
 					if(!empty($fields['_pk'])){
@@ -250,8 +250,8 @@ class Model implements ArrayAccess{
 		// 2008-3-7 增加缓存开关控制
 		if(C('db_fields_cache', !APP_DEBUG)){
 			// 永久缓存数据表信息
-			$db   =  $this->dbName ? $this->dbName : C('db_name');
-			F('_fields/'.strtolower($db.'.'.$this->tablePrefix.$this->name),$this->fields);
+			$name=$this->getTableName(true, true);
+			F('_fields/'.strtolower($name), $this->fields);
 		}
 	}
 
