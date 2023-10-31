@@ -193,7 +193,7 @@ class Response
     {
         if (!$this->isEnd) {
             // 输出文件类型
-            $ext = fileext($filename);
+            $ext = fileext($filename, 'bin');
             $mimetype = C('mimetype.' . $ext, 'application/octet-stream');
             $this->clientHeader($mimetype, false, $isCache);
             // 发送文件
