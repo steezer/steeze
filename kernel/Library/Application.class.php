@@ -72,7 +72,7 @@ class Application extends Context
      * @return string
      * @throws Exception
      */
-    public function run(Request $request, Response $response = null)
+    public function run($request, $response = null)
     {
         //获取路由参数
         $route=$request->getRoute();

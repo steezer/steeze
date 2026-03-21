@@ -1866,8 +1866,8 @@ class Model implements ArrayAccess{
 	 * @param mixed $data 数据
 	 * @return Model
 	 */
-	public function data($data=''){
-		if('' === $data && !empty($this->data)){
+	public function data($data=null){
+		if($data===null){
 			return $this->data;
 		}
 		if(is_object($data)){
@@ -2192,7 +2192,7 @@ class Model implements ArrayAccess{
 		return isset($this->data[$offset]);
 	}
 	public function offsetGet ($offset) {
-		return $this->data[$offset];
+		return isset($this->data[$offset]) ? $this->data[$offset] : null;
 	}
 	public function offsetSet ($offset, $value) {
 		$this->data[$offset]=$value;

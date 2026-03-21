@@ -154,8 +154,8 @@ final class View
     /**
      * 加载模板和页面输出 可以返回输出内容
      *
-     * @param string $file 需要渲染的文件名
-     * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
+     * @param string $file 需要渲染的文件名
+     * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
      * @return bool 成功输出返回true，如果模版未找到返回false
      */
     public function display($file = '', $data = '')
@@ -171,8 +171,8 @@ final class View
     /**
      * 解析和获取模板内容 用于输出
      *
-     * @param string $file 需要渲染的文件名
-     * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
+     * @param string $file 需要渲染的文件名
+     * @param string|array $data 渲染输出的内容，如果为空字符串则使用文件渲染，如果为数组则为模板变量
      * @return string
      */
     public function fetch($file = '', $data = '')
@@ -260,11 +260,13 @@ final class View
             if(function_exists('eval')){
                 eval('?>' . $fileOrString);
             }else{
-                $___filename__=CACHE_PATH.'tpl_'.md5($fileOrString).'.php';
-                if(file_put_contents($___filename__, $fileOrString)){
-                    include $___filename__;
+                $___tmp_dirname__=CACHE_PATH . 'View';
+                $___tmp_filename__=$___tmp_dirname__. DS .'tpl_'.md5($fileOrString).'.php';
+                if(!is_file($___tmp_filename__)){
+                    !is_dir($___tmp_dirname__) && mkdir($___tmp_dirname__, 0777, true);
+                    file_put_contents($___tmp_filename__, $fileOrString);
                 }
-                unlink($___filename__);
+                include $___tmp_filename__;
             }
         }
         // 清空缓存并返回

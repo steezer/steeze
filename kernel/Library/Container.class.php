@@ -212,7 +212,7 @@ class Container{
 		$results=array();
 		
 		foreach($dependencies as $dependency){
-			$depClass=$dependency->getClass();
+			$depClass=$dependency->getType();
 			$name=$dependency->name;
 			if($this->hasParameterOverride($dependency)){
 				$depDefault=$this->getParameterOverride($dependency);
@@ -221,7 +221,7 @@ class Container{
 					//如果实现了模型类（或者是模型类的子类）
 					if($depObject instanceof Model){
 						//@!模型不缓存
-						$this->forgetInstance($depClass->name);
+						$this->forgetInstance($depClass->getName());
 						$pk=$depObject->getPk();
                         $where[$pk]=$depDefault;
 						if(
@@ -247,7 +247,7 @@ class Container{
 				$depObject=$this->resolveClass($dependency);
 				if($depObject instanceof Model){
 					//@!模型不缓存
-					$this->forgetInstance($depClass->name);
+					$this->forgetInstance($depClass->getName());
                     //自动设置表名
                     if($depObject->getTableName(false) === ''){
                        $depObject->table(parse_name($name));
@@ -314,7 +314,7 @@ class Container{
 	 */
 	protected function resolveClass(ReflectionParameter $parameter){
 		try{
-			$classname=$parameter->getClass()->name;
+			$classname=$parameter->getType()->getName();
             //如果此类属于容器本身，则注入容器对象
             if($this instanceof $classname){
                 return $this;
@@ -401,7 +401,7 @@ class Container{
 	 * @param Container|null $container
 	 * @return static
 	 */
-	public static function setInstance(Container $container=null){
+	public static function setInstance($container=null){
 		return self::$instance=$container;
 	}
     

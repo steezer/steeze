@@ -114,7 +114,9 @@ Loader::env();
  */
 !defined('APP_DEBUG_LEVEL') && define(
     'APP_DEBUG_LEVEL',
-    APP_DEBUG ? (E_ALL ^ E_STRICT ^ E_NOTICE) : (E_ERROR | E_PARSE)
+    APP_DEBUG 
+        ? (PHP_VERSION_ID >= 80400 ? (E_ALL ^ E_NOTICE ^ E_DEPRECATED ^ E_WARNING) : (E_ALL ^ E_STRICT ^ E_NOTICE ^ E_DEPRECATED)) 
+        : (E_ERROR | E_PARSE)
 );
 
 /**

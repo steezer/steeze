@@ -14,7 +14,7 @@ class User extends Controller{
     // 定义中间件
     const MIDDLEWARE='auth';
 	
-	// 模型参数直接绑定路由
+	// 模型参数直接绑定路由, URL: /user/info/1
 	public function info(UserModel $user){
         $tpl='user: id-{$id}, name-{$name}';
         return $this->fetchString($tpl, $user->data());

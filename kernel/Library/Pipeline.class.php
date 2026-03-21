@@ -20,7 +20,7 @@ class Pipeline{
      *
      * @param Container | null $container
      */
-    public function __construct(Container $container=null){
+    public function __construct($container=null){
         $this->container=$container;
     }
 

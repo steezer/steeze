@@ -602,7 +602,7 @@ class Manager {
 				$rep=':ESC' . substr(md5($var_str), 8, 16) . ':';
 				$var_str=str_replace('\$', $rep, $var_str);
 			}
-			$var_str=preg_replace_callback('/(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[\$a-zA-Z0-9_]+)+)/', array('self','parseDoVar'), $var_str);
+			$var_str=preg_replace_callback('/(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[\$a-zA-Z0-9_]+)+)/', [self::class,'parseDoVar'], $var_str);
 			if($is_esc){
 				$var_str=str_replace($rep, '$', $var_str);
 			}

@@ -403,7 +403,7 @@ function sys_auth($str, $operation='ENCODE', $key='', $expiry=0){
 	$result='';
 	$strLen=strlen($str);
 	for($i=0; $i < $strLen; $i++){
-		$result.=chr(ord($str{$i}) ^ ord($keys{$i % 32}));
+		$result .= chr(ord($str[$i]) ^ ord($keys[$i % 32]));
 	}
 	if($operation == 'ENCODE'){
 		return $runtokey . str_replace('=', '', base64_encode($result));
@@ -438,7 +438,7 @@ function sys_crypt($str, $type=1, $key=''){
 	$strLen=strlen($str);
 	$result='';
 	for($i=0; $i < $strLen; $i++){
-		$result.=chr(ord($str{$i}) ^ ord($keys{$i % 32}));
+		$result.=chr(ord($str[$i]) ^ ord($keys[$i % 32]));
 	}
 	return $type ? base64($result, 'encode', 1) : $result;
 }

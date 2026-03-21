@@ -13,7 +13,8 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "steezer/steeze-vendor":"^1.0"
+        "steezer/steeze-vendor":"^1.0",
+        "symfony/yaml": "^5.4"
     },
     "config": {
         "vendor-dir": "vendor"

@@ -474,7 +474,8 @@ class Request
      */
     private function filter()
     {
-        if (get_magic_quotes_gpc()) {
+        $isMagicQuotes = function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc();
+        if ($isMagicQuotes) {
             $_POST = slashes($_POST, 0);
             $_GET = slashes($_GET, 0);
             $_REQUEST = slashes($_REQUEST, 0);

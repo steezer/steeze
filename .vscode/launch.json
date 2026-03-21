@@ -5,6 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // URL中需要XDEBUG_SESSION_START=1参数
+            // 例如：http://test.steeze.cn/user/info?XDEBUG_SESSION_START=1
             "name": "Listen for XDebug",
             "type": "php",
             "request": "launch",
@@ -14,7 +16,7 @@
             "name": "Client for XDebug",
             "type": "php",
             "request": "launch",
-            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "runtimeExecutable":"/Develop/local/bin/php",
             "program": "${workspaceFolder}/public/index.php",
             //参数：['带参数的URL地址','POST参数名称']
             "args": ["http://api.steeze.cn/user/lists","name=spring&year=23","TOKEN=121"],  
@@ -25,7 +27,7 @@
             "name": "Swoole for XDebug",
             "type": "php",
             "request": "launch",
-            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "runtimeExecutable":"/Develop/local/bin/php",
             "program": "${workspaceFolder}/app/console/swoole.php",
             //参数：['带参数的URL地址','POST参数名称']
             "args": ["http://api.steeze.cn/user/lists","name=spring&year=23","TOKEN=121"],  
@@ -36,7 +38,7 @@
             "name": "Launch currently open script",
             "type": "php",
             "request": "launch",
-            "runtimeExecutable":"/usr/local/php71/bin/php",
+            "runtimeExecutable":"/Develop/local/bin/php",
             "program": "${file}",
             "cwd": "${fileDirname}",
             "port": 9071

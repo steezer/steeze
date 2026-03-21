@@ -13,6 +13,13 @@ class Context extends Container{
     protected $isInit=false; //是否已经初始化
     
     /**
+     * 错误处理
+     *
+     * @var AppException
+     */
+    private $exceptionHandler=null;
+    
+    /**
      * 内置Controller对象
      *
      * @var Controller
@@ -32,6 +39,7 @@ class Context extends Container{
      * @var Response
      */
 	protected $response=null;
+    
     
 	public function __construct($request=null, $response=null){
 		//初始化请求和响应对象
@@ -98,13 +106,14 @@ class Context extends Container{
         if($isSet){
             //设置错误处理函数
             error_reporting(APP_DEBUG_LEVEL);
-            $handle=$this->make('\Library\AppException');
-            $handle->setContext($this);
-            set_error_handler(array($handle, 'onAppError'), APP_DEBUG_LEVEL);
-            set_exception_handler(array($handle, 'onAppException'));
+            $this->exceptionHandler=new AppException();
+            $this->exceptionHandler->setContext($this);
+            set_error_handler(array($this->exceptionHandler, 'onAppError'), APP_DEBUG_LEVEL);
+            set_exception_handler(array($this->exceptionHandler, 'onAppException'));
         }else{
             restore_error_handler();
             restore_exception_handler();
+            $this->exceptionHandler=null;
         }
     }
 

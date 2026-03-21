@@ -6,6 +6,7 @@ return [
 			return 'Under construction...';
 		},
 		'/hello'=> 'Index/hello',
+		'/article/speech'=> 'Article/speech',
 		'/member/index/hello'=> 'Member/Index/hello',
 		'auth&convert' => [
 			'/{c}/{a}'=>'{c}/{a}',

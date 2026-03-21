@@ -37,7 +37,14 @@ class AppException extends Exception {
      * @param int $errline 错误的所在文件行号
      * @param array $errcontext 错误的上下文的符号表数组
      */
-    static public function onError($errno, $errstr, $errfile, $errline, $errcontext){
+    static public function onError($errno, $errstr, $errfile, $errline, $errcontext=null){
+        if (
+            $errno === E_WARNING && 
+            strpos($errstr, 'Undefined variable')===0
+        ) {
+            return true; 
+        }
+        
         $info=array(
             'type'=>'error',
             'code'=> ($errno ? $errno : self::DEFAULT_ERROR_CODE),
