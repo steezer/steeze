@@ -35,6 +35,6 @@ class Index extends Controller{
     //模板内部控制器方法调用
 	public function _show(Model $user){
         $this->assign('user', $user);
-		$this->display();
+		$this->display('', 0);
 	}
 }

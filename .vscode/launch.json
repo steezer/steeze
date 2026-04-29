@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // URL中需要XDEBUG_SESSION_START=1参数
+            // 需要配置xdebug，并设置URL参数：XDEBUG_SESSION_START=1或XDEBUG_TRIGGER=1
             // 例如：http://test.steeze.cn/user/info?XDEBUG_SESSION_START=1
             "name": "Listen for XDebug",
             "type": "php",
