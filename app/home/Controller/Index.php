@@ -9,6 +9,12 @@ use Library\Response;
  * 常规开发范例
  */
 class Index extends Controller{
+	
+	public function dispatch(Request $request)
+	{
+		$fullPath=$request->server('request_path');
+		var_dump($fullPath);
+	}
     
     //模板变量赋值
 	public function hello(){

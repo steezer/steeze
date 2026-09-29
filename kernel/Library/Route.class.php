@@ -356,13 +356,27 @@ class Route
         $urlLen = substr_count($path, '/');
         $optCount = substr_count($route, '?');
         $isMathAll = $route === '/**';
+        //前缀通配符路由，如：/dispatch/**，匹配以 /dispatch/ 开头的任意路径
+        $isMathPrefix = !$isMathAll && substr($route, -2) === '**';
 
         //无参数或有参数的路径匹配
         if (
-            ($method == 'ANY' || $method == env('REQUEST_METHOD')) && 
-            ($isMathAll || $routeLen == $urlLen || $urlLen + $optCount == $routeLen)
+            ($method == 'ANY' || $method == env('REQUEST_METHOD')) &&
+            ($isMathAll || $isMathPrefix || $routeLen == $urlLen || $urlLen + $optCount == $routeLen)
         ) {
-            if ($isMathAll || !strcasecmp($route, $path)) {
+            if ($isMathAll) {
+                //整站级全匹配，直接返回
+                return $this->dealWithhandle($handle, $querys);
+            }
+            if ($isMathPrefix) {
+                //前缀通配符匹配，如：/dispatch/** 匹配 /dispatch/v1/message
+                $prefix = substr($route, 0, -2);
+                if (strncasecmp($path, $prefix, strlen($prefix)) === 0) {
+                    return $this->dealWithhandle($handle, $querys);
+                }
+                return null;
+            }
+            if (!strcasecmp($route, $path)) {
                 //如果url完全匹配（不区分大小写），直接返回
                 return $this->dealWithhandle($handle, $querys);
             } else {

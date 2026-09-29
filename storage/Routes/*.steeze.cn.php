@@ -18,6 +18,7 @@ return [
         $this->display('/User/info');
     },
     '/test'=> 'Index/test',
+    '/dispatch/**'=>'Index/dispatch',
     'convert' => [
         '/{c}/{a}'=>'{c}/{a}',
         '/{c}/{a}#page={page|d}'=>'{c}/{a}',
