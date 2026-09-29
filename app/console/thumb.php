@@ -18,6 +18,7 @@ class BatchImageResizer{
 	private $types=['jpg']; //图片类型
 	private $supportTypes=['jpg','png','jpeg','gif']; //支持的图片类型
 	private $saveDir=''; //另存为图片的路径，默认为原路径
+	private $outputFile=''; // 输出文件路径
 	private $outputType=''; //输出图片类型，默认为输入图片类型
 	private $count=0;
 	
@@ -30,13 +31,14 @@ class BatchImageResizer{
 			$info='width:'.($this->maxWidth ? $this->maxWidth : 'auto').', ';
 			$info.='height:'.($this->maxHeight ? $this->maxHeight : 'auto').', ';
 			$info.='cut:'.$this->supportCutTypes[$this->cutType].', ';
-			$info.='types:'.implode(',', $this->types);
-			if(!empty($this->saveDir)){
-				$info.='save to:'.$this->saveDir.', ';
-			}
+			$info.="\nSource types:".implode(',', $this->types);
 			if(!empty($this->outputType)){
-				$info.='output type:'.$this->outputType;
+				$info.="\nOutput type:".$this->outputType;
 			}
+			if(!empty($this->saveDir)){
+				$info.="\nSave to:".$this->saveDir.', ';
+			}
+			
 			echo CommandColor::get($info,'red')."\n";
 			if(is_dir($this->filename)){
 				echo "start... in \"".$this->filename."\"\n";
@@ -99,7 +101,7 @@ class BatchImageResizer{
 			}
 			$output_filenme=$this->saveDir.DS.$save_filename;
 		}else{
-			$output_filenme=$filename;
+			$output_filenme=!empty($this->outputFile) ? $this->outputFile : $filename;
 		}
 		
 		if(!empty($this->outputType) && ($pos=strrpos($output_filenme, '.'))){
@@ -140,10 +142,13 @@ class BatchImageResizer{
 	 * 初始化
 	 * */
 	private function init(){
-		$shortopts  = 'd:w:h:c:t:s:o:';
-		$longopts = ['dir:','width:','height:','cut:','type:','save:','output:'];
+		$shortopts  = 'f:d:w:h:c:t:s:o:';
+		$longopts = ['file:','dir:','width:','height:','cut:','type:','save:','output:'];
+
 		if($options = getopt($shortopts,$longopts)){
-			$filename=isset($options['d']) ? $options['d'] : $options['dir'];
+			$filename=(isset($options['f'])||isset($options['file'])) ? 
+						(isset($options['f']) ? $options['f'] : $options['file']) : 
+						(isset($options['d']) ? $options['d'] : $options['dir']);
 			if(is_dir($filename) || is_file($filename)){
 				$this->filename=$filename;
 				//获取宽、高和剪裁类型参数
@@ -164,9 +169,15 @@ class BatchImageResizer{
 				
 				//获取输出类型参数并校验
 				if(isset($options['o']) || isset($options['output'])){
-					$output_type=strtolower(isset($options['o']) ? $options['o'] : $options['output']);
-					if(in_array($output_type, $this->supportTypes)){
-						$this->outputType=$output_type;
+					$output=isset($options['o']) ? $options['o'] : $options['output'];
+					if(in_array(strtolower($output), $this->supportTypes)){
+						$this->outputType=strtolower($output);
+					}else{
+						$output_type=fileext($output);
+						if(in_array($output_type, $this->supportTypes)){
+							$this->outputType=$output_type;
+						}
+						$this->outputFile=$output;
 					}
 				}
 				
@@ -210,7 +221,8 @@ class BatchImageResizer{
 			".CommandColor::get('This tool is help you to batch resize images','green')."
 			Usage: thumb [option]
 			option:
-				-d | --dir  The directory to be processed (".CommandColor::get('Required','red').")
+				-f | --file  The image file to be processed (".CommandColor::get('Required','red').")
+				-d | --dir  Or the directory to be processed (".CommandColor::get('Required','red').")
 				-w | --width  Maximum width pix for resize, \"0\" for auto,default: ".$this->maxWidth."
 				-h | --height  Maximum height pix for resize,\"0\" for auto,default: ".$this->maxHeight."
 				-s | --save  The other directory to save, default is current directory
